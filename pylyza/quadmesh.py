@@ -27,9 +27,9 @@ def line_intersection(line1, line2):
     return x, y
 
 class QuadMesh(Mesh):
-    def __init__(self, param):
-        self.param = param
-        super().__init__()
+    # def __init__(self, param):
+    #     self.param = param
+    #     super().__init__()
 
     def construct_mesh(self):
         # g1 = self.param[2]

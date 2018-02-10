@@ -12,4 +12,5 @@ build/
 *.c
 dist/
 *.pdf
+out_*
 out-*

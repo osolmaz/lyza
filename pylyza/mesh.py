@@ -1,41 +1,18 @@
 import numpy as np
 # import scipy as sp
-# from scipy import sparse
 from scipy.sparse.linalg import spsolve
 from scipy.sparse import csr_matrix
 from math import sqrt, cos, sin, pi
-import copy
-# from partition_system import partition_system, partition_matrix
-import itertools
 import progressbar
-
 import logging
-import operator
 
-
-
-PHYSICAL_DIM = 2
-
-
-# print(quadrature_weights_2d)
-# print(quadrature_points_2d)
-
-class Node():
-    def __init__(self, coor, idx, label=None):
-        self.coor = coor
-        self.label = label
-        self.idx = idx
-
-        self.dofmap = []
-        for i in range(PHYSICAL_DIM):
-            self.dofmap.append(idx*PHYSICAL_DIM+i)
-
+from pylyza.node import Node
 
 
 
 class Mesh:
 
-    def __init__(self):
+    def __init__(self, param):
         self.nodes = []
         self.elems = []
         self.edges = []
@@ -43,13 +20,21 @@ class Mesh:
         self.node_labels = {}
         self.elem_labels = {}
 
+        self.param = param
+        self.physical_dim = self.param['physical_dim']
+        self.postinit()
+
         self.construct_mesh()
+
+
+    def postinit(self):
+        pass
 
     def construct_mesh():
         pass
 
     def add_node(self, coors, label=None):
-        self.nodes.append(Node(coors, len(self.nodes), label=label))
+        self.nodes.append(Node(coors, len(self.nodes), self.physical_dim, label=label))
 
         if label:
             self.node_labels[label] = self.last_node_index()
@@ -85,7 +70,7 @@ class Mesh:
     #         e.calc_rhs_vector()
 
     def get_n_dofs(self):
-        n_dofs = len(self.nodes)*PHYSICAL_DIM
+        n_dofs = len(self.nodes)*self.physical_dim
         return n_dofs
 
     def assemble_stiffness_matrix(self):

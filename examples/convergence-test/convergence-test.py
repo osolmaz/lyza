@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 RESOLUTIONS = [2, 4, 6, 8, 10]
 # RESOLUTIONS = [10]
 
-errors_file = open('out-errors_convergence_test.csv', 'w')
+errors_file = open('out_errors_convergence_test.csv', 'w')
 errors_file.write('# resolution L2_error Linf_error H1_error\n')
 
 n_node_array = []
