@@ -33,13 +33,11 @@ class FiniteElement:
         self.label = label
         self.nodes = nodes
 
-        # self.physical_dim = self.param['physical_dim']
-
-        # self.matrix_quadrature_interface = self.param['matrix_quadrature_interface']
 
         self.dofmap = []
         for n in self.nodes:
-            self.dofmap += n.dofmap
+            # node_dofs = [n.idx*self.function_dim+i for i in range(self.function_dim)]
+            self.dofmap += self.function_space.node_dofs[n.idx]
 
         if not self.N or not self.Bhat or not self.quad_weights or not self.quad_points:
             raise Exception('Improper element subclassing')

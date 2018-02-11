@@ -1,15 +1,9 @@
 from math import *
-import copy
-import os
-
-from quadmesh import QuadMesh
-from mesh import DirichletBC, NeumannBC, join_boundaries
+from pylyza import *
 
 import logging
 logging.basicConfig(level=logging.INFO)
 
-
-RESOLUTION = 20
 L = 4.
 C = 1.
 P = 1.
@@ -20,30 +14,6 @@ MU = 1000.
 E = MU*(3.*LAMBDA+2.*MU)/(LAMBDA+MU)
 NU = LAMBDA/2./(LAMBDA+MU)
 I = 1./12.*C*C*C
-
-PARAM = {
-    'lambda': LAMBDA,
-    'mu': MU,
-    'resolution_x': 100,
-    'resolution_y': 25,
-    'p0': [0., -C/2.],
-    'p1': [L, -C/2.],
-    'p2': [L, C/2.],
-    'p3': [0., C/2.],
-}
-
-
-mesh = QuadMesh(PARAM)
-
-right_boundary = lambda x: x[0] >= L-1e-12
-left_boundary = lambda x: x[0] <= 1e-12
-
-
-
-dirichlet_bcs = [DirichletBC(lambda x: [0.,0.], right_boundary)]
-# neumann_bcs = [NeumannBC(lambda x: [0.,-P/C], left_boundary)]
-neumann_bcs = []
-
 
 def exact_solution(coor):
     x = coor[0]
@@ -67,13 +37,45 @@ def exact_solution(coor):
 
     return [u, -v]
 
+class LeftEnd(Domain):
+    def is_subset(self, cell, is_boundary):
+        is_in = not (False in [left_boundary(node.coor) for node in cell.nodes])
+
+        # if is_in and is_boundary:
+        #     print('ASDASD')
+
+        return is_in and is_boundary
+
+right_boundary = lambda x: x[0] >= L-1e-12
+left_boundary = lambda x: x[0] <= 1e-12
+
+mesh = meshes.QuadMesh(
+    40,
+    10,
+    [0., -C/2.],
+    [L, -C/2.],
+    [L, C/2.],
+    [0., C/2.],
+)
+
+V = FunctionSpace(mesh, 2, 2, 1, 1)
+u = Function(V)
+a = BilinearForm(element_matrices.LinearElasticityMatrix(LAMBDA, MU))
+b_neumann = LinearForm(element_vectors.FunctionVector(lambda x: [0.,-P/C]), domain=LeftEnd())
+
+
+dirichlet_bcs = [DirichletBC(lambda x: [0.,0.], right_boundary)]
 # dirichlet_bcs = [DirichletBC(exact_solution, lambda x: True)]
 
+u, f = solve(a, b_neumann, u, dirichlet_bcs)
+ofile = VTKFile('out_beam.vtk')
+
+u.set_label('displacement')
+f.set_label('force')
+
+ofile.write(mesh, [u, f])
 
 
-mesh.solve(dirichlet_bcs, neumann_bcs=neumann_bcs)
-mesh.write_vtk('out_beam.vtk')
-
-print(exact_solution([0.,-C/2.]))
+# print(exact_solution([0.,-C/2.]))
 
 

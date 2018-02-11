@@ -5,7 +5,7 @@ def get_exact_solution_vector(function_space, exact):
 
     for n in function_space.mesh.nodes:
         exact_val = exact(n.coor)
-        for n, dof in enumerate(n.dofmap):
+        for n, dof in enumerate(function_space.node_dofs[n.idx]):
             exact_solution_vector[dof] = exact_val[n]
 
     return exact_solution_vector

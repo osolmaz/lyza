@@ -6,7 +6,9 @@ class Function:
 
         n_dof = function_space.get_system_size()
         self.vector = np.zeros((n_dof,1))
-        # pass
 
     def set_vector(self, vector):
         self.vector = vector
+
+    def set_label(self, label):
+        self.label = label

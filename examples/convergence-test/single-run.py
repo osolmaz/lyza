@@ -1,17 +1,4 @@
-from math import *
-import copy
-import os
-
-from pylyza.quadmesh import QuadMesh
-from pylyza.boundary_condition import DirichletBC, NeumannBC, join_boundaries
-from pylyza.linear_elasticity import LinearElasticityMatrix
-from pylyza.function_vector import FunctionVector
-from pylyza.form import BilinearForm, LinearForm
-# from pylyza.domain import Domain
-from pylyza.function_space import FunctionSpace
-from pylyza.solver import solve
-from pylyza.function import Function
-from pylyza.error import absolute_error
+from pylyza import *
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -42,21 +29,20 @@ exact_solution_deriv = lambda x: [
 ]
 
 
-mesh = QuadMesh({
-    'resolution_x': RESOLUTION,
-    'resolution_y': RESOLUTION,
-    'p0': [0., 0.],
-    'p1': [1., 0.],
-    'p2': [1., 1.],
-    'p3': [0., 1.],
-})
+mesh = meshes.QuadMesh(
+    RESOLUTION,
+    RESOLUTION,
+    [0., 0.],
+    [1., 0.],
+    [1., 1.],
+    [0., 1.],
+)
 
 
-# domain = Domain(mesh)
-V= FunctionSpace(mesh, 2, 2, 1, 1)
+V = FunctionSpace(mesh, 2, 2, 1, 1)
 u = Function(V)
-a = BilinearForm(LinearElasticityMatrix({'lambda':LAMBDA, 'mu':MU}))
-L = LinearForm(FunctionVector({'function':force_function}))
+a = BilinearForm(element_matrices.LinearElasticityMatrix(LAMBDA, MU))
+b_body_force = LinearForm(element_vectors.FunctionVector(force_function))
 
 
 bottom_boundary = lambda x: x[1] <= 1e-12
@@ -70,14 +56,14 @@ perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right
 dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
 # dirichlet_bcs = [DirichletBC(exact_solution, lambda x: True)]
 
-solve(a, L, u, dirichlet_bcs)
+solve(a, b_body_force, u, dirichlet_bcs)
 # mesh.write_vtk('out_convergence_test.vtk')
 
 h_max = 1./RESOLUTION
 n_node = len(mesh.nodes)
-l2 = absolute_error(u, exact_solution, exact_solution_deriv, error='l2')
-linf = absolute_error(u, exact_solution, exact_solution_deriv, error='linf')
-h1 = absolute_error(u, exact_solution, exact_solution_deriv, error='h1')
+l2 = error.absolute_error(u, exact_solution, exact_solution_deriv, error='l2')
+linf = error.absolute_error(u, exact_solution, exact_solution_deriv, error='linf')
+h1 = error.absolute_error(u, exact_solution, exact_solution_deriv, error='h1')
 
 print(l2, linf, h1)
 

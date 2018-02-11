@@ -1,4 +1,5 @@
 import numpy as np
+# from scipy.sparse import coo_matrix
 import logging
 import progressbar
 
@@ -11,13 +12,14 @@ class BilinearForm:
     def assemble(self, function_space):
         n_dof = function_space.get_system_size()
         K = np.zeros((n_dof,n_dof))
-        # K = csr_matrix((n_dof,n_dof))
+        # K = coo_matrix((n_dof,n_dof))
 
-        elems = function_space.get_finite_elements()
+        elems = function_space.get_finite_elements(domain=self.domain)
 
         logging.info('Calculating element matrices')
         elem_matrices = []
         bar = progressbar.ProgressBar(max_value=len(elems))
+
         for n, e in enumerate(elems):
             bar.update(n+1)
             elem_matrices.append(e.calc_matrix(self.element_matrix))
@@ -40,11 +42,12 @@ class LinearForm:
         n_dof = function_space.get_system_size()
         f = np.zeros((n_dof,1))
 
-        elems = function_space.get_finite_elements()
+        elems = function_space.get_finite_elements(domain=self.domain)
 
         logging.info('Calculating element force vectors')
         elem_vectors = []
         bar = progressbar.ProgressBar(max_value=len(elems))
+
         for n, e in enumerate(elems):
             bar.update(n+1)
             elem_vectors.append(e.calc_vector(self.element_vector))

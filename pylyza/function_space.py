@@ -14,19 +14,23 @@ class FunctionSpace:
         self.element_degree = element_degree
         self.quadrature_degree = quadrature_degree
 
+        self.node_dofs = []
+        for n in self.mesh.nodes:
+            self.node_dofs.append([n.idx*self.get_dimension()+i for i in range(self.get_dimension())])
+
 
     def get_dimension(self):
         return self.function_dimension
 
 
-    def get_finite_elements(self, domain_func=None):
+    def get_finite_elements(self, domain=None):
         result = []
-        if domain_func:
+        if domain:
             for c in self.mesh.cells:
-                if domain_func(c, False):
+                if domain.is_subset(c, False):
                     result.append(c.get_finite_element(self))
-            for c in self.mesh.edges:
-                if domain_func(c, True):
+            for c in self.mesh.boundary_cells:
+                if domain.is_subset(c, True):
                     result.append(c.get_finite_element(self))
         else:
             for c in self.mesh.cells:

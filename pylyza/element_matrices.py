@@ -10,24 +10,16 @@ def delta(i,j):
 
 class LinearElasticityMatrix(ElementMatrix):
 
-
-    def postinit(self):
-        self.lambda_ = self.param['lambda']
-        self.mu = self.param['mu']
+    def __init__(self, lambda_, mu):
+        self.lambda_ = lambda_
+        self.mu = mu
+        super().__init__()
 
     def C(self, i,j,k,l):
         return self.lambda_*delta(i,j)*delta(k,l) + self.mu*(delta(i,k)*delta(j,l) + delta(i,l)*delta(j,k))
 
 
     def eval(self, K, N_p, B_p, det_jac, quad_point, physical_dim, elem_dim, n_dof, n_node):
-        # K = np.zeros((n_dof,n_dof))
-        # B_p = []
-        # jac = self.jacobian(p)
-        # det_jac = determinant(jac)
-        # jac_inv_tra = inverse(jac).transpose()
-
-        # for I in range(n_node):
-        #     B_p.append(jac_inv_tra.dot(self.Bhat[I](p)))
 
         for I,J,i,j,k,l in itertools.product(
                 range(n_node),

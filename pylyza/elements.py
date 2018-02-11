@@ -13,7 +13,6 @@ quad_weights_2 = [5./9., 8./9., 5./9.]
 quad_points_2 = [-sqrt(3./5), 0., sqrt(3./5)]
 
 
-
 class QuadElement1(FiniteElement):
     elem_dim = 2
     N = [
@@ -67,3 +66,4 @@ class LineElement1(FiniteElement):
         elif self.function_space.quadrature_degree == 2:
             self.quad_weights = quad_weights_2
             self.quad_points = quad_weights_2
+        self.quad_points = [[i] for i in self.quad_points]
