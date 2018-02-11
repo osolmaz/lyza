@@ -14,14 +14,14 @@ class Mesh:
 
     def __init__(self, param):
         self.nodes = []
-        self.elems = []
-        self.edges = []
+        self.cells = []
+        self.boundary_cells = []
 
-        self.node_labels = {}
-        self.elem_labels = {}
+        # self.node_labels = {}
+        # self.cell_labels = {}
 
         self.param = param
-        self.physical_dim = self.param['physical_dim']
+        # self.physical_dim = self.param['physical_dim']
         self.postinit()
 
         self.construct_mesh()
@@ -52,66 +52,56 @@ class Mesh:
     #     if label:
     #         self.elem_labels[label] = self.last_elem_index()
 
-    def add_elem(self, elem):
-        self.elems.append(elem)
+    def add_cell(self, elem):
+        self.cells.append(elem)
 
-    def add_edge(self, elem):
-        self.edges.append(elem)
+    def add_boundary_cell(self, elem):
+        self.boundary_cells.append(elem)
 
-
-    def get_elem_by_label(self, label):
-        return self.elems[self.elem_labels[label]]
-
-    # def calc_element_objects(self):
-    #     bar = progressbar.ProgressBar(max_value=len(self.elems))
-    #     for n, e in enumerate(self.elems):
-    #         bar.update(n)
-    #         e.calc_stiffness_matrix()
-    #         e.calc_rhs_vector()
 
     def get_n_dofs(self):
         n_dofs = len(self.nodes)*self.physical_dim
         return n_dofs
 
-    def assemble_stiffness_matrix(self):
-        n_dof = self.get_n_dofs()
-        K = np.zeros((n_dof,n_dof))
-        # K = csr_matrix((n_dof,n_dof))
+    # def assemble_stiffness_matrix(self):
+    #     n_dof = self.get_n_dofs()
+    #     K = np.zeros((n_dof,n_dof))
+    #     # K = csr_matrix((n_dof,n_dof))
 
-        logging.info('Calculating element matrices')
-        elem_matrices = []
-        bar = progressbar.ProgressBar(max_value=len(self.elems))
-        for n, e in enumerate(self.elems):
-            bar.update(n+1)
-            elem_matrices.append(e.calc_stiffness_matrix())
+    #     logging.info('Calculating element matrices')
+    #     elem_matrices = []
+    #     bar = progressbar.ProgressBar(max_value=len(self.elems))
+    #     for n, e in enumerate(self.elems):
+    #         bar.update(n+1)
+    #         elem_matrices.append(e.calc_stiffness_matrix())
 
-        # elem_matrices = [e.calc_stiffness_matrix() for e in self.elems]
+    #     # elem_matrices = [e.calc_stiffness_matrix() for e in self.elems]
 
-        for e, K_elem in zip(self.elems, elem_matrices):
-            for i, I in enumerate(e.dofmap):
-                for j, J in enumerate(e.dofmap):
-                    K[I, J] += K_elem[i,j]
+    #     for e, K_elem in zip(self.elems, elem_matrices):
+    #         for i, I in enumerate(e.dofmap):
+    #             for j, J in enumerate(e.dofmap):
+    #                 K[I, J] += K_elem[i,j]
 
-        return (K+K.T)/2.
+    #     return (K+K.T)/2.
 
-    def assemble_force_rhs(self, force_function):
-        n_dof = self.get_n_dofs()
-        f = np.zeros((n_dof,1))
+    # def assemble_force_rhs(self, force_function):
+    #     n_dof = self.get_n_dofs()
+    #     f = np.zeros((n_dof,1))
 
-        logging.info('Calculating element force vectors')
-        elem_vectors = []
-        bar = progressbar.ProgressBar(max_value=len(self.elems))
-        for n, e in enumerate(self.elems):
-            bar.update(n+1)
-            elem_vectors.append(e.calc_rhs_vector(force_function))
+    #     logging.info('Calculating element force vectors')
+    #     elem_vectors = []
+    #     bar = progressbar.ProgressBar(max_value=len(self.elems))
+    #     for n, e in enumerate(self.elems):
+    #         bar.update(n+1)
+    #         elem_vectors.append(e.calc_rhs_vector(force_function))
 
-        # elem_vectors = [e.calc_rhs_vector(force_function) for e in self.elems]
+    #     # elem_vectors = [e.calc_rhs_vector(force_function) for e in self.elems]
 
-        for e, f_elem in zip(self.elems, elem_vectors):
-            for i, I in enumerate(e.dofmap):
-                f[I] += f_elem[i]
+    #     for e, f_elem in zip(self.elems, elem_vectors):
+    #         for i, I in enumerate(e.dofmap):
+    #             f[I] += f_elem[i]
 
-        return f
+    #     return f
 
     def assemble_neumann_rhs(self, neumann_bcs):
         n_dof = self.get_n_dofs()
@@ -131,24 +121,24 @@ class Mesh:
 
         return f
 
-    def get_closest_node_idx(self, coor):
-        current_index = 0
-        current_distance = None
-        for n, i in enumerate(self.nodes):
+    # def get_closest_node_idx(self, coor):
+    #     current_index = 0
+    #     current_distance = None
+    #     for n, i in enumerate(self.nodes):
 
-            distance = sqrt((coor[0]-i.coor[0])*(coor[0]-i.coor[0])
-                            + (coor[1]-i.coor[1])*(coor[1]-i.coor[1])
-                            + (coor[2]-i.coor[2])*(coor[2]-i.coor[2]))
+    #         distance = sqrt((coor[0]-i.coor[0])*(coor[0]-i.coor[0])
+    #                         + (coor[1]-i.coor[1])*(coor[1]-i.coor[1])
+    #                         + (coor[2]-i.coor[2])*(coor[2]-i.coor[2]))
 
-            if current_distance == None:
-                current_distance = distance
-            else:
-                if distance < current_distance:
-                    current_distance = distance
-                    current_index = n
+    #         if current_distance == None:
+    #             current_distance = distance
+    #         else:
+    #             if distance < current_distance:
+    #                 current_distance = distance
+    #                 current_index = n
 
-        # print(current_index, self.nodes[current_index].coor, current_distance)
-        return current_index
+    #     # print(current_index, self.nodes[current_index].coor, current_distance)
+    #     return current_index
 
     def solve(self, dirichlet_bcs, neumann_bcs=[], force_function=lambda x: [0.,0.]):
 
@@ -206,50 +196,8 @@ class Mesh:
 
         # print(force_resultant)
 
-    def get_exact_solution_vector(self, exact):
-        exact_solution_vector = np.zeros(self.solution_vector.shape)
-        for n in self.nodes:
-            exact_val = exact(n.coor)
-            for n, dof in enumerate(n.dofmap):
-                exact_solution_vector[dof] = exact_val[n]
-        return exact_solution_vector
-
-    def absolute_error(self, exact, exact_deriv, error='l2'):
-
-        if error == 'l2':
-            result = self.absolute_error_lp(exact, 2)
-        elif error == 'linf':
-            result = abs(self.solution_vector - self.get_exact_solution_vector(exact)).max()
-        elif error == 'h1':
-            l2 = self.absolute_error_lp(exact, 2)
-            l2d = self.absolute_error_deriv_lp(exact_deriv, 2)
-            result = pow(pow(l2,2.) + pow(l2d,2.), .5)
-        else:
-            raise Exception('Invalid error specification: %s'%error)
-
-        return result
-
-    def absolute_error_lp(self, exact, p):
-        result = 0.
-
-        for e in self.elems:
-            coefficients = [self.solution_vector[i,0] for i in e.dofmap]
-            result += e.absolute_error_lp(exact, coefficients, p)
-
-        result = pow(result, 1./p)
-
-        return result
-
-    def absolute_error_deriv_lp(self, exact_deriv, p):
-        result = 0.
-
-        for e in self.elems:
-            coefficients = [self.solution_vector[i,0] for i in e.dofmap]
-            result += e.absolute_error_deriv_lp(exact_deriv, coefficients, p)
-
-        result = pow(result, 1./p)
-
-        return result
+    def get_n_nodes(self):
+        return len(self.nodes)
 
     def write_vtk(self, ofilename):
         logging.info('Writing %s'%ofilename)

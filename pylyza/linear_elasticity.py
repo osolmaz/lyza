@@ -1,5 +1,5 @@
 import numpy as np
-from pylyza.quadrature_interface import MatrixQuadratureInterface
+from pylyza.quadrature_interface import ElementMatrix
 import itertools
 
 def delta(i,j):
@@ -8,7 +8,7 @@ def delta(i,j):
     else:
         return 0
 
-class LinearElasticityMatrix(MatrixQuadratureInterface):
+class LinearElasticityMatrix(ElementMatrix):
 
 
     def postinit(self):
@@ -19,7 +19,7 @@ class LinearElasticityMatrix(MatrixQuadratureInterface):
         return self.lambda_*delta(i,j)*delta(k,l) + self.mu*(delta(i,k)*delta(j,l) + delta(i,l)*delta(j,k))
 
 
-    def eval(self, K, N_p, B_p, det_jac, physical_dim, elem_dim, n_dof, n_node):
+    def eval(self, K, N_p, B_p, det_jac, quad_point, physical_dim, elem_dim, n_dof, n_node):
         # K = np.zeros((n_dof,n_dof))
         # B_p = []
         # jac = self.jacobian(p)
