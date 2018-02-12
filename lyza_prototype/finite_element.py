@@ -26,7 +26,7 @@ class FiniteElement:
     def __init__(self, nodes, function_space, label=None):
         self.function_space = function_space
         self.quadrature_degree = function_space.quadrature_degree
-        self.function_dim = self.function_space.get_dimension()
+        self.function_dimension = self.function_space.get_dimension()
         self.physical_dimension = self.function_space.physical_dimension
         self.set_quad_points()
 
@@ -91,7 +91,7 @@ class FiniteElement:
         return J
 
     def calc_matrix(self, quad_matrix):
-        n_dof = len(self.nodes)*self.physical_dimension
+        n_dof = len(self.nodes)*self.function_dimension
         K = np.zeros((n_dof,n_dof))
         n_node = len(self.nodes)
 
@@ -103,6 +103,7 @@ class FiniteElement:
                 self.quad_B[n],
                 self.quad_det_jac[n],
                 self.quad_points_global[n],
+                self.function_dimension,
                 self.physical_dimension,
                 self.elem_dim,
                 n_dof,
@@ -114,7 +115,7 @@ class FiniteElement:
 
     def calc_vector(self, quad_func):
         n_node = len(self.nodes)
-        n_dof = len(self.nodes)*self.function_dim
+        n_dof = len(self.nodes)*self.function_dimension
 
         f = np.zeros((n_dof,1))
 
@@ -126,14 +127,13 @@ class FiniteElement:
                 self.quad_B[n],
                 self.quad_det_jac[n],
                 self.quad_points_global[n],
+                self.function_dimension,
                 self.physical_dimension,
                 self.elem_dim,
                 n_dof,
                 n_node)
 
             f = f + self.quad_weights[n]*f_cont
-
-            # f_val = f_func(self.quad_points_global[n])
 
             # if self.elem_dim == 1:
             #     import ipdb; ipdb.set_trace()
@@ -148,15 +148,15 @@ class FiniteElement:
         n_node = len(self.nodes)
 
         for n in range(self.n_quad_point):
-            u_h = [0. for i in range(self.physical_dimension)]
+            u_h = [0. for i in range(self.function_dimension)]
 
-            for I, i in itertools.product(range(n_node), range(self.physical_dimension)):
-                u_h[i] += self.quad_N[n][I]*coefficients[I*self.physical_dimension+i]
+            for I, i in itertools.product(range(n_node), range(self.function_dimension)):
+                u_h[i] += self.quad_N[n][I]*coefficients[I*self.function_dimension+i]
 
             exact_val = exact(self.quad_points_global[n])
 
             inner_product = 0.
-            for i in range(self.physical_dimension):
+            for i in range(self.function_dimension):
                 inner_product += (exact_val[i] - u_h[i])**2
 
             result += pow(inner_product, p/2.)*self.quad_weights[n]*self.quad_det_jac[n]
@@ -168,16 +168,16 @@ class FiniteElement:
         n_node = len(self.nodes)
 
         for n in range(self.n_quad_point):
-            u_h = np.zeros((self.physical_dimension, self.physical_dimension))
+            u_h = np.zeros((self.function_dimension, self.physical_dimension))
 
-            for I, i, j in itertools.product(range(n_node), range(self.physical_dimension), range(self.physical_dimension)):
-                u_h[i][j] += self.quad_B[n][I][j]*coefficients[I*self.physical_dimension+i]
+            for I, i, j in itertools.product(range(n_node), range(self.function_dimension), range(self.physical_dimension)):
+                u_h[i][j] += self.quad_B[n][I][j]*coefficients[I*self.function_dimension+i]
 
             exact_val = np.array(exact_deriv(self.quad_points_global[n]))
             # import ipdb; ipdb.set_trace()
 
             inner_product = 0.
-            for i in range(self.physical_dimension):
+            for i in range(self.function_dimension):
                 for j in range(self.physical_dimension):
                     inner_product += (exact_val[i,j] - u_h[i,j])**2
 

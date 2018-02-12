@@ -1,62 +1,59 @@
 from lyza_prototype import *
+from math import *
 
+import itertools
 import logging
 logging.basicConfig(level=logging.INFO)
 
 
-RESOLUTION = 10
+RESOLUTION = 20
 
-E = 1.
-NU = 0.3
+exact_solution = lambda x: [sin(2.*pi*x[0])*sin(2.*pi*x[1])]
 
-LAMBDA = E*NU/(1.+NU)/(1.-2.*NU)
-MU = E/2./(1.+NU)
+exact_solution_deriv = lambda x: [[
+    2.*pi*cos(2.*pi*x[0])*sin(2.*pi*x[1]),
+    2.*pi*sin(2.*pi*x[0])*cos(2.*pi*x[1]),
+]]
 
-force_function = lambda x: [
-    (LAMBDA+MU)*(1.-2.*x[0])*(1.-2.*x[1]),
-    -2.*MU*x[1]*(1.-x[1])-2.*(LAMBDA+2.*MU)*x[0]*(1.-x[0]),
-]
-
-exact_solution = lambda x: [
-    0.,
-    -x[0]*(1-x[0])*x[1]*(1-x[1]),
-]
-
-exact_solution_deriv = lambda x: [
-    [0.,0.],
-    [x[1]*(-2.*x[0]*(x[1]-1.)+x[1]-1.),
-     x[0]*(-2.*x[0]*x[1]+x[0]+2.*x[1]-1.)]
-]
-
-
-mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
-
-
-V = FunctionSpace(mesh, 2, 2, 1, 1)
-u = Function(V)
-a = BilinearForm(element_matrices.LinearElasticityMatrix(LAMBDA, MU))
-b_body_force = LinearForm(element_vectors.FunctionVector(force_function))
-
+force_function = lambda x: [8.*pi*pi*sin(2.*pi*x[0])*sin(2.*pi*x[1])]
 
 bottom_boundary = lambda x: x[1] <= 1e-12
 top_boundary = lambda x: x[1] >= 1. -1e-12
 left_boundary = lambda x: x[0] <= 1e-12
 right_boundary = lambda x: x[0] >= 1.-1e-12
 
-perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
+class PoissonMatrix(lyza_prototype.ElementMatrix):
 
+    def eval(self, K, N_p, B_p, det_jac, quad_point, function_dim, physical_dim, elem_dim, n_dof, n_node):
+        for I,J,i in itertools.product(
+                range(n_node),
+                range(n_node),
+                range(physical_dim)):
+            # import ipdb; ipdb.set_trace()
 
-dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
-# dirichlet_bcs = [DirichletBC(exact_solution, lambda x: True)]
+            K[I, J] += B_p[I][i]*B_p[J][i]*det_jac
 
-solve(a, b_body_force, u, dirichlet_bcs)
-# mesh.write_vtk('out_convergence_test.vtk')
+        return K
 
-h_max = 1./RESOLUTION
-n_node = len(mesh.nodes)
-l2 = error.absolute_error(u, exact_solution, exact_solution_deriv, error='l2')
-linf = error.absolute_error(u, exact_solution, exact_solution_deriv, error='linf')
-h1 = error.absolute_error(u, exact_solution, exact_solution_deriv, error='h1')
+if __name__=='__main__':
+    mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
-print(l2, linf, h1)
+    V = FunctionSpace(mesh, 1, 2, 1, 1)
+    u = Function(V)
+    a = BilinearForm(PoissonMatrix())
+    b_body_force = LinearForm(element_vectors.FunctionVector(force_function))
+
+    perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
+
+    dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
+
+    u, f = solve(a, b_body_force, u, dirichlet_bcs)
+
+    ofile = VTKFile('out_poisson.vtk')
+
+    u.set_label('u')
+    f.set_label('f')
+
+    ofile.write(mesh, [u, f])
+
 

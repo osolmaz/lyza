@@ -19,7 +19,7 @@ class LinearElasticityMatrix(ElementMatrix):
         return self.lambda_*delta(i,j)*delta(k,l) + self.mu*(delta(i,k)*delta(j,l) + delta(i,l)*delta(j,k))
 
 
-    def eval(self, K, N_p, B_p, det_jac, quad_point, physical_dim, elem_dim, n_dof, n_node):
+    def eval(self, K, N_p, B_p, det_jac, quad_point, function_dim, physical_dim, elem_dim, n_dof, n_node):
 
         for I,J,i,j,k,l in itertools.product(
                 range(n_node),

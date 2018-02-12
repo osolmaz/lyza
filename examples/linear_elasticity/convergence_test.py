@@ -47,10 +47,6 @@ linf_array = []
 l2_array = []
 h1_array = []
 
-linf_convergence_array = [float('nan')]
-l2_convergence_array = [float('nan')]
-h1_convergence_array = [float('nan')]
-
 
 for RESOLUTION in RESOLUTIONS:
     E = 1.
@@ -89,61 +85,21 @@ for RESOLUTION in RESOLUTIONS:
     linf_array.append(linf)
     h1_array.append(h1)
 
-    if len(h_max_array) >= 2:
-        denominator = log(h_max_array[-2]-h_max_array[-1])
-        l2_convergence_array.append(log(l2_array[-2]-l2_array[-1])/denominator)
-        linf_convergence_array.append(log(linf_array[-2]-linf_array[-1])/denominator)
-        h1_convergence_array.append(log(h1_array[-2]-h1_array[-1])/denominator)
-
-    errors_file.write('%d %e %e %e %e %e %e\n'%(
-        n_node,
-        l2,
-        l2_convergence_array[-1],
-        linf,
-        linf_convergence_array[-1],
-        h1,
-        h1_convergence_array[-1],
-    ))
-    errors_file.flush()
+    # errors_file.write('%d %e %e %e %e %e %e\n'%(
+    #     n_node,
+    #     l2,
+    #     l2_convergence_array[-1],
+    #     linf,
+    #     linf_convergence_array[-1],
+    #     h1,
+    #     h1_convergence_array[-1],
+    # ))
+    # errors_file.flush()
 
 
 import matplotlib
 matplotlib.use('Qt4Agg')
 matplotlib.rc('text', usetex=True)
 
-import pylab as pl
-
-# Error figure
-pl.loglog(h_max_array, l2_array, '-o', label='$L^2$ Error')
-pl.loglog(h_max_array, linf_array, '-o', label='$L^\infty$ Error')
-pl.loglog(h_max_array, h1_array, '-o', label='$H^1$ Error')
-
-
-# pl.minorticks_on()
-pl.xlabel('$h_{max}$')
-pl.ylabel('$\epsilon_{a}$')
-pl.grid(b=True, which='minor', color='gray', linestyle='--')
-pl.grid(b=True, which='major', color='gray', linestyle='-')
-pl.title('Errors')
-pl.legend()
-
-pl.savefig('plot_convergence_test.pdf')
-
-# Convergence rate figure
-pl.figure()
-
-pl.semilogx(h_max_array, l2_convergence_array, '-o', label='$L^2$ Convergence rate')
-pl.semilogx(h_max_array, linf_convergence_array, '-o', label='$L^\infty$ Convergence rate')
-pl.semilogx(h_max_array, h1_convergence_array, '-o', label='$H^1$ Convergence rate')
-
-pl.xlabel('$h_{max}$')
-pl.ylabel('$\log(\epsilon_{n-1}-\epsilon_{n})/\log(h_{max,n-1}-h_{max,n})$')
-pl.grid(b=True, which='minor', color='gray', linestyle='--')
-pl.grid(b=True, which='major', color='gray', linestyle='-')
-pl.title('Convergence rates')
-pl.legend()
-
-pl.savefig('plot_convergence_test_rates.pdf')
-
-# pl.show()
-
+error.plot_errors('plot_errors.pdf', h_max_array, l2_array, linf_array, h1_array)
+error.plot_convergence_rates('plot_convergence_rates.pdf', h_max_array, l2_array, linf_array, h1_array)
