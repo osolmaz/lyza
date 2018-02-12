@@ -1,4 +1,4 @@
-from pylyza import *
+from lyza_prototype import *
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -29,14 +29,7 @@ exact_solution_deriv = lambda x: [
 ]
 
 
-mesh = meshes.QuadMesh(
-    RESOLUTION,
-    RESOLUTION,
-    [0., 0.],
-    [1., 0.],
-    [1., 1.],
-    [0., 1.],
-)
+mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
 
 V = FunctionSpace(mesh, 2, 2, 1, 1)

@@ -1,5 +1,5 @@
-from pylyza.cell import Cell
-from pylyza.elements import QuadElement1, LineElement1
+from lyza_prototype.cell import Cell
+from lyza_prototype.elements import QuadElement1, LineElement1
 
 class Quad(Cell):
 

@@ -1,5 +1,5 @@
 from math import *
-from pylyza import *
+from lyza_prototype import *
 
 import logging
 logging.basicConfig(level=logging.INFO)

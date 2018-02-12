@@ -3,7 +3,7 @@ import logging
 from scipy.sparse.linalg import spsolve
 from scipy.sparse import csr_matrix
 
-from pylyza.function import Function
+from lyza_prototype.function import Function
 
 
 def solve(bilinear_form, linear_form, function, dirichlet_bcs):

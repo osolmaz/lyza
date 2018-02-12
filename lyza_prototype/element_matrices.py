@@ -1,5 +1,5 @@
 import numpy as np
-from pylyza.quadrature_interface import ElementMatrix
+from lyza_prototype.quadrature_interface import ElementMatrix
 import itertools
 
 def delta(i,j):

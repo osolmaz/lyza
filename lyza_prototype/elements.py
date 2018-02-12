@@ -1,5 +1,5 @@
 import itertools
-from pylyza.finite_element import FiniteElement
+from lyza_prototype.finite_element import FiniteElement
 import numpy as np
 from math import sqrt
 

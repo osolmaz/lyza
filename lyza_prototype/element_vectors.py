@@ -1,4 +1,4 @@
-from pylyza.quadrature_interface import ElementVector
+from lyza_prototype.quadrature_interface import ElementVector
 import itertools
 
 class FunctionVector(ElementVector):

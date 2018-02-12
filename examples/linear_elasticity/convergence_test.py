@@ -1,5 +1,5 @@
 from math import *
-from pylyza import *
+from lyza_prototype import *
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -59,14 +59,7 @@ for RESOLUTION in RESOLUTIONS:
     LAMBDA = E*NU/(1.+NU)/(1.-2.*NU)
     MU = E/2./(1.+NU)
 
-    mesh = meshes.QuadMesh(
-        RESOLUTION,
-        RESOLUTION,
-        [0., 0.],
-        [1., 0.],
-        [1., 1.],
-        [0., 1.],
-    )
+    mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
     V = FunctionSpace(mesh, 2, 2, 1, 1)
     u = Function(V)

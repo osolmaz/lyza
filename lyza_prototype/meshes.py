@@ -1,6 +1,6 @@
 from math import pi as pi_val
-from pylyza.mesh import Mesh
-from pylyza.cells import Quad, Line
+from lyza_prototype.mesh import Mesh
+from lyza_prototype.cells import Quad, Line
 import copy
 
 def locate_midpoint(coor1, coor2, percent):
@@ -70,4 +70,14 @@ class QuadMesh(Mesh):
                 n0 = self.nodes[y*(self.res_x+1) + x]
                 n1 = self.nodes[y*(self.res_x+1) + x + 1]
                 self.add_boundary_cell(Line([n0,n1]))
+
+class UnitSquareMesh(QuadMesh):
+    def __init__(self, resolution_x, resolution_y):
+        super().__init__(
+            resolution_x,
+            resolution_y,
+            [0., 0.],
+            [1., 0.],
+            [1., 1.],
+            [0., 1.])
 

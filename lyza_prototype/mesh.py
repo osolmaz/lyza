@@ -1,4 +1,4 @@
-from pylyza.node import Node
+from lyza_prototype.node import Node
 
 class Mesh:
 
