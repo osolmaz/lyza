@@ -1,4 +1,3 @@
-import pylab as pl
 import numpy as np
 from math import log
 
@@ -52,6 +51,8 @@ def absolute_error_deriv_lp(function, exact_deriv, p):
 
 
 def plot_convergence_rates(path, h_max_array, l2_array, linf_array, h1_array):
+    import pylab as pl
+
     pl.figure()
 
     linf_convergence_array = [float('nan')]
@@ -82,6 +83,8 @@ def plot_convergence_rates(path, h_max_array, l2_array, linf_array, h1_array):
 
 
 def plot_errors(path, h_max_array, l2_array, linf_array, h1_array):
+    import pylab as pl
+
     pl.figure()
 
     # Error figure

@@ -53,6 +53,7 @@ class FiniteElement:
         self.n_quad_point = len(self.quad_points)
         self.n_node = len(self.nodes)
 
+
         for quad_point in self.quad_points:
             B = []
             N = []
@@ -76,6 +77,16 @@ class FiniteElement:
             for I, i in itertools.product(range(self.n_node), range(self.physical_dimension)):
                 quad_point_global[i] += N[I]*self.nodes[I].coor[i]
             self.quad_points_global.append(quad_point_global)
+
+        self.quad_intp_matrix = np.zeros((self.n_quad_point, self.n_node))
+        for i, quad_point in enumerate(self.quad_points):
+            for j, shape_function in enumerate(self.N):
+                self.quad_intp_matrix[i,j] = shape_function(quad_point)
+
+        # try:
+        self.quad_intp_matrix_inv = inverse(self.quad_intp_matrix)
+        # except:
+            # import ipdb; ipdb.set_trace()
 
     def set_quad_points(self):
         pass

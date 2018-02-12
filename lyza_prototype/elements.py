@@ -59,11 +59,11 @@ class LineElement1(FiniteElement):
     def set_quad_points(self):
         if self.function_space.quadrature_degree == 0:
             self.quad_weights = quad_weights_0
-            self.quad_points = points_0
+            self.quad_points = quad_points_0
         elif self.function_space.quadrature_degree == 1:
             self.quad_weights = quad_weights_1
-            self.quad_points = quad_weights_1
+            self.quad_points = quad_points_1
         elif self.function_space.quadrature_degree == 2:
             self.quad_weights = quad_weights_2
-            self.quad_points = quad_weights_2
+            self.quad_points = quad_points_2
         self.quad_points = [[i] for i in self.quad_points]

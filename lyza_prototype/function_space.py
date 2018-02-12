@@ -18,6 +18,15 @@ class FunctionSpace:
         for n in self.mesh.nodes:
             self.node_dofs.append([n.idx*self.get_dimension()+i for i in range(self.get_dimension())])
 
+        self.elements = []
+        self.boundary_elements = []
+
+        for c in self.mesh.cells:
+            self.elements.append(c.get_finite_element(self))
+
+        for c in self.mesh.boundary_cells:
+            self.boundary_elements.append(c.get_finite_element(self))
+
 
     def get_dimension(self):
         return self.function_dimension
@@ -26,17 +35,17 @@ class FunctionSpace:
     def get_finite_elements(self, domain=None):
         result = []
         if domain:
-            for c in self.mesh.cells:
+            for c, e in zip(self.mesh.cells, self.elements):
                 if domain.is_subset(c, False):
-                    result.append(c.get_finite_element(self))
-            for c in self.mesh.boundary_cells:
+                    result.append(e)
+            for c, e in zip(self.mesh.boundary_cells, self.boundary_elements):
                 if domain.is_subset(c, True):
-                    result.append(c.get_finite_element(self))
+                    result.append(e)
         else:
-            for c in self.mesh.cells:
-                result.append(c.get_finite_element(self))
-        return result
+            for c, e in zip(self.mesh.cells, self.elements):
+                result.append(e)
 
+        return result
 
     def get_system_size(self):
         return self.mesh.get_n_nodes()*self.get_dimension()
