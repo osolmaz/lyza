@@ -1,4 +1,3 @@
-from math import *
 from lyza_prototype import *
 from poisson import *
 
@@ -6,9 +5,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
-
 RESOLUTIONS = [4, 6, 8, 10, 15, 20, 30, 40]
 # RESOLUTIONS = [4, 6, 8, 10]
+# RESOLUTIONS = [4, 8, 16]
 
 n_node_array = []
 h_max_array = []

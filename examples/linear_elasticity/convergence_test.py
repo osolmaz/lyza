@@ -37,9 +37,6 @@ exact_solution_deriv = lambda x: [
 RESOLUTIONS = [2, 4, 6, 8, 10]
 # RESOLUTIONS = [10]
 
-errors_file = open('out_errors_convergence_test.csv', 'w')
-errors_file.write('# resolution L2_error Linf_error H1_error\n')
-
 n_node_array = []
 h_max_array = []
 
@@ -84,17 +81,6 @@ for RESOLUTION in RESOLUTIONS:
     l2_array.append(l2)
     linf_array.append(linf)
     h1_array.append(h1)
-
-    # errors_file.write('%d %e %e %e %e %e %e\n'%(
-    #     n_node,
-    #     l2,
-    #     l2_convergence_array[-1],
-    #     linf,
-    #     linf_convergence_array[-1],
-    #     h1,
-    #     h1_convergence_array[-1],
-    # ))
-    # errors_file.flush()
 
 
 import matplotlib

@@ -32,7 +32,7 @@ def absolute_error_lp(function, exact, p):
 
     for e in function.function_space.get_finite_elements():
         coefficients = [function.vector[i,0] for i in e.dofmap]
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
         result += e.absolute_error_lp(exact, coefficients, p)
 
     result = pow(result, 1./p)
@@ -60,11 +60,11 @@ def plot_convergence_rates(path, h_max_array, l2_array, linf_array, h1_array):
 
     for i in range(len(h_max_array)):
         if i >= 1:
-            denominator = log(h_max_array[i-1]-h_max_array[i])
-            l2_convergence_array.append(log(l2_array[i-1]-l2_array[i])/denominator)
-            linf_convergence_array.append(log(linf_array[i-1]-linf_array[i])/denominator)
-            h1_convergence_array.append(log(h1_array[i-1]-h1_array[i])/denominator)
-    # import ipdb; ipdb.set_trace()
+            base = h_max_array[i-1]/h_max_array[i]
+            # import ipdb; ipdb.set_trace()
+            l2_convergence_array.append(log(l2_array[i-1]/l2_array[i])/log(base))
+            linf_convergence_array.append(log(linf_array[i-1]/linf_array[i])/log(base))
+            h1_convergence_array.append(log(h1_array[i-1]/h1_array[i])/log(base))
 
     # print(l2_convergence_array)
     pl.semilogx(h_max_array, l2_convergence_array, '-o', label='$L^2$ Convergence rate')
