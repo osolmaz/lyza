@@ -24,7 +24,7 @@ def line_intersection(line1, line2):
     d = (det(*line1), det(*line2))
     x = det(d, xdiff) / div
     y = det(d, ydiff) / div
-    return x, y
+    return [x, y]
 
 class QuadMesh(Mesh):
     def __init__(self, resolution_x, resolution_y, p0, p1, p2, p3):
@@ -49,7 +49,7 @@ class QuadMesh(Mesh):
                 point_right = locate_midpoint(self.p1, self.p2, y/self.res_y)
 
                 coor = line_intersection((point_left, point_right), (point_down, point_up))
-                self.add_node(coor)
+                self.add_node(coor+[0.])
 
         for y in range(self.res_y):
             for x in range(self.res_x):
@@ -63,13 +63,13 @@ class QuadMesh(Mesh):
             for x in range(self.res_x+1):
                 n0 = self.nodes[y*(self.res_x+1) + x]
                 n1 = self.nodes[(y+1)*(self.res_x+1) + x]
-                self.add_boundary_cell(Line([n0,n1]))
+                self.add_cell(Line([n0,n1], is_boundary=True))
 
         for y in range(self.res_y+1):
             for x in range(self.res_x):
                 n0 = self.nodes[y*(self.res_x+1) + x]
                 n1 = self.nodes[y*(self.res_x+1) + x + 1]
-                self.add_boundary_cell(Line([n0,n1]))
+                self.add_cell(Line([n0,n1], is_boundary=True))
 
 class UnitSquareMesh(QuadMesh):
     def __init__(self, resolution_x, resolution_y):

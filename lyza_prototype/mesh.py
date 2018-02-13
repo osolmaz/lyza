@@ -9,17 +9,24 @@ class Mesh:
 
         self.construct_mesh()
 
+        for idx, n in enumerate(self.nodes):
+            n.idx = idx
+
+        for idx, c in enumerate(self.cells):
+            c.idx = idx
+
+
     def construct_mesh():
         pass
 
     def add_node(self, coors):
         self.nodes.append(Node(coors, len(self.nodes)))
 
-    def add_cell(self, elem):
-        self.cells.append(elem)
+    def add_cell(self, cell):
+        self.cells.append(cell)
 
-    def add_boundary_cell(self, elem):
-        self.boundary_cells.append(elem)
+    # def add_boundary_cell(self, elem):
+    #     self.boundary_cells.append(elem)
 
     def get_n_nodes(self):
         return len(self.nodes)

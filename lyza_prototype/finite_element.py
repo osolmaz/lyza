@@ -19,27 +19,33 @@ def determinant(J):
 class FiniteElement:
     N = []
     Bhat = []
-    quad_weights = []
-    quad_points = []
     elem_dim = None
 
-    def __init__(self, nodes, function_space, label=None):
+    def __init__(self,
+                 nodes,
+                 parent_cell,
+                 function_space,
+                 quadrature_degree):
+
         self.function_space = function_space
-        self.quadrature_degree = function_space.quadrature_degree
+        # self.quadrature_degree = function_space.quadrature_degree
         self.function_dimension = self.function_space.get_dimension()
         self.physical_dimension = self.function_space.physical_dimension
-        self.set_quad_points()
+        # self.quadrature_degree = quadrature_degree
+        # self.function_dimension = function_dimension
+        # self.physical_dimension = physical_dimension
+        self.quad_points = parent_cell.get_quad_points(quadrature_degree)
+        self.n_quad_point = len(self.quad_points)
 
-        self.label = label
         self.nodes = nodes
-
+        self.parent_cell = parent_cell
 
         self.dofmap = []
-        for n in self.nodes:
-            # node_dofs = [n.idx*self.function_dim+i for i in range(self.function_dim)]
+        for n in self.parent_cell.nodes:
+            node_dofs = [n.idx*self.function_dimension+i for i in range(self.function_dimension)]
             self.dofmap += self.function_space.node_dofs[n.idx]
 
-        if not self.N or not self.Bhat or not self.quad_weights or not self.quad_points:
+        if not self.N or not self.Bhat:
             raise Exception('Improper element subclassing')
 
         # Calculate quadrature point related quantities
@@ -50,14 +56,14 @@ class FiniteElement:
         self.quad_N = []
         self.quad_points_global = []
 
-        self.n_quad_point = len(self.quad_points)
+        # self.n_quad_point = len(self.quad_points)
         self.n_node = len(self.nodes)
 
 
         for quad_point in self.quad_points:
             B = []
             N = []
-            jac = self.jacobian(quad_point)
+            jac = self.jacobian(quad_point.coor)
             det_jac = determinant(jac)
             jac_inv_tra = inverse(jac).transpose()
 
@@ -67,29 +73,23 @@ class FiniteElement:
             self.quad_jac_inv_tra.append(self.quad_jac_inv_tra)
 
             for I in range(len(self.N)):
-                B.append(jac_inv_tra.dot(self.Bhat[I](quad_point)))
-                N.append(self.N[I](quad_point))
+                B.append(jac_inv_tra.dot(self.Bhat[I](quad_point.coor)))
+                N.append(self.N[I](quad_point.coor))
 
             self.quad_B.append(B)
             self.quad_N.append(N)
 
-            quad_point_global = [0. for i in range(self.physical_dimension)]
-            for I, i in itertools.product(range(self.n_node), range(self.physical_dimension)):
+            quad_point_global = [0. ,0., 0.]
+            for I, i in itertools.product(range(self.n_node), range(3)):
                 quad_point_global[i] += N[I]*self.nodes[I].coor[i]
             self.quad_points_global.append(quad_point_global)
 
         self.quad_intp_matrix = np.zeros((self.n_quad_point, self.n_node))
         for i, quad_point in enumerate(self.quad_points):
             for j, shape_function in enumerate(self.N):
-                self.quad_intp_matrix[i,j] = shape_function(quad_point)
+                self.quad_intp_matrix[i,j] = shape_function(quad_point.coor)
 
-        # try:
         self.quad_intp_matrix_inv = inverse(self.quad_intp_matrix)
-        # except:
-            # import ipdb; ipdb.set_trace()
-
-    def set_quad_points(self):
-        pass
 
     def jacobian(self, xi):
         J = np.zeros((self.physical_dimension,self.elem_dim))
