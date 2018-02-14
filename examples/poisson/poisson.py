@@ -7,7 +7,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
-RESOLUTION = 5
+RESOLUTION = 10
 
 exact_solution = lambda x: [sin(2.*pi*x[0])*sin(2.*pi*x[1])]
 
@@ -23,7 +23,7 @@ top_boundary = lambda x: x[1] >= 1. -1e-12
 left_boundary = lambda x: x[0] <= 1e-12
 right_boundary = lambda x: x[0] >= 1.-1e-12
 
-class PoissonMatrix(lyza_prototype.MatrixInterface):
+class PoissonMatrixInterface(lyza_prototype.MatrixInterface):
 
     def calculate(self, elem1, elem2):
         n_node_1 = len(elem1.nodes)
@@ -34,46 +34,18 @@ class PoissonMatrix(lyza_prototype.MatrixInterface):
 
         K = np.zeros((n_dof_2,n_dof_1))
 
-        for n in range(elem1.n_quad_point):
-            # K_cont = np.zeros((n_dof,n_dof))
-
+        for q1, q2 in zip(elem1.quad_points, elem2.quad_points):
 
             for I,J,i in itertools.product(
                     range(n_node_1),
                     range(n_node_2),
                     range(elem1.physical_dimension)):
-                # import ipdb; ipdb.set_trace()
 
-                K[I, J] += elem1.quad_B[n][I][i]*elem2.quad_B[n][J][i]*elem1.quad_det_jac[n]*elem1.quad_points[n].weight
-
+                K[I, J] += q1.B[I][i]*q2.B[J][i]*q1.det_jac*q1.weight
 
 
         # import ipdb; ipdb.set_trace()
         return K
-
-# class FunctionVectorInterface(lyza_prototype.VectorInterface):
-
-#     def __init__(self, function):
-#         self.function = function
-
-#     def calculate(self, elem):
-#         n_node = len(elem.nodes)
-#         n_dof = n_node*elem.function_dimension
-
-#         f = np.zeros((n_dof,1))
-
-#         for n in range(elem.n_quad_point):
-#             f_cont = np.zeros((n_dof,1))
-
-#             for I, i in itertools.product(range(n_node), range(elem.function_dimension)):
-#                 alpha = I*elem.function_dimension + i
-#                 f_val = self.function(elem.quad_points_global[n])
-#                 # print(alpha, i, I, f_val, function_dim)
-#                 f[alpha] += f_val[i]*elem.quad_N[n][I]*elem.quad_det_jac[n]*elem.quad_points[n].weight
-
-
-#         return f
-
 
 
 if __name__=='__main__':
@@ -86,7 +58,7 @@ if __name__=='__main__':
 
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V, PoissonMatrix(), quadrature_degree)
+    a = BilinearForm(V, V, PoissonMatrixInterface(), quadrature_degree)
     b_body_force = LinearForm(V, vector_interfaces.FunctionVectorInterface(force_function), quadrature_degree)
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])

@@ -29,34 +29,52 @@ exact_solution_deriv = lambda x: [
 ]
 
 
-mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
+# Exact solution from Di Pietro & Ern 2015
+# force_function = lambda x: [
+#     2.*pi*pi*sin(pi*x[0])*sin(pi*x[1]),
+#     2.*pi*pi*cos(pi*x[0])*cos(pi*x[1]),
+# ]
+
+# exact_solution = lambda x: [
+#     sin(pi*x[0])*sin(pi*x[1]) + 0.5/LAMBDA*x[0],
+#     cos(pi*x[0])*cos(pi*x[1]) + 0.5/LAMBDA*x[1],
+# ]
 
 
-V = FunctionSpace(mesh, 2, 2, 1, 1)
-u = Function(V)
-a = BilinearForm(element_matrices.LinearElasticityMatrix(LAMBDA, MU))
-b_body_force = LinearForm(element_vectors.FunctionVector(force_function))
+if __name__ == '__main__':
+
+    mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
+
+    physical_dimension = 2
+    function_dimension = 2
+    element_degree = 1
+    quadrature_degree = 1
+
+    V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
+    u = Function(V)
+    a = BilinearForm(V, V, matrix_interfaces.LinearElasticityMatrixInterface(LAMBDA, MU), quadrature_degree)
+    b_body_force = LinearForm(V, vector_interfaces.FunctionVectorInterface(force_function), quadrature_degree)
+
+    bottom_boundary = lambda x: x[1] <= 1e-12
+    top_boundary = lambda x: x[1] >= 1. -1e-12
+    left_boundary = lambda x: x[0] <= 1e-12
+    right_boundary = lambda x: x[0] >= 1.-1e-12
+
+    perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
+
+    dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
+    # dirichlet_bcs = [DirichletBC(exact_solution, lambda x: True)]
+
+    u, f = solve(a, b_body_force, u, dirichlet_bcs)
 
 
-bottom_boundary = lambda x: x[1] <= 1e-12
-top_boundary = lambda x: x[1] >= 1. -1e-12
-left_boundary = lambda x: x[0] <= 1e-12
-right_boundary = lambda x: x[0] >= 1.-1e-12
+    ofile = VTKFile('out_linear_elasticity.vtk')
 
-perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
+    u.set_label('u')
+    f.set_label('f')
 
+    ofile.write(mesh, [u, f])
 
-dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
-# dirichlet_bcs = [DirichletBC(exact_solution, lambda x: True)]
+    print('L2 Error: %e'%error.absolute_error(u, exact_solution, exact_solution_deriv, quadrature_degree, error='l2'))
 
-solve(a, b_body_force, u, dirichlet_bcs)
-# mesh.write_vtk('out_convergence_test.vtk')
-
-h_max = 1./RESOLUTION
-n_node = len(mesh.nodes)
-l2 = error.absolute_error(u, exact_solution, exact_solution_deriv, error='l2')
-linf = error.absolute_error(u, exact_solution, exact_solution_deriv, error='linf')
-h1 = error.absolute_error(u, exact_solution, exact_solution_deriv, error='h1')
-
-print(l2, linf, h1)
 

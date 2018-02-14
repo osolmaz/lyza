@@ -15,19 +15,19 @@ class AbsoluteErrorScalarInterface(ScalarInterface):
 
         coefficients = [self.function.vector[i,0] for i in elem.dofmap]
 
-        for n in range(elem.n_quad_point):
+        for q in elem.quad_points:
             u_h = [0. for i in range(elem.function_dimension)]
 
             for I, i in itertools.product(range(n_node), range(elem.function_dimension)):
-                u_h[i] += elem.quad_N[n][I]*coefficients[I*elem.function_dimension+i]
+                u_h[i] += q.N[I]*coefficients[I*elem.function_dimension+i]
 
-            exact_val = self.exact(elem.quad_points_global[n])
+            exact_val = self.exact(q.global_coor)
 
             inner_product = 0.
             for i in range(elem.function_dimension):
                 inner_product += (exact_val[i] - u_h[i])**2
 
-            result += pow(inner_product, self.p/2.)*elem.quad_points[n].weight*elem.quad_det_jac[n]
+            result += pow(inner_product, self.p/2.)*q.weight*q.det_jac
 
         return result
 
@@ -44,13 +44,13 @@ class DerivativeAbsoluteErrorScalarInterface(ScalarInterface):
 
         coefficients = [self.function.vector[i,0] for i in elem.dofmap]
 
-        for n in range(elem.n_quad_point):
+        for q in elem.quad_points:
             u_h = np.zeros((elem.function_dimension, elem.physical_dimension))
 
             for I, i, j in itertools.product(range(n_node), range(elem.function_dimension), range(elem.physical_dimension)):
-                u_h[i][j] += elem.quad_B[n][I][j]*coefficients[I*elem.function_dimension+i]
+                u_h[i][j] += q.B[I][j]*coefficients[I*elem.function_dimension+i]
 
-            exact_val = np.array(self.exact_deriv(elem.quad_points_global[n]))
+            exact_val = np.array(self.exact_deriv(q.global_coor))
 
             inner_product = 0.
             for i in range(elem.function_dimension):
@@ -58,7 +58,7 @@ class DerivativeAbsoluteErrorScalarInterface(ScalarInterface):
                     inner_product += (exact_val[i,j] - u_h[i,j])**2
 
 
-            result += pow(inner_product, self.p/2.)*elem.quad_points[n].weight*elem.quad_det_jac[n]
+            result += pow(inner_product, self.p/2.)*q.weight*q.det_jac
 
         return result
 

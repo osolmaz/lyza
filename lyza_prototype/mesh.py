@@ -25,9 +25,6 @@ class Mesh:
     def add_cell(self, cell):
         self.cells.append(cell)
 
-    # def add_boundary_cell(self, elem):
-    #     self.boundary_cells.append(elem)
-
     def get_n_nodes(self):
         return len(self.nodes)
 

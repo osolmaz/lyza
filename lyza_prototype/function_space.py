@@ -12,20 +12,10 @@ class FunctionSpace:
         self.function_dimension = function_dimension
         self.physical_dimension = physical_dimension
         self.element_degree = element_degree
-        # self.quadrature_degree = quadrature_degree
 
         self.node_dofs = []
         for n in self.mesh.nodes:
             self.node_dofs.append([n.idx*self.get_dimension()+i for i in range(self.get_dimension())])
-
-        # self.elements = []
-        # self.boundary_elements = []
-
-        # for c in self.mesh.cells:
-        #     self.elements.append(c.get_finite_element(self))
-
-        # for c in self.mesh.boundary_cells:
-        #     self.boundary_elements.append(c.get_finite_element(self))
 
 
     def get_dimension(self):
@@ -59,7 +49,6 @@ class FunctionSpace:
                         self,
                         self.element_degree,
                         quadrature_degree))
-
 
 
         return Assembly(result)

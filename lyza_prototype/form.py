@@ -34,18 +34,6 @@ class BilinearForm:
         assembly_1 = self.function_space_1.get_assembly(self.quadrature_degree, domain=self.domain)
         assembly_2 = self.function_space_2.get_assembly(self.quadrature_degree, domain=self.domain)
 
-        # jac = AssemblyFunction(assembly_1, 1)
-
-        # for e in assembly_1.elems:
-            # for points in e.quad_points:
-            # print(jac.cell_quad_point_indices[e.parent_cell.idx])
-            # val = e.jacobian(
-            # quad_points =
-            # val =
-        # import ipdb; ipdb.set_trace()
-
-
-
         elem_pairs = [[i,j] for i, j in zip(assembly_1.elems, assembly_2.elems)]
 
         logging.info('Calculating element matrices')
@@ -56,7 +44,6 @@ class BilinearForm:
             bar.update(n+1)
             matrix = self.matrix_interface.calculate(e[0], e[1])
             elem_matrices.append(matrix)
-            # elem_matrices.append(e.calc_matrix(self.element_matrix))
 
         for e, K_elem in zip(elem_pairs, elem_matrices):
             for i, I in enumerate(e[1].dofmap):
@@ -65,8 +52,6 @@ class BilinearForm:
 
         return K
 
-    # def calc_element_matrix(self, element1, element2):
-    #     pass
 
 class LinearForm:
     def __init__(self, function_space, vector_interface, quadrature_degree, domain=None):
@@ -74,7 +59,6 @@ class LinearForm:
         self.vector_interface = vector_interface
         self.domain = domain
         self.quadrature_degree = quadrature_degree
-        # self.function_space = function_space
 
     def assemble(self):
         n_dof = self.function_space.get_system_size()
@@ -91,7 +75,6 @@ class LinearForm:
             bar.update(n+1)
             vector = self.vector_interface.calculate(e)
             elem_vectors.append(vector)
-            # elem_matrices.append(e.calc_matrix(self.element_matrix))
 
         for e, f_elem in zip(assembly.elems, elem_vectors):
             for i, I in enumerate(e.dofmap):
