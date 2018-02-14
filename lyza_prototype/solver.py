@@ -10,10 +10,10 @@ def solve(bilinear_form, linear_form, function, dirichlet_bcs):
 
     # A = csr_matrix(self.assemble_stiffness_matrix())
     V = function.function_space
-    A = bilinear_form.assemble(V)
+    A = bilinear_form.assemble()
     A_bc = A.copy()
 
-    f_bc = linear_form.assemble(V)
+    f_bc = linear_form.assemble()
 
     n_dof = A.shape[0]
 

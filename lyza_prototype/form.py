@@ -2,7 +2,7 @@ import numpy as np
 # from scipy.sparse import coo_matrix
 import logging
 import progressbar
-from lyza_prototype.quadrature_function_space import AssemblyFunction
+from lyza_prototype.assembly_function import AssemblyFunction
 
 class BilinearForm:
     def __init__(self,
@@ -65,32 +65,39 @@ class BilinearForm:
 
         return K
 
-    def calc_element_matrix(self, element1, element2):
-        pass
+    # def calc_element_matrix(self, element1, element2):
+    #     pass
 
 class LinearForm:
-    def __init__(self, element_vector, domain=None):
-        self.element_vector = element_vector
+    def __init__(self, function_space, vector_interface, quadrature_degree, domain=None):
+        self.function_space = function_space
+        self.vector_interface = vector_interface
         self.domain = domain
+        self.quadrature_degree = quadrature_degree
         # self.function_space = function_space
 
-    def assemble(self, function_space):
-        n_dof = function_space.get_system_size()
+    def assemble(self):
+        n_dof = self.function_space.get_system_size()
         f = np.zeros((n_dof,1))
 
-        elems = function_space.get_assembly(domain=self.domain)
+        assembly = self.function_space.get_assembly(self.quadrature_degree, domain=self.domain)
 
-        logging.info('Calculating element force vectors')
+
+        logging.info('Calculating element vectors')
         elem_vectors = []
-        bar = progressbar.ProgressBar(max_value=len(elems))
+        bar = progressbar.ProgressBar(max_value=len(assembly.elems))
 
-        for n, e in enumerate(elems):
+        for n, e in enumerate(assembly.elems):
             bar.update(n+1)
-            elem_vectors.append(e.calc_vector(self.element_vector))
+            vector = self.vector_interface.calculate(e)
+            elem_vectors.append(vector)
+            # elem_matrices.append(e.calc_matrix(self.element_matrix))
 
-        for e, f_elem in zip(elems, elem_vectors):
+        for e, f_elem in zip(assembly.elems, elem_vectors):
             for i, I in enumerate(e.dofmap):
                 f[I] += f_elem[i]
 
         return f
+
+
 

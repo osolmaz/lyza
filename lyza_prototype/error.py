@@ -1,5 +1,67 @@
 import numpy as np
 from math import log
+from lyza_prototype.scalar_interface import ScalarInterface
+import itertools
+
+class AbsoluteErrorScalarInterface(ScalarInterface):
+    def __init__(self, function, exact, p):
+        self.function = function
+        self.exact = exact
+        self.p = p # Lp error
+
+    def calculate(self, elem):
+        result = 0.
+        n_node = len(elem.nodes)
+
+        coefficients = [self.function.vector[i,0] for i in elem.dofmap]
+
+        for n in range(elem.n_quad_point):
+            u_h = [0. for i in range(elem.function_dimension)]
+
+            for I, i in itertools.product(range(n_node), range(elem.function_dimension)):
+                u_h[i] += elem.quad_N[n][I]*coefficients[I*elem.function_dimension+i]
+
+            exact_val = self.exact(elem.quad_points_global[n])
+
+            inner_product = 0.
+            for i in range(elem.function_dimension):
+                inner_product += (exact_val[i] - u_h[i])**2
+
+            result += pow(inner_product, self.p/2.)*elem.quad_points[n].weight*elem.quad_det_jac[n]
+
+        return result
+
+
+class DerivativeAbsoluteErrorScalarInterface(ScalarInterface):
+    def __init__(self, function, exact_deriv, p):
+        self.function = function
+        self.exact_deriv = exact_deriv
+        self.p = p # Lp error
+
+    def calculate(self, elem):
+        result = 0.
+        n_node = len(elem.nodes)
+
+        coefficients = [self.function.vector[i,0] for i in elem.dofmap]
+
+        for n in range(elem.n_quad_point):
+            u_h = np.zeros((elem.function_dimension, elem.physical_dimension))
+
+            for I, i, j in itertools.product(range(n_node), range(elem.function_dimension), range(elem.physical_dimension)):
+                u_h[i][j] += elem.quad_B[n][I][j]*coefficients[I*elem.function_dimension+i]
+
+            exact_val = np.array(self.exact_deriv(elem.quad_points_global[n]))
+
+            inner_product = 0.
+            for i in range(elem.function_dimension):
+                for j in range(elem.physical_dimension):
+                    inner_product += (exact_val[i,j] - u_h[i,j])**2
+
+
+            result += pow(inner_product, self.p/2.)*elem.quad_points[n].weight*elem.quad_det_jac[n]
+
+        return result
+
 
 def get_exact_solution_vector(function_space, exact):
     exact_solution_vector = np.zeros((function_space.get_system_size(), 1))
@@ -11,39 +73,45 @@ def get_exact_solution_vector(function_space, exact):
 
     return exact_solution_vector
 
-def absolute_error(function, exact, exact_deriv, error='l2'):
+
+def absolute_error(function, exact, exact_deriv, quadrature_degree, error='l2'):
 
     if error == 'l2':
-        result = absolute_error_lp(function, exact, 2)
+        result = absolute_error_lp(function, exact, 2, quadrature_degree)
     elif error == 'linf':
         result = abs(function.vector - get_exact_solution_vector(function.function_space, exact)).max()
     elif error == 'h1':
-        l2 = absolute_error_lp(function, exact, 2)
-        l2d = absolute_error_deriv_lp(function, exact_deriv, 2)
+        l2 = absolute_error_lp(function, exact, 2, quadrature_degree)
+        l2d = absolute_error_deriv_lp(function, exact_deriv, 2, quadrature_degree)
         result = pow(pow(l2,2.) + pow(l2d,2.), .5)
     else:
         raise Exception('Invalid error specification: %s'%error)
 
     return result
 
-def absolute_error_lp(function, exact, p):
+
+def absolute_error_lp(function, exact, p, quadrature_degree):
     result = 0.
 
-    for e in function.function_space.get_finite_elements():
-        coefficients = [function.vector[i,0] for i in e.dofmap]
-        # import ipdb; ipdb.set_trace()
-        result += e.absolute_error_lp(exact, coefficients, p)
+    assembly = function.function_space.get_assembly(quadrature_degree)
+    interface = AbsoluteErrorScalarInterface(function, exact, p)
+
+    for e in assembly.elems:
+        result += interface.calculate(e)
 
     result = pow(result, 1./p)
 
     return result
 
-def absolute_error_deriv_lp(function, exact_deriv, p):
+
+def absolute_error_deriv_lp(function, exact_deriv, p, quadrature_degree):
     result = 0.
 
-    for e in function.function_space.get_finite_elements():
-        coefficients = [function.vector[i,0] for i in e.dofmap]
-        result += e.absolute_error_deriv_lp(exact_deriv, coefficients, p)
+    assembly = function.function_space.get_assembly(quadrature_degree)
+    interface = DerivativeAbsoluteErrorScalarInterface(function, exact_deriv, p)
+
+    for e in assembly.elems:
+        result += interface.calculate(e)
 
     result = pow(result, 1./p)
 

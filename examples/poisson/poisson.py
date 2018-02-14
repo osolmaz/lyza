@@ -48,36 +48,46 @@ class PoissonMatrix(lyza_prototype.MatrixInterface):
 
 
 
-            # quad_matrix.eval(
-            #     K_cont,
-            #     self.quad_N[n],
-            #     self.quad_B[n],
-            #     self.quad_det_jac[n],
-            #     self.quad_points_global[n],
-            #     self.function_dimension,
-            #     self.physical_dimension,
-            #     self.elem_dim,
-            #     n_dof,
-            #     n_node)
-
-            # K = K + *K_cont
         # import ipdb; ipdb.set_trace()
         return K
 
+# class FunctionVectorInterface(lyza_prototype.VectorInterface):
 
-    # def eval(self, K, N_p, B_p, det_jac, quad_point, function_dim, physical_dim, elem_dim, n_dof, n_node):
+#     def __init__(self, function):
+#         self.function = function
 
-    #     return K
+#     def calculate(self, elem):
+#         n_node = len(elem.nodes)
+#         n_dof = n_node*elem.function_dimension
+
+#         f = np.zeros((n_dof,1))
+
+#         for n in range(elem.n_quad_point):
+#             f_cont = np.zeros((n_dof,1))
+
+#             for I, i in itertools.product(range(n_node), range(elem.function_dimension)):
+#                 alpha = I*elem.function_dimension + i
+#                 f_val = self.function(elem.quad_points_global[n])
+#                 # print(alpha, i, I, f_val, function_dim)
+#                 f[alpha] += f_val[i]*elem.quad_N[n][I]*elem.quad_det_jac[n]*elem.quad_points[n].weight
+
+
+#         return f
+
+
 
 if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
-    V = FunctionSpace(mesh, 1, 2, 1)
+    quadrature_degree = 1
+    function_dimension = 1
+    physical_dimension = 2
+    element_degree = 1
+
+    V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V, PoissonMatrix(), 1)
-    asd = a.assemble()
-    import ipdb; ipdb.set_trace()
-    # b_body_force = LinearForm(element_vectors.FunctionVector(force_function))
+    a = BilinearForm(V, V, PoissonMatrix(), quadrature_degree)
+    b_body_force = LinearForm(V, vector_interfaces.FunctionVectorInterface(force_function), quadrature_degree)
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 
@@ -92,4 +102,4 @@ if __name__=='__main__':
 
     ofile.write(mesh, [u, f])
 
-    print('L2 Error: %e'%error.absolute_error(u, exact_solution, exact_solution_deriv, error='l2'))
+    print('L2 Error: %e'%error.absolute_error(u, exact_solution, exact_solution_deriv, quadrature_degree, error='l2'))
