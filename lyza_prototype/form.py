@@ -3,19 +3,19 @@ import numpy as np
 import logging
 import progressbar
 from lyza_prototype.assembly_function import AssemblyFunction
-from lyza_prototype.matrix_interface import MatrixInterfaceWrapper
-from lyza_prototype.vector_interface import VectorInterfaceWrapper
-from lyza_prototype.scalar_interface import ScalarInterfaceWrapper
+from lyza_prototype.element_matrix import ElementMatrixWrapper
+from lyza_prototype.element_vector import ElementVectorWrapper
+from lyza_prototype.element_scalar import ElementScalarWrapper
 
 class BilinearForm:
     def __init__(self,
                  function_space_1,
                  function_space_2,
-                 # matrix_interface,
+                 # element_matrix,
                  # quadrature_degree,
                  domain=None):
 
-        # self.matrix_interface = matrix_interface
+        # self.element_matrix = element_matrix
         self.domain = domain
         # self.quadrature_degree = quadrature_degree
 
@@ -29,21 +29,21 @@ class BilinearForm:
         # A^IJ = a(N^J,N^I)
 
 
-        self.matrix_interface_wrappers = None
+        self.element_matrix_wrappers = None
 
 
-    def set_matrix_interface(self, matrix_interface, quadrature_degree):
-        self.matrix_interface_wrappers = []
+    def set_element_matrix(self, element_matrix, quadrature_degree):
+        self.element_matrix_wrappers = []
 
         elems_1 = self.function_space_1.get_finite_elements(quadrature_degree, domain=self.domain)
         elems_2 = self.function_space_2.get_finite_elements(quadrature_degree, domain=self.domain)
 
         for elem1, elem2 in zip(elems_1, elems_2):
-            self.matrix_interface_wrappers.append(MatrixInterfaceWrapper(matrix_interface, elem1, elem2))
+            self.element_matrix_wrappers.append(ElementMatrixWrapper(element_matrix, elem1, elem2))
 
 
     def assemble(self):
-        if not self.matrix_interface_wrappers:
+        if not self.element_matrix_wrappers:
             raise Exception('No element matrix assigned to bilinear form')
 
 
@@ -59,14 +59,14 @@ class BilinearForm:
 
         logging.info('Calculating element matrices')
         elem_matrices = []
-        bar = progressbar.ProgressBar(max_value=len(self.matrix_interface_wrappers))
+        bar = progressbar.ProgressBar(max_value=len(self.element_matrix_wrappers))
 
-        for n, w in enumerate(self.matrix_interface_wrappers):
+        for n, w in enumerate(self.element_matrix_wrappers):
             bar.update(n+1)
             # matrix =
             elem_matrices.append(w.calculate())
 
-        for w, K_elem in zip(self.matrix_interface_wrappers, elem_matrices):
+        for w, K_elem in zip(self.element_matrix_wrappers, elem_matrices):
             for i, I in enumerate(w.elem1.dofmap):
                 for j, J in enumerate(w.elem2.dofmap):
                     K[I, J] += K_elem[i,j]
@@ -77,26 +77,26 @@ class BilinearForm:
 class LinearForm:
     def __init__(self, function_space, domain=None):
         self.function_space = function_space
-        # self.vector_interface = vector_interface
+        # self.element_vector = element_vector
         self.domain = domain
         # self.quadrature_degree = quadrature_degree
 
 
-    def set_vector_interface(self, vector_interface, quadrature_degree):
+    def set_element_vector(self, element_vector, quadrature_degree):
 
         elems = self.function_space.get_finite_elements(quadrature_degree, domain=self.domain)
-        self.vector_interface_wrappers = []
+        self.element_vector_wrappers = []
 
         for elem in elems:
-            self.vector_interface_wrappers.append(VectorInterfaceWrapper(vector_interface, elem))
+            self.element_vector_wrappers.append(ElementVectorWrapper(element_vector, elem))
 
-    def set_scalar_interface(self, scalar_interface, quadrature_degree):
+    def set_element_scalar(self, element_scalar, quadrature_degree):
 
         elems = self.function_space.get_finite_elements(quadrature_degree, domain=self.domain)
-        self.scalar_interface_wrappers = []
+        self.element_scalar_wrappers = []
 
         for elem in elems:
-            self.scalar_interface_wrappers.append(ScalarInterfaceWrapper(scalar_interface, elem))
+            self.element_scalar_wrappers.append(ElementScalarWrapper(element_scalar, elem))
 
 
     def assemble(self):
@@ -105,13 +105,13 @@ class LinearForm:
 
         logging.info('Calculating element vectors')
         elem_vectors = []
-        bar = progressbar.ProgressBar(max_value=len(self.vector_interface_wrappers))
+        bar = progressbar.ProgressBar(max_value=len(self.element_vector_wrappers))
 
-        for n, w in enumerate(self.vector_interface_wrappers):
+        for n, w in enumerate(self.element_vector_wrappers):
             bar.update(n+1)
             elem_vectors.append(w.calculate())
 
-        for w, f_elem in zip(self.vector_interface_wrappers, elem_vectors):
+        for w, f_elem in zip(self.element_vector_wrappers, elem_vectors):
             for i, I in enumerate(w.elem.dofmap):
                 f[I] += f_elem[i]
 
@@ -121,9 +121,9 @@ class LinearForm:
         result = 0.
 
         # assembly = function.function_space.get_assembly(quadrature_degree)
-        # interface = AbsoluteErrorScalarInterface(function, exact, p)
+        # interface = AbsoluteErrorElementScalar(function, exact, p)
 
-        for w in self.scalar_interface_wrappers:
+        for w in self.element_scalar_wrappers:
             result += w.calculate()
 
         return result

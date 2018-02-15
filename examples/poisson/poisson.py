@@ -23,7 +23,7 @@ top_boundary = lambda x: x[1] >= 1. -1e-12
 left_boundary = lambda x: x[0] <= 1e-12
 right_boundary = lambda x: x[0] >= 1.-1e-12
 
-class PoissonMatrixInterface(lyza_prototype.MatrixInterface):
+class PoissonMatrix(lyza_prototype.ElementMatrix):
 
     def calculate(self, elem1, elem2):
         n_node_1 = len(elem1.nodes)
@@ -59,9 +59,9 @@ if __name__=='__main__':
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
     a = BilinearForm(V, V)
-    a.set_matrix_interface(PoissonMatrixInterface(), quadrature_degree)
+    a.set_element_matrix(PoissonMatrix(), quadrature_degree)
     b_body_force = LinearForm(V)
-    b_body_force.set_vector_interface(vector_interfaces.FunctionVectorInterface(force_function), quadrature_degree)
+    b_body_force.set_element_vector(element_vectors.FunctionElementVector(force_function), quadrature_degree)
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 

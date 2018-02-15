@@ -1,8 +1,8 @@
-from lyza_prototype.vector_interface import VectorInterface
+from lyza_prototype.element_vector import ElementVector
 import numpy as np
 import itertools
 
-class FunctionVectorInterface(VectorInterface):
+class FunctionElementVector(ElementVector):
 
     def __init__(self, function):
         self.function = function

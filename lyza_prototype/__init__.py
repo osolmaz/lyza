@@ -5,12 +5,12 @@ from lyza_prototype.form import BilinearForm, LinearForm
 from lyza_prototype.boundary_condition import DirichletBC, join_boundaries
 from lyza_prototype.domain import Domain
 from lyza_prototype.vtk import VTKFile
-from lyza_prototype.matrix_interface import MatrixInterface
-from lyza_prototype.vector_interface import VectorInterface
+from lyza_prototype.element_matrix import ElementMatrix
+from lyza_prototype.element_vector import ElementVector
 
 import lyza_prototype.meshes
 import lyza_prototype.error
-import lyza_prototype.vector_interfaces
-import lyza_prototype.matrix_interfaces
+import lyza_prototype.element_vectors
+import lyza_prototype.element_matrices
 
 
