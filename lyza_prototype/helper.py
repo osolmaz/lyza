@@ -1,4 +1,5 @@
 import numpy as np
+from math import sqrt
 
 def inverse(J):
     if J.shape[0] == J.shape[1]:

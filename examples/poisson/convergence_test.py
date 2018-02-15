@@ -34,9 +34,9 @@ for RESOLUTION in RESOLUTIONS:
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
     a = BilinearForm(V, V)
-    a.set_element_matrix(PoissonMatrix(), quadrature_degree)
+    a.set_element_interface(element_matrices.PoissonMatrix(), quadrature_degree)
     b_body_force = LinearForm(V)
-    b_body_force.set_element_vector(element_vectors.FunctionElementVector(force_function), quadrature_degree)
+    b_body_force.set_element_interface(element_vectors.FunctionElementVector(force_function), quadrature_degree)
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 

@@ -23,6 +23,8 @@ class FiniteElement:
         self.n_quad_point = len(self.quad_points)
 
         self.nodes = nodes
+        self.n_node = len(self.nodes)
+        self.n_dof = self.n_node*self.function_dimension
         self.parent_cell = parent_cell
 
         self.dofmap = []

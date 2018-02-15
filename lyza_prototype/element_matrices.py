@@ -1,5 +1,5 @@
 import numpy as np
-from lyza_prototype.element_matrix import ElementMatrix
+from lyza_prototype.element_interface import ElementInterface
 import itertools
 
 def delta(i,j):
@@ -8,7 +8,24 @@ def delta(i,j):
     else:
         return 0
 
-class LinearElasticityElementMatrix(ElementMatrix):
+class PoissonMatrix(ElementInterface):
+
+    def bilinear_form_matrix(self, elem1, elem2):
+
+        K = np.zeros((elem2.n_dof, elem1.n_dof))
+
+        for q1, q2 in zip(elem1.quad_points, elem2.quad_points):
+
+            for I,J,i in itertools.product(
+                    range(elem1.n_node),
+                    range(elem2.n_node),
+                    range(elem1.physical_dimension)):
+
+                K[I, J] += q1.B[I][i]*q2.B[J][i]*q1.det_jac*q1.weight
+
+        return K
+
+class LinearElasticityMatrix(ElementInterface):
 
     def __init__(self, lambda_, mu):
         self.lambda_ = lambda_
@@ -18,7 +35,7 @@ class LinearElasticityElementMatrix(ElementMatrix):
         return self.lambda_*delta(i,j)*delta(k,l) + self.mu*(delta(i,k)*delta(j,l) + delta(i,l)*delta(j,k))
 
 
-    def calculate(self, elem1, elem2):
+    def bilinear_form_matrix(self, elem1, elem2):
         n_node_1 = len(elem1.nodes)
         n_node_2 = len(elem2.nodes)
 
@@ -44,14 +61,5 @@ class LinearElasticityElementMatrix(ElementMatrix):
                 K[alpha, beta] += q1.B[I][k]*self.C(i,k,j,l)*q2.B[J][l]*q1.det_jac*q1.weight
 
 
-            # for I,J,i in itertools.product(
-            #         range(n_node_1),
-            #         range(n_node_2),
-            #         range(elem1.physical_dimension)):
-
-            #     K[I, J] += q1.B[I][i]*q2.B[J][i]*q1.det_jac*q1.weight
-
-
-        # import ipdb; ipdb.set_trace()
         return K
 

@@ -52,8 +52,10 @@ if __name__ == '__main__':
 
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V, matrix_interfaces.LinearElasticityMatrixInterface(LAMBDA, MU), quadrature_degree)
-    b_body_force = LinearForm(V, vector_interfaces.FunctionVectorInterface(force_function), quadrature_degree)
+    a = BilinearForm(V, V)
+    a.set_element_interface(element_matrices.LinearElasticityMatrix(LAMBDA, MU), quadrature_degree)
+    b_body_force = LinearForm(V)
+    b_body_force.set_element_interface(element_vectors.FunctionElementVector(force_function), quadrature_degree)
 
     bottom_boundary = lambda x: x[1] <= 1e-12
     top_boundary = lambda x: x[1] >= 1. -1e-12

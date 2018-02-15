@@ -15,14 +15,14 @@ class VTKFile:
         f = open(self.path,'w')
 
         f.write("# vtk DataFile Version 3.1\n")
-        f.write("Structural analysis of external ring fixator\n")
+        f.write("LYZA Output\n")
         f.write("ASCII\n")
 
         f.write("DATASET UNSTRUCTURED_GRID\n")
         # f.write("DATASET POLYDATA\n")
 
         n_points = len(mesh.nodes)
-        n_cells = len(mesh.cells)
+        n_cells = len([i for i in mesh.cells if not i.is_boundary])
         f.write("POINTS  "+repr(n_points)+" FLOAT\n")
 
         for n in mesh.nodes:
@@ -30,13 +30,15 @@ class VTKFile:
 
         f.write('\nCELLS %d %d\n'%(n_cells, n_cells * 5))
         for e in mesh.cells:
+            if e.is_boundary: continue
             f.write("4 ")
             for k in e.nodes:
                 f.write("%d "%(k.idx))
             f.write("\n")
 
         f.write('\nCELL_TYPES '+repr(n_cells)+'\n')
-        for e in range(n_cells):
+        for e in mesh.cells:
+            if e.is_boundary: continue
             f.write('9 ')
 
         if functions:

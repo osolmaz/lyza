@@ -1,13 +1,13 @@
-from lyza_prototype.element_vector import ElementVector
+from lyza_prototype.element_interface import ElementInterface
 import numpy as np
 import itertools
 
-class FunctionElementVector(ElementVector):
+class FunctionElementVector(ElementInterface):
 
     def __init__(self, function):
         self.function = function
 
-    def calculate(self, elem):
+    def linear_form_vector(self, elem):
         n_node = len(elem.nodes)
         n_dof = n_node*elem.function_dimension
 

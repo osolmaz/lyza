@@ -1,4 +1,3 @@
-from lyza_prototype.assembly import Assembly
 
 class FunctionSpace:
 
@@ -34,7 +33,6 @@ class FunctionSpace:
                         dofmap += self.node_dofs[n.idx]
 
                     result.append(c.get_finite_element(
-                        dofmap,
                         self,
                         self.element_degree,
                         quadrature_degree))

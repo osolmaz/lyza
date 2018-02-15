@@ -8,12 +8,22 @@ from lyza_prototype.function import Function
 
 def solve(bilinear_form, linear_form, function, dirichlet_bcs):
 
+    # if bilinear_form.function_space_2 != linear_form.function_space:
+    #     raise Exception('Function spaces of the bilinear form and linear form do not match')
+
     # A = csr_matrix(self.assemble_stiffness_matrix())
     V = function.function_space
-    A = bilinear_form.assemble()
+    if isinstance(bilinear_form, list):
+        A = sum([i.assemble() for i in bilinear_form])
+    else:
+        A = bilinear_form.assemble()
+
     A_bc = A.copy()
 
-    f_bc = linear_form.assemble()
+    if isinstance(linear_form, list):
+        f_bc = sum([i.assemble() for i in linear_form])
+    else:
+        f_bc = linear_form.assemble()
 
     n_dof = A.shape[0]
 
