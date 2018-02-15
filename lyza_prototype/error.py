@@ -1,6 +1,7 @@
 import numpy as np
 from math import log
 from lyza_prototype.scalar_interface import ScalarInterface
+from lyza_prototype.form import LinearForm
 import itertools
 
 class AbsoluteErrorScalarInterface(ScalarInterface):
@@ -91,28 +92,23 @@ def absolute_error(function, exact, exact_deriv, quadrature_degree, error='l2'):
 
 
 def absolute_error_lp(function, exact, p, quadrature_degree):
-    result = 0.
+    form = LinearForm(function.function_space)
+    form.set_scalar_interface(
+        AbsoluteErrorScalarInterface(function, exact, p),
+        quadrature_degree)
 
-    assembly = function.function_space.get_assembly(quadrature_degree)
-    interface = AbsoluteErrorScalarInterface(function, exact, p)
-
-    for e in assembly.elems:
-        result += interface.calculate(e)
-
+    result = form.calculate()
     result = pow(result, 1./p)
 
     return result
 
-
 def absolute_error_deriv_lp(function, exact_deriv, p, quadrature_degree):
-    result = 0.
+    form = LinearForm(function.function_space)
+    form.set_scalar_interface(
+        DerivativeAbsoluteErrorScalarInterface(function, exact_deriv, p),
+        quadrature_degree)
 
-    assembly = function.function_space.get_assembly(quadrature_degree)
-    interface = DerivativeAbsoluteErrorScalarInterface(function, exact_deriv, p)
-
-    for e in assembly.elems:
-        result += interface.calculate(e)
-
+    result = form.calculate()
     result = pow(result, 1./p)
 
     return result

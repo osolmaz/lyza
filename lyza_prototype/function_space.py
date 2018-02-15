@@ -22,7 +22,7 @@ class FunctionSpace:
         return self.function_dimension
 
 
-    def get_assembly(self, quadrature_degree, domain=None):
+    def get_finite_elements(self, quadrature_degree, domain=None):
 
         result = []
         if domain:
@@ -51,7 +51,7 @@ class FunctionSpace:
                         quadrature_degree))
 
 
-        return Assembly(result)
+        return result
 
     def get_system_size(self):
         return self.mesh.get_n_nodes()*self.get_dimension()
