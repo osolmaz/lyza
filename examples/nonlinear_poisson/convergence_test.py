@@ -2,7 +2,7 @@ from lyza_prototype import *
 from nonlinear_poisson import *
 
 import logging
-logging.basicConfig(level=logging.INFO)
+logging.getLogger().setLevel(level=logging.DEBUG)
 
 
 RESOLUTIONS = [4, 6, 8, 10, 15, 20, 30, 40]
@@ -28,7 +28,7 @@ for RESOLUTION in RESOLUTIONS:
 
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V, element_matrices.PoissonMatrix(), quadrature_degree)
+    a = BilinearForm(V, V, NonlinearPoissonMatrix(), quadrature_degree)
     b_body_force = LinearForm(V, element_vectors.FunctionElementVector(force_function), quadrature_degree)
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])

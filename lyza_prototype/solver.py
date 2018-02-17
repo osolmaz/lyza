@@ -48,6 +48,8 @@ def solve(bilinear_form, linear_form, function, dirichlet_bcs):
 
     logging.info('Attempting to solve %dx%d system'%(n_dof, n_dof))
     u = spsolve(A_bc, f_bc).reshape(f_bc.shape)
+    logging.debug('Solved')
+
     function.set_vector(u)
 
     rhs_function = Function(V)

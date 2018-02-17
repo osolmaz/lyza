@@ -1,33 +1,33 @@
 from math import log
 import numpy as np
 from lyza_prototype.form import LinearForm
-from lyza_prototype.element_interface import ElementInterface
-
+from lyza_prototype.element_interface import LinearElementInterface
+import logging
 import itertools
 
 
-class AbsoluteErrorElementScalar(ElementInterface):
+class AbsoluteErrorElementScalar(LinearElementInterface):
     def __init__(self, function, exact, p):
         self.function = function
         self.exact = exact
         self.p = p # Lp error
 
-    def evaluate_linear_form(self, elem):
+    def evaluate(self):
         result = 0.
-        n_node = len(elem.nodes)
+        n_node = len(self.elem.nodes)
 
-        coefficients = [self.function.vector[i,0] for i in elem.dofmap]
+        coefficients = [self.function.vector[i,0] for i in self.elem.dofmap]
 
-        for q in elem.quad_points:
-            u_h = [0. for i in range(elem.function_dimension)]
+        for q in self.elem.quad_points:
+            u_h = [0. for i in range(self.elem.function_dimension)]
 
-            for I, i in itertools.product(range(n_node), range(elem.function_dimension)):
-                u_h[i] += q.N[I]*coefficients[I*elem.function_dimension+i]
+            for I, i in itertools.product(range(n_node), range(self.elem.function_dimension)):
+                u_h[i] += q.N[I]*coefficients[I*self.elem.function_dimension+i]
 
             exact_val = self.exact(q.global_coor)
 
             inner_product = 0.
-            for i in range(elem.function_dimension):
+            for i in range(self.elem.function_dimension):
                 inner_product += (exact_val[i] - u_h[i])**2
 
             result += pow(inner_product, self.p/2.)*q.weight*q.det_jac
@@ -35,29 +35,29 @@ class AbsoluteErrorElementScalar(ElementInterface):
         return result
 
 
-class DerivativeAbsoluteErrorElementScalar(ElementInterface):
+class DerivativeAbsoluteErrorElementScalar(LinearElementInterface):
     def __init__(self, function, exact_deriv, p):
         self.function = function
         self.exact_deriv = exact_deriv
         self.p = p # Lp error
 
-    def evaluate_linear_form(self, elem):
+    def evaluate(self):
         result = 0.
-        n_node = len(elem.nodes)
+        n_node = len(self.elem.nodes)
 
-        coefficients = [self.function.vector[i,0] for i in elem.dofmap]
+        coefficients = [self.function.vector[i,0] for i in self.elem.dofmap]
 
-        for q in elem.quad_points:
-            u_h = np.zeros((elem.function_dimension, elem.physical_dimension))
+        for q in self.elem.quad_points:
+            u_h = np.zeros((self.elem.function_dimension, self.elem.physical_dimension))
 
-            for I, i, j in itertools.product(range(n_node), range(elem.function_dimension), range(elem.physical_dimension)):
-                u_h[i][j] += q.B[I][j]*coefficients[I*elem.function_dimension+i]
+            for I, i, j in itertools.product(range(n_node), range(self.elem.function_dimension), range(self.elem.physical_dimension)):
+                u_h[i][j] += q.B[I][j]*coefficients[I*self.elem.function_dimension+i]
 
             exact_val = np.array(self.exact_deriv(q.global_coor))
 
             inner_product = 0.
-            for i in range(elem.function_dimension):
-                for j in range(elem.physical_dimension):
+            for i in range(self.elem.function_dimension):
+                for j in range(self.elem.physical_dimension):
                     inner_product += (exact_val[i,j] - u_h[i,j])**2
 
 
@@ -79,7 +79,7 @@ def get_exact_solution_vector(function_space, exact):
 
 
 def absolute_error(function, exact, exact_deriv, quadrature_degree, error='l2'):
-
+    logging.debug('Calculating error')
     if error == 'l2':
         result = absolute_error_lp(function, exact, 2, quadrature_degree)
     elif error == 'linf':
@@ -90,6 +90,7 @@ def absolute_error(function, exact, exact_deriv, quadrature_degree, error='l2'):
         result = pow(pow(l2,2.) + pow(l2d,2.), .5)
     else:
         raise Exception('Invalid error specification: %s'%error)
+    logging.debug('Done')
 
     return result
 

@@ -8,18 +8,25 @@ logging.basicConfig(level=logging.INFO)
 
 
 
-class NonlinearPoissonMatrix(ElementInterface):
+class NonlinearPoissonMatrix(BilinearElementInterface):
 
-    def bilinear_form_matrix(self, elem1, elem2):
+    # def __init__(self):
 
-        K = np.zeros((elem2.n_dof, elem1.n_dof))
+    def init_quadrature_point_quantities(self, n_quad_points):
+        self.prev_sol = QuadraturePointQuantity()
 
-        for q1, q2 in zip(elem1.quad_points, elem2.quad_points):
+    def matrix(self):
+        # print('asdasdads')
+        # import ipdb; ipdb.set_trace()
+
+        K = np.zeros((self.elem2.n_dof, self.elem1.n_dof))
+
+        for q1, q2 in zip(self.elem1.quad_points, self.elem2.quad_points):
 
             for I,J,i in itertools.product(
-                    range(elem1.n_node),
-                    range(elem2.n_node),
-                    range(elem1.physical_dimension)):
+                    range(self.elem1.n_node),
+                    range(self.elem2.n_node),
+                    range(self.elem1.physical_dimension)):
 
                 K[I, J] += q1.B[I][i]*q2.B[J][i]*q1.det_jac*q1.weight
 
@@ -67,7 +74,7 @@ if __name__=='__main__':
 
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V, element_matrices.PoissonMatrix(), quadrature_degree)
+    a = BilinearForm(V, V, NonlinearPoissonMatrix(), quadrature_degree)
     b_body_force = LinearForm(V, element_vectors.FunctionElementVector(force_function), quadrature_degree)
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])

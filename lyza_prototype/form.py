@@ -3,16 +3,19 @@ import numpy as np
 import logging
 import progressbar
 from lyza_prototype.assembly_function import AssemblyFunction
-from lyza_prototype.element_interface import ElementInterface, \
-    BilinearElementInterfaceWrapper, LinearElementInterfaceWrapper
+from lyza_prototype.element_interface import BilinearElementInterface, LinearElementInterface
+
+from copy import deepcopy, copy
+import time
 
 class BilinearForm:
-    def __init__(self,
-                 function_space_1,
-                 function_space_2,
-                 element_interface,
-                 quadrature_degree,
-                 domain=None):
+    def __init__(
+            self,
+            function_space_1,
+            function_space_2,
+            element_interface,
+            quadrature_degree,
+            domain=None):
 
         if function_space_1.mesh != function_space_2.mesh:
             raise Exception('Function spaces not defined on the same mesh')
@@ -23,19 +26,20 @@ class BilinearForm:
         self.mesh = function_space_1.mesh
         # A^IJ = a(N^J,N^I)
 
-        self.wrappers = []
+        self.interfaces = []
 
+        logging.debug('Getting bilinear form finite elements')
         elems_1 = self.function_space_1.get_finite_elements(quadrature_degree, domain=domain)
         elems_2 = self.function_space_2.get_finite_elements(quadrature_degree, domain=domain)
+        logging.debug('Finished getting finite elements')
 
         for elem1, elem2 in zip(elems_1, elems_2):
-            self.wrappers.append(BilinearElementInterfaceWrapper(element_interface, elem1, elem2))
-
+            # new_interface = deepcopy(element_interface)
+            new_interface = copy(element_interface)
+            new_interface.set_elements(elem1, elem2)
+            self.interfaces.append(new_interface)
 
     def assemble(self):
-        if not self.wrappers:
-            raise Exception('No element interface assigned to bilinear form')
-
 
         n_dof_1 = self.function_space_1.get_system_size()
         n_dof_2 = self.function_space_2.get_system_size()
@@ -44,16 +48,13 @@ class BilinearForm:
 
 
         logging.info('Calculating element matrices')
-        elem_matrices = []
-        bar = progressbar.ProgressBar(max_value=len(self.wrappers))
+        # bar = progressbar.ProgressBar(max_value=len(self.interfaces))
 
-        for n, w in enumerate(self.wrappers):
-            bar.update(n+1)
-            elem_matrices.append(w.bilinear_form_matrix())
-
-        for w, K_elem in zip(self.wrappers, elem_matrices):
-            for i, I in enumerate(w.elem1.dofmap):
-                for j, J in enumerate(w.elem2.dofmap):
+        for n, interface in enumerate(self.interfaces):
+            # bar.update(n+1)
+            K_elem = interface.matrix()
+            for i, I in enumerate(interface.elem1.dofmap):
+                for j, J in enumerate(interface.elem2.dofmap):
                     K[I, J] += K_elem[i,j]
 
         return K
@@ -67,19 +68,23 @@ class BilinearForm:
             raise Exception('Cannot add types')
 
 class LinearForm:
-    def __init__(self,
-                 function_space,
-                 element_interface,
-                 quadrature_degree,
-                 domain=None):
+    def __init__(
+            self,
+            function_space,
+            element_interface,
+            quadrature_degree,
+            domain=None):
 
         self.function_space = function_space
 
         elems = self.function_space.get_finite_elements(quadrature_degree, domain=domain)
-        self.wrappers = []
+        self.interfaces = []
 
         for elem in elems:
-            self.wrappers.append(LinearElementInterfaceWrapper(element_interface, elem))
+            # new_interface = deepcopy(element_interface)
+            new_interface = copy(element_interface)
+            new_interface.set_element(elem)
+            self.interfaces.append(new_interface)
 
 
     def assemble(self):
@@ -87,24 +92,23 @@ class LinearForm:
         f = np.zeros((n_dof,1))
 
         logging.info('Calculating element vectors')
-        elem_vectors = []
-        bar = progressbar.ProgressBar(max_value=len(self.wrappers))
+        # bar = progressbar.ProgressBar(max_value=len(self.interfaces))
 
-        for n, w in enumerate(self.wrappers):
-            bar.update(n+1)
-            elem_vectors.append(w.linear_form_vector())
-
-        for w, f_elem in zip(self.wrappers, elem_vectors):
-            for i, I in enumerate(w.elem.dofmap):
+        logging.debug('Getting linear form finite elements')
+        for n, interface in enumerate(self.interfaces):
+            # bar.update(n+1)
+            f_elem = interface.vector()
+            for i, I in enumerate(interface.elem.dofmap):
                 f[I] += f_elem[i]
+        logging.debug('Finished getting finite elements')
 
         return f
 
     def calculate(self):
         result = 0.
 
-        for w in self.wrappers:
-            result += w.evaluate_linear_form()
+        for interface in self.interfaces:
+            result += interface.evaluate()
 
         return result
 

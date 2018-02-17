@@ -1,5 +1,5 @@
 import numpy as np
-from lyza_prototype.element_interface import ElementInterface
+from lyza_prototype.element_interface import BilinearElementInterface
 import itertools
 
 def delta(i,j):
@@ -8,24 +8,24 @@ def delta(i,j):
     else:
         return 0
 
-class PoissonMatrix(ElementInterface):
+class PoissonMatrix(BilinearElementInterface):
 
-    def bilinear_form_matrix(self, elem1, elem2):
+    def matrix(self):
 
-        K = np.zeros((elem2.n_dof, elem1.n_dof))
+        K = np.zeros((self.elem2.n_dof, self.elem1.n_dof))
 
-        for q1, q2 in zip(elem1.quad_points, elem2.quad_points):
+        for q1, q2 in zip(self.elem1.quad_points, self.elem2.quad_points):
 
             for I,J,i in itertools.product(
-                    range(elem1.n_node),
-                    range(elem2.n_node),
-                    range(elem1.physical_dimension)):
+                    range(self.elem1.n_node),
+                    range(self.elem2.n_node),
+                    range(self.elem1.physical_dimension)):
 
                 K[I, J] += q1.B[I][i]*q2.B[J][i]*q1.det_jac*q1.weight
 
         return K
 
-class LinearElasticityMatrix(ElementInterface):
+class LinearElasticityMatrix(BilinearElementInterface):
 
     def __init__(self, lambda_, mu):
         self.lambda_ = lambda_
@@ -35,18 +35,18 @@ class LinearElasticityMatrix(ElementInterface):
         return self.lambda_*delta(i,j)*delta(k,l) + self.mu*(delta(i,k)*delta(j,l) + delta(i,l)*delta(j,k))
 
 
-    def bilinear_form_matrix(self, elem1, elem2):
-        n_node_1 = len(elem1.nodes)
-        n_node_2 = len(elem2.nodes)
+    def matrix(self):
+        n_node_1 = len(self.elem1.nodes)
+        n_node_2 = len(self.elem2.nodes)
 
-        n_dof_1 = n_node_1*elem1.function_dimension
-        n_dof_2 = n_node_2*elem2.function_dimension
+        n_dof_1 = n_node_1*self.elem1.function_dimension
+        n_dof_2 = n_node_2*self.elem2.function_dimension
 
-        physical_dim = elem1.physical_dimension
+        physical_dim = self.elem1.physical_dimension
 
         K = np.zeros((n_dof_2,n_dof_1))
 
-        for q1, q2 in zip(elem1.quad_points, elem2.quad_points):
+        for q1, q2 in zip(self.elem1.quad_points, self.elem2.quad_points):
 
             for I,J,i,j,k,l in itertools.product(
                     range(n_node_1),

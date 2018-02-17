@@ -2,7 +2,7 @@ from lyza_prototype import *
 from poisson import *
 
 import logging
-logging.basicConfig(level=logging.INFO)
+logging.getLogger().setLevel(level=logging.DEBUG)
 
 
 RESOLUTIONS = [4, 6, 8, 10, 15, 20, 30, 40]
@@ -49,7 +49,6 @@ for RESOLUTION in RESOLUTIONS:
     linf_array.append(linf)
     h1_array.append(h1)
 
-# import ipdb; ipdb.set_trace()
 import matplotlib
 matplotlib.use('Qt4Agg')
 matplotlib.rc('text', usetex=True)
