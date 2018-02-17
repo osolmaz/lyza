@@ -72,3 +72,13 @@ class FiniteElement:
 
         return J
 
+
+    def interpolate_scalar(self, nodal_values, position):
+        assert len(nodal_values) == self.n_node
+
+        result = 0.
+        for I in range(len(self.n_node)):
+            result += self.N[I](position)*nodal_values[I]
+
+        return result
+

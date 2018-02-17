@@ -3,16 +3,16 @@ import numpy as np
 import logging
 import progressbar
 from lyza_prototype.assembly_function import AssemblyFunction
-# from lyza_prototype.element_matrix import ElementMatrixWrapper
-# from lyza_prototype.element_vector import ElementVectorWrapper
-# from lyza_prototype.element_scalar import ElementScalarWrapper
 from lyza_prototype.element_interface import ElementInterface, \
     BilinearElementInterfaceWrapper, LinearElementInterfaceWrapper
 
 class BilinearForm:
     def __init__(self,
                  function_space_1,
-                 function_space_2):
+                 function_space_2,
+                 element_interface,
+                 quadrature_degree,
+                 domain=None):
 
         if function_space_1.mesh != function_space_2.mesh:
             raise Exception('Function spaces not defined on the same mesh')
@@ -23,10 +23,6 @@ class BilinearForm:
         self.mesh = function_space_1.mesh
         # A^IJ = a(N^J,N^I)
 
-        self.wrappers = None
-
-
-    def set_element_interface(self, element_interface, quadrature_degree, domain=None):
         self.wrappers = []
 
         elems_1 = self.function_space_1.get_finite_elements(quadrature_degree, domain=domain)
@@ -62,13 +58,22 @@ class BilinearForm:
 
         return K
 
+    def __add__(self, a):
+        if isinstance(a, BilinearForm):
+            return AggregateBilinearForm([self, a])
+        elif isinstance(a, AggregateBilinearForm):
+            return AggregateBilinearForm([a]+a.bilinear_forms)
+        else:
+            raise Exception('Cannot add types')
 
 class LinearForm:
-    def __init__(self, function_space):
+    def __init__(self,
+                 function_space,
+                 element_interface,
+                 quadrature_degree,
+                 domain=None):
+
         self.function_space = function_space
-
-
-    def set_element_interface(self, element_interface, quadrature_degree, domain=None):
 
         elems = self.function_space.get_finite_elements(quadrature_degree, domain=domain)
         self.wrappers = []
@@ -103,5 +108,50 @@ class LinearForm:
 
         return result
 
+    def __add__(self, a):
+        if isinstance(a, LinearForm):
+            return AggregateLinearForm([self, a])
+        elif isinstance(a, AggregateLinearForm):
+            return AggregateLinearForm([a]+a.linear_forms)
+        else:
+            raise Exception('Cannot add types')
 
 
+class AggregateBilinearForm:
+    def __init__(self, bilinear_forms):
+        self.bilinear_forms = bilinear_forms
+
+    def assemble(self):
+        return sum([i.assemble() for i in self.bilinear_forms])
+
+    def __add__(self, a):
+        if isinstance(a, BilinearForm):
+            return AggregateBilinearForm([self.bilinear_forms, a])
+        elif isinstance(a, AggregateBilinearForm):
+            return AggregateBilinearForm(self.bilinear_forms+a.bilinear_forms)
+        else:
+            raise Exception('Cannot add types')
+
+
+    def check(self):
+        pass
+        # TODO: check vector spaces same
+
+class AggregateLinearForm:
+    def __init__(self, linear_forms):
+        self.linear_forms = linear_forms
+
+    def assemble(self):
+        return sum([i.assemble() for i in self.linear_forms])
+
+    def __add__(self, a):
+        if isinstance(a, LinearForm):
+            return AggregateLinearForm([self.linear_forms, a])
+        elif isinstance(a, AggregateLinearForm):
+            return AggregateLinearForm(self.linear_forms+a.linear_forms)
+        else:
+            raise Exception('Cannot add types')
+
+    def check(self):
+        pass
+        # TODO: check vector spaces same

@@ -10,7 +10,7 @@ RESOLUTION = 20
 
 exact_solution = lambda x: [(2./pi)*atan(-0.5*x[0] + x[1]-0.25)]
 
-exact_solution_deriv = lambda x: [[
+exact_solution_gradient = lambda x: [[
     -1./(pi*((.5*x[0] - x[1] + .25)**2 + 1.)),
     2./(pi*((.5*x[0] - x[1] + .25)**2 + 1.))
 ]]
@@ -72,9 +72,9 @@ ofile.write(mesh, [u, f])
 
 h_max = 1./RESOLUTION
 n_node = len(mesh.nodes)
-l2 = error.absolute_error(u, exact_solution, exact_solution_deriv, error='l2')
-linf = error.absolute_error(u, exact_solution, exact_solution_deriv, error='linf')
-h1 = error.absolute_error(u, exact_solution, exact_solution_deriv, error='h1')
+l2 = error.absolute_error(u, exact_solution, exact_solution_gradient, error='l2')
+linf = error.absolute_error(u, exact_solution, exact_solution_gradient, error='linf')
+h1 = error.absolute_error(u, exact_solution, exact_solution_gradient, error='h1')
 
 print(l2, linf, h1)
 

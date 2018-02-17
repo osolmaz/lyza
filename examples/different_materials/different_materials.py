@@ -46,31 +46,29 @@ quadrature_degree = 1
 V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
 
 u = Function(V)
-a1 = BilinearForm(V, V)
-a2 = BilinearForm(V, V)
 
 matrix1 = element_matrices.LinearElasticityMatrix(10000., 1000.)
 matrix2 = element_matrices.LinearElasticityMatrix(1000., 100.)
 
-a1.set_element_interface(matrix1, quadrature_degree, domain=RightPart())
-a2.set_element_interface(matrix2, quadrature_degree, domain=LeftPart())
+a1 = BilinearForm(V, V, matrix1, quadrature_degree, domain=RightPart())
+a2 = BilinearForm(V, V, matrix2, quadrature_degree, domain=LeftPart())
 
-b_neumann = LinearForm(V)
-b_neumann.set_element_interface(
+
+b_neumann = LinearForm(
+    V,
     element_vectors.FunctionElementVector(lambda x: [0.,-P/C]),
     quadrature_degree,
     domain=LeftEnd())
 
 dirichlet_bcs = [DirichletBC(lambda x: [0.,0.], right_boundary)]
 
-u, f = solve([a1, a2], b_neumann, u, dirichlet_bcs)
+u, f = solve(a1+a2, b_neumann, u, dirichlet_bcs)
 ofile = VTKFile('out_different_materials.vtk')
 
 u.set_label('displacement')
 f.set_label('force')
 
 ofile.write(mesh, [u, f])
-
 
 # print(exact_solution([0.,-C/2.]))
 

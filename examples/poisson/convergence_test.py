@@ -16,11 +16,6 @@ linf_array = []
 l2_array = []
 h1_array = []
 
-linf_convergence_array = [float('nan')]
-l2_convergence_array = [float('nan')]
-h1_convergence_array = [float('nan')]
-
-
 quadrature_degree = 1
 function_dimension = 1
 physical_dimension = 2
@@ -33,10 +28,8 @@ for RESOLUTION in RESOLUTIONS:
 
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V)
-    a.set_element_interface(element_matrices.PoissonMatrix(), quadrature_degree)
-    b_body_force = LinearForm(V)
-    b_body_force.set_element_interface(element_vectors.FunctionElementVector(force_function), quadrature_degree)
+    a = BilinearForm(V, V, element_matrices.PoissonMatrix(), quadrature_degree)
+    b_body_force = LinearForm(V, element_vectors.FunctionElementVector(force_function), quadrature_degree)
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 
@@ -46,9 +39,9 @@ for RESOLUTION in RESOLUTIONS:
 
     h_max = 1./RESOLUTION
     n_node = len(mesh.nodes)
-    l2 = error.absolute_error(u, exact_solution, exact_solution_deriv, quadrature_degree, error='l2')
-    linf = error.absolute_error(u, exact_solution, exact_solution_deriv, quadrature_degree, error='linf')
-    h1 = error.absolute_error(u, exact_solution, exact_solution_deriv, quadrature_degree, error='h1')
+    l2 = error.absolute_error(u, exact_solution, exact_solution_gradient, quadrature_degree, error='l2')
+    linf = error.absolute_error(u, exact_solution, exact_solution_gradient, quadrature_degree, error='linf')
+    h1 = error.absolute_error(u, exact_solution, exact_solution_gradient, quadrature_degree, error='h1')
 
     h_max_array.append(h_max)
     n_node_array.append(n_node)

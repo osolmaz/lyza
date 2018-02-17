@@ -1,14 +1,13 @@
-from math import *
 from lyza_prototype import *
-from linear_elasticity import *
+from nonlinear_poisson import *
 
 import logging
 logging.basicConfig(level=logging.INFO)
 
 
-RESOLUTIONS = [2, 4, 6, 8, 10, 15, 20, 30, 40]
-# RESOLUTIONS = [2, 4, 6, 8, 10]
-# RESOLUTIONS = [10]
+RESOLUTIONS = [4, 6, 8, 10, 15, 20, 30, 40]
+# RESOLUTIONS = [4, 6, 8, 10]
+# RESOLUTIONS = [4, 8, 16]
 
 n_node_array = []
 h_max_array = []
@@ -17,25 +16,20 @@ linf_array = []
 l2_array = []
 h1_array = []
 
+quadrature_degree = 1
+function_dimension = 1
+physical_dimension = 2
+element_degree = 1
+
 
 for RESOLUTION in RESOLUTIONS:
 
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
-    physical_dimension = 2
-    function_dimension = 2
-    element_degree = 1
-    quadrature_degree = 1
-
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V, matrix_interfaces.LinearElasticityMatrixInterface(LAMBDA, MU), quadrature_degree)
-    b_body_force = LinearForm(V, vector_interfaces.FunctionVectorInterface(force_function), quadrature_degree)
-
-    bottom_boundary = lambda x: x[1] <= 1e-12
-    top_boundary = lambda x: x[1] >= 1. -1e-12
-    left_boundary = lambda x: x[0] <= 1e-12
-    right_boundary = lambda x: x[0] >= 1.-1e-12
+    a = BilinearForm(V, V, element_matrices.PoissonMatrix(), quadrature_degree)
+    b_body_force = LinearForm(V, element_vectors.FunctionElementVector(force_function), quadrature_degree)
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 
@@ -55,7 +49,7 @@ for RESOLUTION in RESOLUTIONS:
     linf_array.append(linf)
     h1_array.append(h1)
 
-
+# import ipdb; ipdb.set_trace()
 import matplotlib
 matplotlib.use('Qt4Agg')
 matplotlib.rc('text', usetex=True)

@@ -22,7 +22,7 @@ exact_solution = lambda x: [
     -x[0]*(1-x[0])*x[1]*(1-x[1]),
 ]
 
-exact_solution_deriv = lambda x: [
+exact_solution_gradient = lambda x: [
     [0.,0.],
     [x[1]*(-2.*x[0]*(x[1]-1.)+x[1]-1.),
      x[0]*(-2.*x[0]*x[1]+x[0]+2.*x[1]-1.)]
@@ -52,10 +52,8 @@ if __name__ == '__main__':
 
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V)
-    a.set_element_interface(element_matrices.LinearElasticityMatrix(LAMBDA, MU), quadrature_degree)
-    b_body_force = LinearForm(V)
-    b_body_force.set_element_interface(element_vectors.FunctionElementVector(force_function), quadrature_degree)
+    a = BilinearForm(V, V, element_matrices.LinearElasticityMatrix(LAMBDA, MU), quadrature_degree)
+    b_body_force = LinearForm(V, element_vectors.FunctionElementVector(force_function), quadrature_degree)
 
     bottom_boundary = lambda x: x[1] <= 1e-12
     top_boundary = lambda x: x[1] >= 1. -1e-12
@@ -77,6 +75,6 @@ if __name__ == '__main__':
 
     ofile.write(mesh, [u, f])
 
-    print('L2 Error: %e'%error.absolute_error(u, exact_solution, exact_solution_deriv, quadrature_degree, error='l2'))
+    print('L2 Error: %e'%error.absolute_error(u, exact_solution, exact_solution_gradient, quadrature_degree, error='l2'))
 
 

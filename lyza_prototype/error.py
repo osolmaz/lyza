@@ -95,8 +95,8 @@ def absolute_error(function, exact, exact_deriv, quadrature_degree, error='l2'):
 
 
 def absolute_error_lp(function, exact, p, quadrature_degree):
-    form = LinearForm(function.function_space)
-    form.set_element_interface(
+    form = LinearForm(
+        function.function_space,
         AbsoluteErrorElementScalar(function, exact, p),
         quadrature_degree)
 
@@ -106,8 +106,8 @@ def absolute_error_lp(function, exact, p, quadrature_degree):
     return result
 
 def absolute_error_deriv_lp(function, exact_deriv, p, quadrature_degree):
-    form = LinearForm(function.function_space)
-    form.set_element_interface(
+    form = LinearForm(
+        function.function_space,
         DerivativeAbsoluteErrorElementScalar(function, exact_deriv, p),
         quadrature_degree)
 
