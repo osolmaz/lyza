@@ -5,9 +5,8 @@ from nonlinear_poisson import *
 # logging.getLogger().setLevel(level=logging.DEBUG)
 
 
-# RESOLUTIONS = [4, 6, 8, 10, 15, 20, 30, 40]
-RESOLUTIONS = [4, 6, 8, 10, 15]
-# RESOLUTIONS = [4, 8, 16]
+RESOLUTIONS = [4, 6, 8, 10, 15, 20, 30, 40]
+# RESOLUTIONS = [4, 6, 8, 10]
 
 n_node_array = []
 h_max_array = []

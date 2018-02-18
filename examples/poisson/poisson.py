@@ -16,7 +16,9 @@ exact_solution_gradient = lambda x: [[
     2.*pi*sin(2.*pi*x[0])*cos(2.*pi*x[1]),
 ]]
 
-force_function = lambda x: [8.*pi*pi*sin(2.*pi*x[0])*sin(2.*pi*x[1])]
+exact_solution_divgrad = lambda x: -8.*pi*pi*sin(2.*pi*x[0])*sin(2.*pi*x[1])
+
+force_function = lambda x: [-exact_solution_divgrad(x)]
 
 bottom_boundary = lambda x: x[1] <= 1e-12
 top_boundary = lambda x: x[1] >= 1. -1e-12
@@ -38,7 +40,8 @@ if __name__=='__main__':
     a = BilinearForm(V, V, element_matrices.PoissonMatrix(), quadrature_degree)
     b_body_force = LinearForm(V, element_vectors.FunctionElementVector(force_function), quadrature_degree)
 
-    perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
+    # perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
+    perimeter = lambda x: True
 
     dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
 

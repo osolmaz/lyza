@@ -1,8 +1,8 @@
 from lyza_prototype import *
 from poisson import *
 
-import logging
-logging.getLogger().setLevel(level=logging.DEBUG)
+# import logging
+# logging.getLogger().setLevel(level=logging.DEBUG)
 
 
 RESOLUTIONS = [4, 6, 8, 10, 15, 20, 30, 40]

@@ -13,7 +13,7 @@ exact_solution_gradient = lambda x: [[
     2.*pi*sin(2.*pi*x[0])*cos(2.*pi*x[1]),
 ]]
 
-exact_solution_divgrad = lambda x: 8.*pi*pi*sin(2.*pi*x[0])*sin(2.*pi*x[1])
+exact_solution_divgrad = lambda x: -8.*pi*pi*sin(2.*pi*x[0])*sin(2.*pi*x[1])
 
 g = lambda u: sqrt(exp(u))
 dgdu = lambda u: 0.5*sqrt(exp(u))
@@ -26,10 +26,9 @@ def force_function(x):
     u = exact_solution(x)[0]
     grad_u = exact_solution_gradient(x)[0]
     divgrad_u = exact_solution_divgrad(x)
-    grad_g = [dgdu(u) for i in grad_u]
 
     grad_u_dot_grad_u = sum([i*i for i in grad_u])
-    result = dgdu(u)*grad_u_dot_grad_u + g(u)*divgrad_u
+    result = -(dgdu(u)*grad_u_dot_grad_u + g(u)*divgrad_u)
 
     return [result]
 
