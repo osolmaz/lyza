@@ -2,7 +2,6 @@ import numpy as np
 # from scipy.sparse import coo_matrix
 import logging
 import progressbar
-from lyza_prototype.assembly_function import AssemblyFunction
 from lyza_prototype.element_interface import BilinearElementInterface, LinearElementInterface
 
 from copy import deepcopy, copy
@@ -36,6 +35,8 @@ class BilinearForm:
         for elem1, elem2 in zip(elems_1, elems_2):
             # new_interface = deepcopy(element_interface)
             new_interface = copy(element_interface)
+            new_interface.init_node_quantities(elem1.n_node)
+            new_interface.init_quadrature_point_quantities(elem1.n_node)
             new_interface.set_elements(elem1, elem2)
             self.interfaces.append(new_interface)
 
@@ -46,8 +47,7 @@ class BilinearForm:
         K = np.zeros((n_dof_2,n_dof_1))
         # K = coo_matrix((n_dof,n_dof))
 
-
-        logging.info('Calculating element matrices')
+        logging.debug('Calculating element matrices')
         # bar = progressbar.ProgressBar(max_value=len(self.interfaces))
 
         for n, interface in enumerate(self.interfaces):
@@ -83,6 +83,8 @@ class LinearForm:
         for elem in elems:
             # new_interface = deepcopy(element_interface)
             new_interface = copy(element_interface)
+            new_interface.init_quadrature_point_quantities(elem.n_node)
+            new_interface.init_node_quantities(elem.n_node)
             new_interface.set_element(elem)
             self.interfaces.append(new_interface)
 
@@ -91,7 +93,7 @@ class LinearForm:
         n_dof = self.function_space.get_system_size()
         f = np.zeros((n_dof,1))
 
-        logging.info('Calculating element vectors')
+        logging.debug('Calculating element vectors')
         # bar = progressbar.ProgressBar(max_value=len(self.interfaces))
 
         logging.debug('Getting linear form finite elements')

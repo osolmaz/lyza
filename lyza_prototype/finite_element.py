@@ -35,7 +35,6 @@ class FiniteElement:
         if not self.N or not self.Bhat:
             raise Exception('Improper element subclassing')
 
-
         self.n_node = len(self.nodes)
 
         for quad_point in self.quad_points:
@@ -73,12 +72,30 @@ class FiniteElement:
         return J
 
 
-    def interpolate_scalar(self, nodal_values, position):
-        assert len(nodal_values) == self.n_node
+    def interpolate_at_quad_point(self, function, quad_point_idx):
+        result = np.zeros((function.function_dimension,1))
 
-        result = 0.
-        for I in range(len(self.n_node)):
-            result += self.N[I](position)*nodal_values[I]
+        for I in range(self.n_node):
+            val = function.get_node_val(self.nodes[I].idx)
+            # shape_function_val = self.N[I](self.quad_points[quad_point_idx].coor)
+
+            for i in range(function.function_dimension):
+                result[i] += self.quad_points[quad_point_idx].N[I]*val[i]
 
         return result
+
+    def interpolate_deriv_at_quad_point(self, function, quad_point_idx):
+        result = np.zeros((function.function_dimension,self.physical_dimension))
+
+        for I in range(self.n_node):
+            val = function.get_node_val(self.nodes[I].idx)
+            # shape_function_val = self.N[I](self.quad_points[quad_point_idx].coor)
+            for i in range(function.function_dimension):
+                for j in range(self.physical_dimension):
+                    result[i,j] += self.quad_points[quad_point_idx].B[I][j]*val[i]
+
+        # import ipdb; ipdb.set_trace()
+
+        return result
+
 

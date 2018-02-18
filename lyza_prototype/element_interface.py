@@ -6,14 +6,21 @@ class BilinearElementInterface:
         pass
 
     def matrix(self):
-        pass
+        raise Exception('Undefined element interface')
 
     def evaluate(self):
-        pass
+        raise Exception('Undefined element interface')
 
     def set_elements(self, elem1, elem2):
         self.elem1 = elem1
         self.elem2 = elem2
+        self.n_quad_point = elem1.n_quad_point
+
+    def init_node_quantities(self, n_node):
+        pass
+
+    def init_quadrature_point_quantities(self, n_quad_point):
+        pass
 
 class LinearElementInterface:
 
@@ -21,37 +28,17 @@ class LinearElementInterface:
         pass
 
     def vector(self):
-        pass
+        raise Exception('Undefined element interface')
 
     def evaluate(self):
-        pass
+        raise Exception('Undefined element interface')
 
     def set_element(self, elem):
         self.elem = elem
+        self.n_quad_point = elem.n_quad_point
 
+    def init_node_quantities(self, n_node):
+        pass
 
-# class BilinearElementInterfaceWrapper:
-#     def __init__(self, element_interface, elem1, elem2):
-#         self.element_interface = element_interface
-#         self.elem1 = elem1
-#         self.elem2 = elem2
-
-#     def bilinear_form_matrix(self):
-#         return self.element_interface.bilinear_form_matrix(self.elem1, self.elem2)
-
-#     def evaluate_bilinear_form(self):
-#         return self.element_interface.evaluate_bilinear_form(self.elem1, self.elem2)
-
-
-# class LinearElementInterfaceWrapper:
-#     def __init__(self, element_interface, elem):
-#         self.element_interface = element_interface
-#         self.elem = elem
-
-#     def linear_form_vector(self):
-#         return self.element_interface.linear_form_vector(self.elem)
-
-#     def evaluate_linear_form(self):
-#         return self.element_interface.evaluate_linear_form(self.elem)
-
-
+    def init_quadrature_point_quantities(self, n_quad_point):
+        pass
