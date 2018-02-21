@@ -15,6 +15,9 @@ def delta(i,j):
         return 0
 
 def isotropic_elasticity_tensor(i,j,k,l):
+    # index_map = [[1,4,6],[4,2,5],[6,5,3]]
+    # return Symbol('C_%d%d'%(index_map[i][j]-1, index_map[k][l]-1))
+    # return Symbol('C_%d%d%d%d'%(i+1,j+1,k+1,l+1))
     return lambda_*delta(i,j)*delta(k,l) + mu*(delta(i,k)*delta(j,l) + delta(i,l)*delta(j,k))
 
 index_map = lambda i,j: 3*i + j
@@ -53,8 +56,15 @@ plane_stress_tensor = simplify(A_11 - A_12*A_22.inv()*A_21)
 
 
 if __name__ == '__main__':
+
+    print('3D tensor:')
+    pprint(reshaped_tensor_symmetric)
+    print(reshaped_tensor_symmetric)
+
     print('Plane stress tensor:')
     pprint(plane_stress_tensor)
+    print(plane_stress_tensor)
 
     print('Plane strain tensor:')
     pprint(plane_strain_tensor)
+    print(plane_strain_tensor)

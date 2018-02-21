@@ -1,5 +1,6 @@
 from lyza_prototype import *
 from math import *
+import numpy as np
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -10,6 +11,8 @@ RESOLUTION = 10
 E = 1000.
 NU = 0.3
 
+MU = E/(1.+NU)/2.
+LAMBDA = E*NU/(1.+NU)/(1.-2.*NU)
 
 # def exact_solution(pos):
 #     x = pos[0]
@@ -56,8 +59,7 @@ if __name__ == '__main__':
 
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V, bilinear_interfaces.PlaneStrainLinearElasticity(E, NU), quadrature_degree)
-    # a = BilinearForm(V, V, bilinear_interfaces.LinearElasticityMatrix(LAMBDA, MU), quadrature_degree)
+    a = BilinearForm(V, V, bilinear_interfaces.IsotropicLinearElasticity(LAMBDA, MU, plane_strain=True), quadrature_degree)
     b_body_force = LinearForm(V, linear_interfaces.FunctionElementVector(force_function), quadrature_degree)
 
     bottom_boundary = lambda x: x[1] <= 1e-12

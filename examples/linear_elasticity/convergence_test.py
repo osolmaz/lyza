@@ -29,8 +29,7 @@ for RESOLUTION in RESOLUTIONS:
 
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V, bilinear_interfaces.PlaneStrainLinearElasticity(E, NU), quadrature_degree)
-    # a = BilinearForm(V, V, bilinear_interfaces.LinearElasticityMatrix(LAMBDA, MU), quadrature_degree)
+    a = BilinearForm(V, V, bilinear_interfaces.IsotropicLinearElasticity(LAMBDA, MU, plane_strain=True), quadrature_degree)
     b_body_force = LinearForm(V, linear_interfaces.FunctionElementVector(force_function), quadrature_degree)
 
     bottom_boundary = lambda x: x[1] <= 1e-12

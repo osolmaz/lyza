@@ -25,14 +25,40 @@ class PoissonMatrix(BilinearElementInterface):
 
         return K
 
-class LinearElasticityMatrix(BilinearElementInterface):
+class LinearElasticity(BilinearElementInterface):
 
-    def __init__(self, lambda_, mu):
-        self.lambda_ = lambda_
-        self.mu = mu
+    def __init__(self, C, plane_stress=False, plane_strain=False):
 
-    def C(self, i,j,k,l):
-        return self.lambda_*delta(i,j)*delta(k,l) + self.mu*(delta(i,k)*delta(j,l) + delta(i,l)*delta(j,k))
+        if plane_stress and plane_strain:
+            raise Exception('Can be either plane stress or plane strain')
+
+        # # Plane stress
+        # self.C = E/(1-nu*nu)*np.array([[1.,nu,0.],[nu,1.,0.],[0.,0.,(1.-nu)/2.]])
+        # self.index_map = [[0,2],[2,1]]
+
+        # # Plane strain
+        # self.C = E/(1.+nu)/(1-2.*nu)*np.array([[1.-nu,nu,0.],[nu,1.-nu,0.],[0.,0.,(1.-2.*nu)/2.]])
+        # self.index_map = [[0,2],[2,1]]
+
+
+        if plane_strain:
+            self.C = np.array([[C[0,0], C[0,1], C[0,3]], [C[1,0], C[1,1], C[1,3]], [C[3,0], C[3,1], C[3,3]]])
+            self.index_map = [[0,2],[2,1]]
+        elif plane_stress:
+            self.C = np.array([
+                [(C[0,0]*C[2,2]*C[4,4]*C[5,5] - C[0,0]*C[2,2]*C[4,5]*C[5,4] - C[0,0]*C[2,4]*C[4,2]*C[5,5] + C[0,0]*C[2,4]*C[4,5]*C[5,2] + C[0,0]*C[2,5]*C[4,2]*C[5,4] - C[0,0]*C[2,5]*C[4,4]*C[5,2] - C[0,2]*C[2,0]*C[4,4]*C[5,5] + C[0,2]*C[2,0]*C[4,5]*C[5,4] + C[0,2]*C[2,4]*C[4,0]*C[5,5] - C[0,2]*C[2,4]*C[4,5]*C[5,0] - C[0,2]*C[2,5]*C[4,0]*C[5,4] + C[0,2]*C[2,5]*C[4,4]*C[5,0] + C[0,4]*C[2,0]*C[4,2]*C[5,5] - C[0,4]*C[2,0]*C[4,5]*C[5,2] - C[0,4]*C[2,2]*C[4,0]*C[5,5] + C[0,4]*C[2,2]*C[4,5]*C[5,0] + C[0,4]*C[2,5]*C[4,0]*C[5,2] - C[0,4]*C[2,5]*C[4,2]*C[5,0] - C[0,5]*C[2,0]*C[4,2]*C[5,4] + C[0,5]*C[2,0]*C[4,4]*C[5,2] + C[0,5]*C[2,2]*C[4,0]*C[5,4] - C[0,5]*C[2,2]*C[4,4]*C[5,0] - C[0,5]*C[2,4]*C[4,0]*C[5,2] + C[0,5]*C[2,4]*C[4,2]*C[5,0])/(C[2,2]*C[4,4]*C[5,5] - C[2,2]*C[4,5]*C[5,4] - C[2,4]*C[4,2]*C[5,5] + C[2,4]*C[4,5]*C[5,2] + C[2,5]*C[4,2]*C[5,4] - C[2,5]*C[4,4]*C[5,2]),
+                 (C[0,1]*C[2,2]*C[4,4]*C[5,5] - C[0,1]*C[2,2]*C[4,5]*C[5,4] - C[0,1]*C[2,4]*C[4,2]*C[5,5] + C[0,1]*C[2,4]*C[4,5]*C[5,2] + C[0,1]*C[2,5]*C[4,2]*C[5,4] - C[0,1]*C[2,5]*C[4,4]*C[5,2] - C[0,2]*C[2,1]*C[4,4]*C[5,5] + C[0,2]*C[2,1]*C[4,5]*C[5,4] + C[0,2]*C[2,4]*C[4,1]*C[5,5] - C[0,2]*C[2,4]*C[4,5]*C[5,1] - C[0,2]*C[2,5]*C[4,1]*C[5,4] + C[0,2]*C[2,5]*C[4,4]*C[5,1] + C[0,4]*C[2,1]*C[4,2]*C[5,5] - C[0,4]*C[2,1]*C[4,5]*C[5,2] - C[0,4]*C[2,2]*C[4,1]*C[5,5] + C[0,4]*C[2,2]*C[4,5]*C[5,1] + C[0,4]*C[2,5]*C[4,1]*C[5,2] - C[0,4]*C[2,5]*C[4,2]*C[5,1] - C[0,5]*C[2,1]*C[4,2]*C[5,4] + C[0,5]*C[2,1]*C[4,4]*C[5,2] + C[0,5]*C[2,2]*C[4,1]*C[5,4] - C[0,5]*C[2,2]*C[4,4]*C[5,1] - C[0,5]*C[2,4]*C[4,1]*C[5,2] + C[0,5]*C[2,4]*C[4,2]*C[5,1])/(C[2,2]*C[4,4]*C[5,5] - C[2,2]*C[4,5]*C[5,4] - C[2,4]*C[4,2]*C[5,5] + C[2,4]*C[4,5]*C[5,2] + C[2,5]*C[4,2]*C[5,4] - C[2,5]*C[4,4]*C[5,2]),
+                 (-C[0,2]*C[2,3]*C[4,4]*C[5,5] + C[0,2]*C[2,3]*C[4,5]*C[5,4] + C[0,2]*C[2,4]*C[4,3]*C[5,5] - C[0,2]*C[2,4]*C[4,5]*C[5,3] - C[0,2]*C[2,5]*C[4,3]*C[5,4] + C[0,2]*C[2,5]*C[4,4]*C[5,3] + C[0,3]*C[2,2]*C[4,4]*C[5,5] - C[0,3]*C[2,2]*C[4,5]*C[5,4] - C[0,3]*C[2,4]*C[4,2]*C[5,5] + C[0,3]*C[2,4]*C[4,5]*C[5,2] + C[0,3]*C[2,5]*C[4,2]*C[5,4] - C[0,3]*C[2,5]*C[4,4]*C[5,2] - C[0,4]*C[2,2]*C[4,3]*C[5,5] + C[0,4]*C[2,2]*C[4,5]*C[5,3] + C[0,4]*C[2,3]*C[4,2]*C[5,5] - C[0,4]*C[2,3]*C[4,5]*C[5,2] - C[0,4]*C[2,5]*C[4,2]*C[5,3] + C[0,4]*C[2,5]*C[4,3]*C[5,2] + C[0,5]*C[2,2]*C[4,3]*C[5,4] - C[0,5]*C[2,2]*C[4,4]*C[5,3] - C[0,5]*C[2,3]*C[4,2]*C[5,4] + C[0,5]*C[2,3]*C[4,4]*C[5,2] + C[0,5]*C[2,4]*C[4,2]*C[5,3] - C[0,5]*C[2,4]*C[4,3]*C[5,2])/(C[2,2]*C[4,4]*C[5,5] - C[2,2]*C[4,5]*C[5,4] - C[2,4]*C[4,2]*C[5,5] + C[2,4]*C[4,5]*C[5,2] + C[2,5]*C[4,2]*C[5,4] - C[2,5]*C[4,4]*C[5,2])],
+                [(C[1,0]*C[2,2]*C[4,4]*C[5,5] - C[1,0]*C[2,2]*C[4,5]*C[5,4] - C[1,0]*C[2,4]*C[4,2]*C[5,5] + C[1,0]*C[2,4]*C[4,5]*C[5,2] + C[1,0]*C[2,5]*C[4,2]*C[5,4] - C[1,0]*C[2,5]*C[4,4]*C[5,2] - C[1,2]*C[2,0]*C[4,4]*C[5,5] + C[1,2]*C[2,0]*C[4,5]*C[5,4] + C[1,2]*C[2,4]*C[4,0]*C[5,5] - C[1,2]*C[2,4]*C[4,5]*C[5,0] - C[1,2]*C[2,5]*C[4,0]*C[5,4] + C[1,2]*C[2,5]*C[4,4]*C[5,0] + C[1,4]*C[2,0]*C[4,2]*C[5,5] - C[1,4]*C[2,0]*C[4,5]*C[5,2] - C[1,4]*C[2,2]*C[4,0]*C[5,5] + C[1,4]*C[2,2]*C[4,5]*C[5,0] + C[1,4]*C[2,5]*C[4,0]*C[5,2] - C[1,4]*C[2,5]*C[4,2]*C[5,0] - C[1,5]*C[2,0]*C[4,2]*C[5,4] + C[1,5]*C[2,0]*C[4,4]*C[5,2] + C[1,5]*C[2,2]*C[4,0]*C[5,4] - C[1,5]*C[2,2]*C[4,4]*C[5,0] - C[1,5]*C[2,4]*C[4,0]*C[5,2] + C[1,5]*C[2,4]*C[4,2]*C[5,0])/(C[2,2]*C[4,4]*C[5,5] - C[2,2]*C[4,5]*C[5,4] - C[2,4]*C[4,2]*C[5,5] + C[2,4]*C[4,5]*C[5,2] + C[2,5]*C[4,2]*C[5,4] - C[2,5]*C[4,4]*C[5,2]),
+                 (C[1,1]*C[2,2]*C[4,4]*C[5,5] - C[1,1]*C[2,2]*C[4,5]*C[5,4] - C[1,1]*C[2,4]*C[4,2]*C[5,5] + C[1,1]*C[2,4]*C[4,5]*C[5,2] + C[1,1]*C[2,5]*C[4,2]*C[5,4] - C[1,1]*C[2,5]*C[4,4]*C[5,2] - C[1,2]*C[2,1]*C[4,4]*C[5,5] + C[1,2]*C[2,1]*C[4,5]*C[5,4] + C[1,2]*C[2,4]*C[4,1]*C[5,5] - C[1,2]*C[2,4]*C[4,5]*C[5,1] - C[1,2]*C[2,5]*C[4,1]*C[5,4] + C[1,2]*C[2,5]*C[4,4]*C[5,1] + C[1,4]*C[2,1]*C[4,2]*C[5,5] - C[1,4]*C[2,1]*C[4,5]*C[5,2] - C[1,4]*C[2,2]*C[4,1]*C[5,5] + C[1,4]*C[2,2]*C[4,5]*C[5,1] + C[1,4]*C[2,5]*C[4,1]*C[5,2] - C[1,4]*C[2,5]*C[4,2]*C[5,1] - C[1,5]*C[2,1]*C[4,2]*C[5,4] + C[1,5]*C[2,1]*C[4,4]*C[5,2] + C[1,5]*C[2,2]*C[4,1]*C[5,4] - C[1,5]*C[2,2]*C[4,4]*C[5,1] - C[1,5]*C[2,4]*C[4,1]*C[5,2] + C[1,5]*C[2,4]*C[4,2]*C[5,1])/(C[2,2]*C[4,4]*C[5,5] - C[2,2]*C[4,5]*C[5,4] - C[2,4]*C[4,2]*C[5,5] + C[2,4]*C[4,5]*C[5,2] + C[2,5]*C[4,2]*C[5,4] - C[2,5]*C[4,4]*C[5,2]),
+                 (-C[1,2]*C[2,3]*C[4,4]*C[5,5] + C[1,2]*C[2,3]*C[4,5]*C[5,4] + C[1,2]*C[2,4]*C[4,3]*C[5,5] - C[1,2]*C[2,4]*C[4,5]*C[5,3] - C[1,2]*C[2,5]*C[4,3]*C[5,4] + C[1,2]*C[2,5]*C[4,4]*C[5,3] + C[1,3]*C[2,2]*C[4,4]*C[5,5] - C[1,3]*C[2,2]*C[4,5]*C[5,4] - C[1,3]*C[2,4]*C[4,2]*C[5,5] + C[1,3]*C[2,4]*C[4,5]*C[5,2] + C[1,3]*C[2,5]*C[4,2]*C[5,4] - C[1,3]*C[2,5]*C[4,4]*C[5,2] - C[1,4]*C[2,2]*C[4,3]*C[5,5] + C[1,4]*C[2,2]*C[4,5]*C[5,3] + C[1,4]*C[2,3]*C[4,2]*C[5,5] - C[1,4]*C[2,3]*C[4,5]*C[5,2] - C[1,4]*C[2,5]*C[4,2]*C[5,3] + C[1,4]*C[2,5]*C[4,3]*C[5,2] + C[1,5]*C[2,2]*C[4,3]*C[5,4] - C[1,5]*C[2,2]*C[4,4]*C[5,3] - C[1,5]*C[2,3]*C[4,2]*C[5,4] + C[1,5]*C[2,3]*C[4,4]*C[5,2] + C[1,5]*C[2,4]*C[4,2]*C[5,3] - C[1,5]*C[2,4]*C[4,3]*C[5,2])/(C[2,2]*C[4,4]*C[5,5] - C[2,2]*C[4,5]*C[5,4] - C[2,4]*C[4,2]*C[5,5] + C[2,4]*C[4,5]*C[5,2] + C[2,5]*C[4,2]*C[5,4] - C[2,5]*C[4,4]*C[5,2])],
+                [(-C[2,0]*C[3,2]*C[4,4]*C[5,5] + C[2,0]*C[3,2]*C[4,5]*C[5,4] + C[2,0]*C[3,4]*C[4,2]*C[5,5] - C[2,0]*C[3,4]*C[4,5]*C[5,2] - C[2,0]*C[3,5]*C[4,2]*C[5,4] + C[2,0]*C[3,5]*C[4,4]*C[5,2] + C[2,2]*C[3,0]*C[4,4]*C[5,5] - C[2,2]*C[3,0]*C[4,5]*C[5,4] - C[2,2]*C[3,4]*C[4,0]*C[5,5] + C[2,2]*C[3,4]*C[4,5]*C[5,0] + C[2,2]*C[3,5]*C[4,0]*C[5,4] - C[2,2]*C[3,5]*C[4,4]*C[5,0] - C[2,4]*C[3,0]*C[4,2]*C[5,5] + C[2,4]*C[3,0]*C[4,5]*C[5,2] + C[2,4]*C[3,2]*C[4,0]*C[5,5] - C[2,4]*C[3,2]*C[4,5]*C[5,0] - C[2,4]*C[3,5]*C[4,0]*C[5,2] + C[2,4]*C[3,5]*C[4,2]*C[5,0] + C[2,5]*C[3,0]*C[4,2]*C[5,4] - C[2,5]*C[3,0]*C[4,4]*C[5,2] - C[2,5]*C[3,2]*C[4,0]*C[5,4] + C[2,5]*C[3,2]*C[4,4]*C[5,0] + C[2,5]*C[3,4]*C[4,0]*C[5,2] - C[2,5]*C[3,4]*C[4,2]*C[5,0])/(C[2,2]*C[4,4]*C[5,5] - C[2,2]*C[4,5]*C[5,4] - C[2,4]*C[4,2]*C[5,5] + C[2,4]*C[4,5]*C[5,2] + C[2,5]*C[4,2]*C[5,4] - C[2,5]*C[4,4]*C[5,2]),
+                 (-C[2,1]*C[3,2]*C[4,4]*C[5,5] + C[2,1]*C[3,2]*C[4,5]*C[5,4] + C[2,1]*C[3,4]*C[4,2]*C[5,5] - C[2,1]*C[3,4]*C[4,5]*C[5,2] - C[2,1]*C[3,5]*C[4,2]*C[5,4] + C[2,1]*C[3,5]*C[4,4]*C[5,2] + C[2,2]*C[3,1]*C[4,4]*C[5,5] - C[2,2]*C[3,1]*C[4,5]*C[5,4] - C[2,2]*C[3,4]*C[4,1]*C[5,5] + C[2,2]*C[3,4]*C[4,5]*C[5,1] + C[2,2]*C[3,5]*C[4,1]*C[5,4] - C[2,2]*C[3,5]*C[4,4]*C[5,1] - C[2,4]*C[3,1]*C[4,2]*C[5,5] + C[2,4]*C[3,1]*C[4,5]*C[5,2] + C[2,4]*C[3,2]*C[4,1]*C[5,5] - C[2,4]*C[3,2]*C[4,5]*C[5,1] - C[2,4]*C[3,5]*C[4,1]*C[5,2] + C[2,4]*C[3,5]*C[4,2]*C[5,1] + C[2,5]*C[3,1]*C[4,2]*C[5,4] - C[2,5]*C[3,1]*C[4,4]*C[5,2] - C[2,5]*C[3,2]*C[4,1]*C[5,4] + C[2,5]*C[3,2]*C[4,4]*C[5,1] + C[2,5]*C[3,4]*C[4,1]*C[5,2] - C[2,5]*C[3,4]*C[4,2]*C[5,1])/(C[2,2]*C[4,4]*C[5,5] - C[2,2]*C[4,5]*C[5,4] - C[2,4]*C[4,2]*C[5,5] + C[2,4]*C[4,5]*C[5,2] + C[2,5]*C[4,2]*C[5,4] - C[2,5]*C[4,4]*C[5,2]),
+                 (C[2,2]*C[3,3]*C[4,4]*C[5,5] - C[2,2]*C[3,3]*C[4,5]*C[5,4] - C[2,2]*C[3,4]*C[4,3]*C[5,5] + C[2,2]*C[3,4]*C[4,5]*C[5,3] + C[2,2]*C[3,5]*C[4,3]*C[5,4] - C[2,2]*C[3,5]*C[4,4]*C[5,3] - C[2,3]*C[3,2]*C[4,4]*C[5,5] + C[2,3]*C[3,2]*C[4,5]*C[5,4] + C[2,3]*C[3,4]*C[4,2]*C[5,5] - C[2,3]*C[3,4]*C[4,5]*C[5,2] - C[2,3]*C[3,5]*C[4,2]*C[5,4] + C[2,3]*C[3,5]*C[4,4]*C[5,2] + C[2,4]*C[3,2]*C[4,3]*C[5,5] - C[2,4]*C[3,2]*C[4,5]*C[5,3] - C[2,4]*C[3,3]*C[4,2]*C[5,5] + C[2,4]*C[3,3]*C[4,5]*C[5,2] + C[2,4]*C[3,5]*C[4,2]*C[5,3] - C[2,4]*C[3,5]*C[4,3]*C[5,2] - C[2,5]*C[3,2]*C[4,3]*C[5,4] + C[2,5]*C[3,2]*C[4,4]*C[5,3] + C[2,5]*C[3,3]*C[4,2]*C[5,4] - C[2,5]*C[3,3]*C[4,4]*C[5,2] - C[2,5]*C[3,4]*C[4,2]*C[5,3] + C[2,5]*C[3,4]*C[4,3]*C[5,2])/(C[2,2]*C[4,4]*C[5,5] - C[2,2]*C[4,5]*C[5,4] - C[2,4]*C[4,2]*C[5,5] + C[2,4]*C[4,5]*C[5,2] + C[2,5]*C[4,2]*C[5,4] - C[2,5]*C[4,4]*C[5,2])]])
+            self.index_map = [[0,2],[2,1]]
+        else:
+            self.C = C
+            self.index_map = [[1,4,6],[4,2,5],[6,5,3]]
 
 
     def matrix(self):
@@ -58,88 +84,19 @@ class LinearElasticityMatrix(BilinearElementInterface):
 
                 alpha = I*physical_dim + i
                 beta = J*physical_dim + j
-                K[alpha, beta] += q1.B[I][k]*self.C(i,k,j,l)*q2.B[J][l]*q1.det_jac*q1.weight
-
-        # import ipdb; ipdb.set_trace()
-
-        return K
-
-
-class PlaneStressLinearElasticity(BilinearElementInterface):
-
-    def __init__(self, E, nu):
-        self.E = E
-        self.nu = nu
-
-        self.C = E/(1-nu*nu)*np.array([[1.,nu,0.],[nu,1.,0.],[0.,0.,(1.-nu)/2.]])
-
-        self.index_map = [[0,2],[2,1]]
-
-    def matrix(self):
-        n_node_1 = len(self.elem1.nodes)
-        n_node_2 = len(self.elem2.nodes)
-
-        n_dof_1 = n_node_1*self.elem1.function_dimension
-        n_dof_2 = n_node_2*self.elem2.function_dimension
-
-        physical_dim = self.elem1.physical_dimension
-
-        K = np.zeros((n_dof_2,n_dof_1))
-
-        for q1, q2 in zip(self.elem1.quad_points, self.elem2.quad_points):
-
-            for I,J,i,j,k,l in itertools.product(
-                    range(n_node_1),
-                    range(n_node_2),
-                    range(physical_dim),
-                    range(physical_dim),
-                    range(physical_dim),
-                    range(physical_dim)):
-
-                alpha = I*physical_dim + i
-                beta = J*physical_dim + j
-                C_val = self.C[self.index_map[i][k],self.index_map[j][l]]
-                K[alpha, beta] += q1.B[I][k]*C_val*q2.B[J][l]*q1.det_jac*q1.weight
-        # import ipdb; ipdb.set_trace()
-
-        return K
-
-
-class PlaneStrainLinearElasticity(BilinearElementInterface):
-
-    def __init__(self, E, nu):
-        self.E = E
-        self.nu = nu
-
-        self.C = E/(1.+nu)/(1-2.*nu)*np.array([[1.-nu,nu,0.],[nu,1.-nu,0.],[0.,0.,(1.-2.*nu)/2.]])
-
-        self.index_map = [[0,2],[2,1]]
-
-    def matrix(self):
-        n_node_1 = len(self.elem1.nodes)
-        n_node_2 = len(self.elem2.nodes)
-
-        n_dof_1 = n_node_1*self.elem1.function_dimension
-        n_dof_2 = n_node_2*self.elem2.function_dimension
-
-        physical_dim = self.elem1.physical_dimension
-
-        K = np.zeros((n_dof_2,n_dof_1))
-
-        for q1, q2 in zip(self.elem1.quad_points, self.elem2.quad_points):
-
-            for I,J,i,j,k,l in itertools.product(
-                    range(n_node_1),
-                    range(n_node_2),
-                    range(physical_dim),
-                    range(physical_dim),
-                    range(physical_dim),
-                    range(physical_dim)):
-
-                alpha = I*physical_dim + i
-                beta = J*physical_dim + j
-                C_val = self.C[self.index_map[i][k],self.index_map[j][l]]
+                C_val = self.C[self.index_map[i][k], self.index_map[j][l]]
                 K[alpha, beta] += q1.B[I][k]*C_val*q2.B[J][l]*q1.det_jac*q1.weight
 
         return K
 
+class IsotropicLinearElasticity(LinearElasticity):
+    def __init__(self, lambda_, mu, plane_stress=False, plane_strain=False):
+        C = np.array([
+            [lambda_ + 2*mu, lambda_, lambda_, 0, 0, 0],
+            [lambda_, lambda_ + 2*mu, lambda_, 0, 0, 0],
+            [lambda_, lambda_, lambda_ + 2*mu, 0, 0, 0],
+            [0, 0, 0, mu, 0, 0],
+            [0, 0, 0, 0, mu, 0],
+            [0, 0, 0, 0, 0, mu]
+        ])
+        super().__init__(C, plane_stress=plane_stress, plane_strain=plane_strain)
