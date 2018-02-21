@@ -1,4 +1,5 @@
 from lyza_prototype import *
+from math import *
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -6,39 +7,42 @@ logging.basicConfig(level=logging.INFO)
 
 RESOLUTION = 10
 
-E = 1.
+E = 1000.
 NU = 0.3
 
-LAMBDA = E*NU/(1.+NU)/(1.-2.*NU)
-MU = E/2./(1.+NU)
 
-force_function = lambda x: [
-    (LAMBDA+MU)*(1.-2.*x[0])*(1.-2.*x[1]),
-    -2.*MU*x[1]*(1.-x[1])-2.*(LAMBDA+2.*MU)*x[0]*(1.-x[0]),
-]
+# def exact_solution(pos):
+#     x = pos[0]
+#     y = pos[1]
+#     return[sin(2*pi*x)*cos(2*pi*y), sin(2*pi*y)*cos(2*pi*x)]
 
-exact_solution = lambda x: [
-    0.,
-    -x[0]*(1-x[0])*x[1]*(1-x[1]),
-]
+# def exact_solution_gradient(pos):
+#     x = pos[0]
+#     y = pos[1]
+#     return [[2*pi*cos(2*pi*x)*cos(2*pi*y), -2*pi*sin(2*pi*x)*sin(2*pi*y)], [-2*pi*sin(2*pi*x)*sin(2*pi*y), 2*pi*cos(2*pi*x)*cos(2*pi*y)]]
 
-exact_solution_gradient = lambda x: [
-    [0.,0.],
-    [x[1]*(-2.*x[0]*(x[1]-1.)+x[1]-1.),
-     x[0]*(-2.*x[0]*x[1]+x[0]+2.*x[1]-1.)]
-]
+# def force_function(pos):
+#     x = pos[0]
+#     y = pos[1]
+
+#     return [8*pi**2*E*(NU - 1)*sin(2*pi*x)*cos(2*pi*y)/((NU + 1)*(2*NU - 1)), 8*pi**2*E*(NU - 1)*sin(2*pi*y)*cos(2*pi*x)/((NU + 1)*(2*NU - 1))]
 
 
-# Exact solution from Di Pietro & Ern 2015
-# force_function = lambda x: [
-#     2.*pi*pi*sin(pi*x[0])*sin(pi*x[1]),
-#     2.*pi*pi*cos(pi*x[0])*cos(pi*x[1]),
-# ]
+def exact_solution(pos):
+    x = pos[0]
+    y = pos[1]
+    return [0, -x*y*(x - 1)*(y - 1)]
 
-# exact_solution = lambda x: [
-#     sin(pi*x[0])*sin(pi*x[1]) + 0.5/LAMBDA*x[0],
-#     cos(pi*x[0])*cos(pi*x[1]) + 0.5/LAMBDA*x[1],
-# ]
+def exact_solution_gradient(pos):
+    x = pos[0]
+    y = pos[1]
+    return [[0, 0], [y*(-2*x + 1)*(y - 1), x*(x - 1)*(-2*y + 1)]]
+
+def force_function(pos):
+    x = pos[0]
+    y = pos[1]
+
+    return [-E*(4*x*y - 2*x - 2*y + 1)/(4*NU**2 + 2*NU - 2), E*(2*x*(NU - 1)*(x - 1) + y*(2*NU - 1)*(y - 1))/((NU + 1)*(2*NU - 1))]
 
 
 if __name__ == '__main__':
@@ -52,8 +56,9 @@ if __name__ == '__main__':
 
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V, element_matrices.LinearElasticityMatrix(LAMBDA, MU), quadrature_degree)
-    b_body_force = LinearForm(V, element_vectors.FunctionElementVector(force_function), quadrature_degree)
+    a = BilinearForm(V, V, bilinear_interfaces.PlaneStrainLinearElasticity(E, NU), quadrature_degree)
+    # a = BilinearForm(V, V, bilinear_interfaces.LinearElasticityMatrix(LAMBDA, MU), quadrature_degree)
+    b_body_force = LinearForm(V, linear_interfaces.FunctionElementVector(force_function), quadrature_degree)
 
     bottom_boundary = lambda x: x[1] <= 1e-12
     top_boundary = lambda x: x[1] >= 1. -1e-12
@@ -66,7 +71,6 @@ if __name__ == '__main__':
     # dirichlet_bcs = [DirichletBC(exact_solution, lambda x: True)]
 
     u, f = solve(a, b_body_force, u, dirichlet_bcs)
-
 
     ofile = VTKFile('out_linear_elasticity.vtk')
 

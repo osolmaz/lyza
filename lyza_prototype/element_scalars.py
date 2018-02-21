@@ -1,2 +1,0 @@
-from lyza_prototype.element_interface import ElementInterface
-
