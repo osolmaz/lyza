@@ -1,10 +1,11 @@
 from lyza_prototype import *
-from math import *
 import numpy as np
+from analytic_solution import get_analytic_solution_function, get_gradient_function, get_force_function
+from sympy import Symbol, sin, cos, pi
+# from math import *
 
 import logging
 logging.basicConfig(level=logging.INFO)
-
 
 RESOLUTION = 10
 
@@ -14,38 +15,15 @@ NU = 0.3
 MU = E/(1.+NU)/2.
 LAMBDA = E*NU/(1.+NU)/(1.-2.*NU)
 
-# def exact_solution(pos):
-#     x = pos[0]
-#     y = pos[1]
-#     return[sin(2*pi*x)*cos(2*pi*y), sin(2*pi*y)*cos(2*pi*x)]
+x = Symbol('x')
+y = Symbol('y')
+# analytic_sol_expr = [sin(2*pi*x)*sin(2*pi*y), sin(2*pi*x)*sin(2*pi*y)]
+# analytic_sol_expr = [sin(2*pi*x)*cos(2*pi*y), sin(2*pi*y)*cos(2*pi*x)]
+analytic_sol_expr = [0, -x*y*(x - 1)*(y - 1)]
 
-# def exact_solution_gradient(pos):
-#     x = pos[0]
-#     y = pos[1]
-#     return [[2*pi*cos(2*pi*x)*cos(2*pi*y), -2*pi*sin(2*pi*x)*sin(2*pi*y)], [-2*pi*sin(2*pi*x)*sin(2*pi*y), 2*pi*cos(2*pi*x)*cos(2*pi*y)]]
-
-# def force_function(pos):
-#     x = pos[0]
-#     y = pos[1]
-
-#     return [8*pi**2*E*(NU - 1)*sin(2*pi*x)*cos(2*pi*y)/((NU + 1)*(2*NU - 1)), 8*pi**2*E*(NU - 1)*sin(2*pi*y)*cos(2*pi*x)/((NU + 1)*(2*NU - 1))]
-
-
-def exact_solution(pos):
-    x = pos[0]
-    y = pos[1]
-    return [0, -x*y*(x - 1)*(y - 1)]
-
-def exact_solution_gradient(pos):
-    x = pos[0]
-    y = pos[1]
-    return [[0, 0], [y*(-2*x + 1)*(y - 1), x*(x - 1)*(-2*y + 1)]]
-
-def force_function(pos):
-    x = pos[0]
-    y = pos[1]
-
-    return [-E*(4*x*y - 2*x - 2*y + 1)/(4*NU**2 + 2*NU - 2), E*(2*x*(NU - 1)*(x - 1) + y*(2*NU - 1)*(y - 1))/((NU + 1)*(2*NU - 1))]
+analytic_solution = get_analytic_solution_function(analytic_sol_expr)
+analytic_solution_gradient = get_gradient_function(analytic_sol_expr)
+force_function = get_force_function(analytic_sol_expr, E, NU, plane_stress=False)
 
 
 if __name__ == '__main__':
@@ -69,8 +47,8 @@ if __name__ == '__main__':
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 
-    dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
-    # dirichlet_bcs = [DirichletBC(exact_solution, lambda x: True)]
+    dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
+    # dirichlet_bcs = [DirichletBC(analytic_solution, lambda x: True)]
 
     u, f = solve(a, b_body_force, u, dirichlet_bcs)
 
@@ -81,6 +59,6 @@ if __name__ == '__main__':
 
     ofile.write(mesh, [u, f])
 
-    print('L2 Error: %e'%error.absolute_error(u, exact_solution, exact_solution_gradient, quadrature_degree, error='l2'))
+    print('L2 Error: %e'%error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='l2'))
 
 

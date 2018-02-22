@@ -1,4 +1,3 @@
-from math import *
 from lyza_prototype import *
 from linear_elasticity import *
 
@@ -6,7 +5,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
-# RESOLUTIONS = [2, 4, 6, 8, 10, 15, 20, 30, 40]
+# RESOLUTIONS = [2, 4, 8, 16, 32, 64]
 RESOLUTIONS = [2, 4, 6, 8, 10, 20]
 # RESOLUTIONS = [10]
 
@@ -39,15 +38,15 @@ for RESOLUTION in RESOLUTIONS:
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 
-    dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
+    dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
     u, f = solve(a, b_body_force, u, dirichlet_bcs)
 
     h_max = 1./RESOLUTION
     n_node = len(mesh.nodes)
-    l2 = error.absolute_error(u, exact_solution, exact_solution_gradient, quadrature_degree, error='l2')
-    linf = error.absolute_error(u, exact_solution, exact_solution_gradient, quadrature_degree, error='linf')
-    h1 = error.absolute_error(u, exact_solution, exact_solution_gradient, quadrature_degree, error='h1')
+    l2 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='l2')
+    linf = error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='linf')
+    h1 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='h1')
 
     h_max_array.append(h_max)
     n_node_array.append(n_node)
