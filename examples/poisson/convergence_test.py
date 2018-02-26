@@ -5,7 +5,7 @@ from poisson import *
 # logging.getLogger().setLevel(level=logging.DEBUG)
 
 
-RESOLUTIONS = [4, 6, 8, 10, 15, 20, 30, 40]
+RESOLUTIONS = [4, 8, 16, 32, 64, 128]
 # RESOLUTIONS = [4, 6, 8, 10, 15]
 # RESOLUTIONS = [4, 8, 16]
 

@@ -48,14 +48,15 @@ class BilinearForm:
         # K = coo_matrix((n_dof,n_dof))
 
         logging.debug('Calculating element matrices')
-        # bar = progressbar.ProgressBar(max_value=len(self.interfaces))
+        bar = progressbar.ProgressBar(max_value=len(self.interfaces))
 
         for n, interface in enumerate(self.interfaces):
-            # bar.update(n+1)
             K_elem = interface.matrix()
             for i, I in enumerate(interface.elem1.dofmap):
                 for j, J in enumerate(interface.elem2.dofmap):
                     K[I, J] += K_elem[i,j]
+            bar.update(n+1)
+            # print(n)
 
         return K
 
