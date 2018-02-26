@@ -6,7 +6,6 @@
 !.gitignore
 \#*\#
 *.egg-info/
-misc/
 *.so
 build/
 *.c

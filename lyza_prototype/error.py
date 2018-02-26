@@ -6,7 +6,7 @@ import logging
 import itertools
 
 
-class AbsoluteErrorElementScalar(LinearElementInterface):
+class LpNormInterface(LinearElementInterface):
     def __init__(self, function, exact, p):
         self.function = function
         self.exact = exact
@@ -35,7 +35,39 @@ class AbsoluteErrorElementScalar(LinearElementInterface):
         return result
 
 
-class DerivativeAbsoluteErrorElementScalar(LinearElementInterface):
+class LinfNormInterface(LinearElementInterface):
+    def __init__(self, function, exact):
+        self.function = function
+        self.exact = exact
+
+        self.quad_point_values = None
+
+    def evaluate(self):
+        n_node = len(self.elem.nodes)
+
+        coefficients = [self.function.vector[i,0] for i in self.elem.dofmap]
+
+        self.quad_point_values = []
+
+        for q in self.elem.quad_points:
+            u_h = [0. for i in range(self.elem.function_dimension)]
+
+            for I, i in itertools.product(range(n_node), range(self.elem.function_dimension)):
+                u_h[i] += q.N[I]*coefficients[I*self.elem.function_dimension+i]
+
+            exact_val = self.exact(q.global_coor)
+
+            inner_product = 0.
+            for i in range(self.elem.function_dimension):
+                inner_product += (exact_val[i] - u_h[i])**2
+
+            linf = pow(inner_product, 0.5)
+            self.quad_point_values.append(linf)
+
+        return 0
+
+
+class DerivativeLpNormInterface(LinearElementInterface):
     def __init__(self, function, exact_deriv, p):
         self.function = function
         self.exact_deriv = exact_deriv
@@ -66,7 +98,6 @@ class DerivativeAbsoluteErrorElementScalar(LinearElementInterface):
         return result
 
 
-
 def get_exact_solution_vector(function_space, exact):
     exact_solution_vector = np.zeros((function_space.get_system_size(), 1))
 
@@ -83,7 +114,9 @@ def absolute_error(function, exact, exact_deriv, quadrature_degree, error='l2'):
     if error == 'l2':
         result = absolute_error_lp(function, exact, 2, quadrature_degree)
     elif error == 'linf':
-        result = abs(function.vector - get_exact_solution_vector(function.function_space, exact)).max()
+        # TODO: decide on how to calculate the infinity norm
+        # result = abs(function.vector - get_exact_solution_vector(function.function_space, exact)).max()
+        result = absolute_error_linf(function, exact, quadrature_degree)
     elif error == 'h1':
         l2 = absolute_error_lp(function, exact, 2, quadrature_degree)
         l2d = absolute_error_deriv_lp(function, exact_deriv, 2, quadrature_degree)
@@ -98,18 +131,33 @@ def absolute_error(function, exact, exact_deriv, quadrature_degree, error='l2'):
 def absolute_error_lp(function, exact, p, quadrature_degree):
     form = LinearForm(
         function.function_space,
-        AbsoluteErrorElementScalar(function, exact, p),
+        LpNormInterface(function, exact, p),
         quadrature_degree)
 
     result = form.calculate()
     result = pow(result, 1./p)
-
     return result
+
+def absolute_error_linf(function, exact, quadrature_degree):
+    form = LinearForm(
+        function.function_space,
+        LinfNormInterface(function, exact),
+        quadrature_degree)
+
+    form.calculate()
+
+    all_values = []
+    for i in form.interfaces:
+        all_values += i.quad_point_values
+
+    result = max(all_values)
+    return result
+
 
 def absolute_error_deriv_lp(function, exact_deriv, p, quadrature_degree):
     form = LinearForm(
         function.function_space,
-        DerivativeAbsoluteErrorElementScalar(function, exact_deriv, p),
+        DerivativeLpNormInterface(function, exact_deriv, p),
         quadrature_degree)
 
     result = form.calculate()

@@ -23,9 +23,7 @@ def solve(bilinear_form, linear_form, function, dirichlet_bcs):
 
     f_bc = linear_form.assemble()
 
-    n_dof = A.shape[0]
-
-    apply_bc(A_bc, f_bc, V, dirichlet_bcs)
+    apply_bcs(A_bc, f_bc, V, dirichlet_bcs)
 
     # import matplotlib
     # matplotlib.use('Qt4Agg')
@@ -33,6 +31,7 @@ def solve(bilinear_form, linear_form, function, dirichlet_bcs):
     # pl.spy(A_bc)
     # pl.show()
 
+    n_dof = A.shape[0]
     logging.info('Attempting to solve %dx%d system'%(n_dof, n_dof))
     u = spsolve(A_bc, f_bc).reshape(f_bc.shape)
     logging.debug('Solved')
@@ -80,7 +79,7 @@ def nonlinear_solve(lhs_derivative, lhs_eval, rhs, function, dirichlet_bcs, tol=
 
         f_bc = (lhs_eval+rhs).assemble()
 
-        apply_bc(A_bc, f_bc, V, dirichlet_bcs)
+        apply_bcs(A_bc, f_bc, V, dirichlet_bcs)
 
         logging.info('Attempting to solve %dx%d system'%(n_dof, n_dof))
         update_vector = spsolve(A_bc, f_bc).reshape(f_bc.shape)
@@ -97,18 +96,20 @@ def nonlinear_solve(lhs_derivative, lhs_eval, rhs, function, dirichlet_bcs, tol=
     return function, rhs_function
 
 
-def apply_bc(A, b, V, dirichlet_bcs):
+def apply_bcs(matrix, rhs_vector, function_space, dirichlet_bcs):
 
-        for bc in dirichlet_bcs:
-            for n in V.mesh.nodes:
-                if not bc.position_bool(n.coor): continue
+    for bc in dirichlet_bcs:
+        for n in function_space.mesh.nodes:
+            if not bc.position_bool(n.coor): continue
+            # print(n.idx)
+            value = bc.value(n.coor)
+            for I_i, I in enumerate(function_space.node_dofs[n.idx]):
+                # TODO: nonhomogeneous bcs: asymmetric matrix
+                # for i in range(matrix.shape[0]):
+                #     matrix[i,I] = 0.
+                for i in range(matrix.shape[1]):
+                    matrix[I,i] = 0.
 
-                value = bc.value(n.coor)
-                for n,I in enumerate(V.node_dofs[n.idx]):
-                    for i in range(A.shape[0]):
-                        A[i,I] = 0.
-                    for i in range(A.shape[1]):
-                        A[I,i] = 0.
+                matrix[I,I] = 1.
+                rhs_vector[I] = value[I_i]
 
-                    A[I,I] = 1.
-                    b[I] = value[n]

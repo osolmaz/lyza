@@ -7,6 +7,7 @@ from lyza_prototype.domain import Domain
 from lyza_prototype.vtk import VTKFile
 from lyza_prototype.element_interface import BilinearElementInterface, LinearElementInterface
 from lyza_prototype.quantity import Quantity
+from lyza_prototype.analytic_solution import AnalyticSolution
 
 
 import lyza_prototype.meshes

@@ -5,8 +5,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
-# RESOLUTIONS = [2, 4, 8, 16, 32, 64]
-RESOLUTIONS = [2, 4, 6, 8, 10, 20]
+RESOLUTIONS = [2, 4, 8, 16, 32, 64]
+# RESOLUTIONS = [2, 4, 6, 8, 10, 20]
 # RESOLUTIONS = [10]
 
 n_node_array = []
@@ -30,13 +30,6 @@ for RESOLUTION in RESOLUTIONS:
     u = Function(V)
     a = BilinearForm(V, V, bilinear_interfaces.IsotropicLinearElasticity(LAMBDA, MU, plane_strain=True), quadrature_degree)
     b_body_force = LinearForm(V, linear_interfaces.FunctionElementVector(force_function), quadrature_degree)
-
-    bottom_boundary = lambda x: x[1] <= 1e-12
-    top_boundary = lambda x: x[1] >= 1. -1e-12
-    left_boundary = lambda x: x[0] <= 1e-12
-    right_boundary = lambda x: x[0] >= 1.-1e-12
-
-    perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 

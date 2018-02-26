@@ -1,6 +1,5 @@
 from lyza_prototype import *
-from math import *
-import numpy as np
+import sympy as sp
 
 import itertools
 import logging
@@ -9,22 +8,31 @@ logging.basicConfig(level=logging.INFO)
 
 RESOLUTION = 10
 
-exact_solution = lambda x: [sin(2.*pi*x[0])*sin(2.*pi*x[1])]
+class PoissonAnalyticSolution(AnalyticSolution):
+    def get_force_expression(self):
+        f = sp.Matrix([0])
 
-exact_solution_gradient = lambda x: [[
-    2.*pi*cos(2.*pi*x[0])*sin(2.*pi*x[1]),
-    2.*pi*sin(2.*pi*x[0])*cos(2.*pi*x[1]),
-]]
+        for i in range(2):
+            f[0] += -sp.diff(sp.diff(self.u[0], self.position[i]), self.position[i])
 
-exact_solution_divgrad = lambda x: -8.*pi*pi*sin(2.*pi*x[0])*sin(2.*pi*x[1])
+        return f
 
-force_function = lambda x: [-exact_solution_divgrad(x)]
+analytic_sol_expr = lambda x: [sp.sin(2*sp.pi*x[0])*sp.sin(2*sp.pi*x[1])]
+# analytic_sol_expr = lambda x: [sp.sin(2*sp.pi*x[0])*sp.cos(2*sp.pi*x[1])]
+
+analytic_solution_obj = PoissonAnalyticSolution(analytic_sol_expr, 1, 2)
+
+analytic_solution = analytic_solution_obj.get_analytic_solution_function()
+analytic_solution_gradient = analytic_solution_obj.get_gradient_function()
+force_function = analytic_solution_obj.get_rhs_function()
+
 
 bottom_boundary = lambda x: x[1] <= 1e-12
 top_boundary = lambda x: x[1] >= 1. -1e-12
 left_boundary = lambda x: x[0] <= 1e-12
 right_boundary = lambda x: x[0] >= 1.-1e-12
-
+perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
+# perimeter = lambda x: True
 
 
 if __name__=='__main__':
@@ -37,13 +45,11 @@ if __name__=='__main__':
 
     V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V, element_matrices.PoissonMatrix(), quadrature_degree)
-    b_body_force = LinearForm(V, element_vectors.FunctionElementVector(force_function), quadrature_degree)
+    a = BilinearForm(V, V, bilinear_interfaces.PoissonMatrix(), quadrature_degree)
+    b_body_force = LinearForm(V, linear_interfaces.FunctionElementVector(force_function), quadrature_degree)
 
-    # perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
-    perimeter = lambda x: True
 
-    dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
+    dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
     u, f = solve(a, b_body_force, u, dirichlet_bcs)
 
@@ -54,4 +60,4 @@ if __name__=='__main__':
 
     ofile.write(mesh, [u, f])
 
-    print('L2 Error: %e'%error.absolute_error(u, exact_solution, exact_solution_gradient, quadrature_degree, error='l2'))
+    print('L2 Error: %e'%error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='l2'))
