@@ -39,11 +39,11 @@ if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
     quadrature_degree = 1
-    function_dimension = 1
-    physical_dimension = 2
+    function_size = 1
+    spatial_dimension = 2
     element_degree = 1
 
-    V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
+    V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
     u = Function(V)
     a = BilinearForm(V, V, bilinear_interfaces.PoissonMatrix(), quadrature_degree)
     b_body_force = LinearForm(V, linear_interfaces.FunctionElementVector(force_function), quadrature_degree)

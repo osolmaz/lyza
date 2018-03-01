@@ -63,12 +63,12 @@ mesh = meshes.QuadMesh(
 )
 
 quadrature_degree = 1
-function_dimension = 2
-physical_dimension = 2
+function_size = 2
+spatial_dimension = 2
 element_degree = 1
 
 
-V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
+V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
 u = Function(V)
 a = BilinearForm(V, V, bilinear_interfaces.PlaneStressMatrix(E, NU), quadrature_degree)
 b_neumann = LinearForm(V, linear_interfaces.FunctionElementVector(

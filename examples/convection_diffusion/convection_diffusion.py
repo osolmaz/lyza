@@ -30,11 +30,11 @@ def force_function(x_coor):
 
 class PoissonMatrix(lyza_prototype.ElementMatrix):
 
-    def eval(self, K, N_p, B_p, det_jac, quad_point, function_dim, physical_dim, elem_dim, n_dof, n_node):
+    def eval(self, K, N_p, B_p, det_jac, quad_point, function_size, spatial_dim, elem_dim, n_dof, n_node):
         for I,J,i in itertools.product(
                 range(n_node),
                 range(n_node),
-                range(physical_dim)):
+                range(spatial_dim)):
             # import ipdb; ipdb.set_trace()
 
             K[I, J] += B_p[I][i]*B_p[J][i]*det_jac

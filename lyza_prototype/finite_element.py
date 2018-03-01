@@ -17,19 +17,19 @@ class FiniteElement:
                  quadrature_degree):
 
         self.function_space = function_space
-        self.function_dimension = self.function_space.get_dimension()
-        self.physical_dimension = self.function_space.physical_dimension
+        self.function_size = self.function_space.get_dimension()
+        self.spatial_dimension = self.function_space.spatial_dimension
         self.quad_points = parent_cell.get_quad_points(quadrature_degree)
         self.n_quad_point = len(self.quad_points)
 
         self.nodes = nodes
         self.n_node = len(self.nodes)
-        self.n_dof = self.n_node*self.function_dimension
+        self.n_dof = self.n_node*self.function_size
         self.parent_cell = parent_cell
 
         self.dofmap = []
         for n in self.parent_cell.nodes:
-            node_dofs = [n.idx*self.function_dimension+i for i in range(self.function_dimension)]
+            node_dofs = [n.idx*self.function_size+i for i in range(self.function_size)]
             self.dofmap += self.function_space.node_dofs[n.idx]
 
         if not self.N or not self.Bhat:
@@ -62,10 +62,10 @@ class FiniteElement:
         self.quad_intp_matrix_inv = inverse(self.quad_intp_matrix)
 
     def jacobian(self, xi):
-        J = np.zeros((self.physical_dimension,self.elem_dim))
+        J = np.zeros((self.spatial_dimension,self.elem_dim))
 
         for I in range(len(self.nodes)):
-            for i in range(self.physical_dimension):
+            for i in range(self.spatial_dimension):
                 for j in range(self.elem_dim):
                     J[i,j] += self.nodes[I].coor[i]*self.Bhat[I](xi)[j]
 
@@ -73,25 +73,25 @@ class FiniteElement:
 
 
     def interpolate_at_quad_point(self, function, quad_point_idx):
-        result = np.zeros((function.function_dimension,1))
+        result = np.zeros((function.function_size,1))
 
         for I in range(self.n_node):
             val = function.get_node_val(self.nodes[I].idx)
             # shape_function_val = self.N[I](self.quad_points[quad_point_idx].coor)
 
-            for i in range(function.function_dimension):
+            for i in range(function.function_size):
                 result[i] += self.quad_points[quad_point_idx].N[I]*val[i]
 
         return result
 
     def interpolate_deriv_at_quad_point(self, function, quad_point_idx):
-        result = np.zeros((function.function_dimension,self.physical_dimension))
+        result = np.zeros((function.function_size,self.spatial_dimension))
 
         for I in range(self.n_node):
             val = function.get_node_val(self.nodes[I].idx)
             # shape_function_val = self.N[I](self.quad_points[quad_point_idx].coor)
-            for i in range(function.function_dimension):
-                for j in range(self.physical_dimension):
+            for i in range(function.function_size):
+                for j in range(self.spatial_dimension):
                     result[i,j] += self.quad_points[quad_point_idx].B[I][j]*val[i]
 
         # import ipdb; ipdb.set_trace()

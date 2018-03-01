@@ -75,7 +75,7 @@ class NonlinearPoissonJacobian(BilinearElementInterface):
             for I,J,i in itertools.product(
                     range(self.elem1.n_node),
                     range(self.elem2.n_node),
-                    range(self.elem1.physical_dimension)):
+                    range(self.elem1.spatial_dimension)):
 
                 # K[I, J] += q1.B[I][i]*q2.B[J][i]*q1.det_jac*q1.weight
                 K[I, J] += (dgdu_u_n*q1.N[J]*grad_u_n[i]
@@ -105,7 +105,7 @@ class NonlinearPoissonResidual(LinearElementInterface):
 
             for I,i in itertools.product(
                     range(self.elem.n_node),
-                    range(self.elem.physical_dimension)):
+                    range(self.elem.spatial_dimension)):
                 f[I] += -1*g_u_n*grad_u_n[i]*q.B[I][i] * q.det_jac*q.weight
 
         return f
@@ -124,11 +124,11 @@ if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
     quadrature_degree = 1
-    function_dimension = 1
-    physical_dimension = 2
+    function_size = 1
+    spatial_dimension = 2
     element_degree = 1
 
-    V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
+    V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
     u = Function(V)
     a = NonlinearBilinearForm(V, V, NonlinearPoissonJacobian(), quadrature_degree)
     b_residual = NonlinearForm(V, NonlinearPoissonResidual(), quadrature_degree)

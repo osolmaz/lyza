@@ -10,7 +10,7 @@ from lyza_prototype.function import Function
 from lyza_prototype.form import AggregateBilinearForm, AggregateLinearForm
 
 
-def solve(bilinear_form, linear_form, function, dirichlet_bcs):
+def solve(bilinear_form, linear_form, function, dirichlet_bcs, solver='scipy_sparse', solver_parameters={}):
 
     # A = csr_matrix(self.assemble_stiffness_matrix())
     V = function.function_space
@@ -36,8 +36,10 @@ def solve(bilinear_form, linear_form, function, dirichlet_bcs):
     n_dof = A.shape[0]
     logging.info('Attempting to solve %dx%d system'%(n_dof, n_dof))
 
-    u = solve_petsc(A_bc, f_bc)
-    # u = spsolve(A_bc, f_bc).reshape(f_bc.shape)
+    if solver == 'scipy_sparse':
+        u = spsolve(A_bc, f_bc).reshape(f_bc.shape)
+    elif solver == 'petsc':
+        u = solve_petsc(A_bc, f_bc)
 
     logging.debug('Solved')
 
@@ -108,10 +110,16 @@ def apply_bcs(matrix, rhs_vector, function_space, dirichlet_bcs):
     rhs_vector = rhs_vector - matrix.dot(u_dirichlet)
 
     for bc in dirichlet_bcs:
+        if bc.components:
+            components = bc.components
+        else:
+            components = range(function_space.function_size)
+
         for n in function_space.mesh.nodes:
             if not bc.position_bool(n.coor): continue
             value = bc.value(n.coor)
             for I_i, I in enumerate(function_space.node_dofs[n.idx]):
+                if not I_i in components: continue
                 for i in range(matrix.shape[0]):
                     matrix[i,I] = 0.
                 for i in range(matrix.shape[1]):
@@ -126,10 +134,16 @@ def get_dirichlet_vector(function_space, dirichlet_bcs):
     u_dirichlet = np.zeros((function_space.get_system_size(), 1))
 
     for bc in dirichlet_bcs:
+        if bc.components:
+            components = bc.components
+        else:
+            components = range(function_space.function_size)
+
         for n in function_space.mesh.nodes:
             if not bc.position_bool(n.coor): continue
             value = bc.value(n.coor)
             for I_i, I in enumerate(function_space.node_dofs[n.idx]):
+                if not I_i in components: continue
                 u_dirichlet[I] = value[I_i]
 
     return u_dirichlet

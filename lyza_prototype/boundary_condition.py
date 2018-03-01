@@ -5,11 +5,7 @@ def join_boundaries(boundaries):
     return  result
 
 class DirichletBC():
-    def __init__(self, value, position_bool):
+    def __init__(self, value, position_bool, components=None):
         self.value = value
         self.position_bool = position_bool
-
-class NeumannBC():
-    def __init__(self, value, position_bool):
-        self.value = value
-        self.position_bool = position_bool
+        self.components = components

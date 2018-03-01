@@ -16,8 +16,8 @@ l2_array = []
 h1_array = []
 
 quadrature_degree = 1
-function_dimension = 1
-physical_dimension = 2
+function_size = 1
+spatial_dimension = 2
 element_degree = 1
 
 
@@ -25,7 +25,7 @@ for RESOLUTION in RESOLUTIONS:
 
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
-    V = FunctionSpace(mesh, function_dimension, physical_dimension, element_degree)
+    V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
     u = Function(V)
     a = NonlinearBilinearForm(V, V, NonlinearPoissonJacobian(), quadrature_degree)
     b_residual = NonlinearForm(V, NonlinearPoissonResidual(), quadrature_degree)

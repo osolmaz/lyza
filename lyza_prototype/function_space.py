@@ -3,13 +3,13 @@ class FunctionSpace:
 
     def __init__(self,
                  mesh,
-                 function_dimension,
-                 physical_dimension,
+                 function_size,
+                 spatial_dimension,
                  element_degree):
 
         self.mesh = mesh
-        self.function_dimension = function_dimension
-        self.physical_dimension = physical_dimension
+        self.function_size = function_size
+        self.spatial_dimension = spatial_dimension
         self.element_degree = element_degree
 
         self.node_dofs = []
@@ -18,7 +18,7 @@ class FunctionSpace:
 
 
     def get_dimension(self):
-        return self.function_dimension
+        return self.function_size
 
 
     def get_finite_elements(self, quadrature_degree, domain=None):
@@ -29,7 +29,7 @@ class FunctionSpace:
                 if domain.is_subset(c):
                     dofmap = []
                     for n in c.nodes:
-                        node_dofs = [n.idx*self.function_dimension+i for i in range(self.function_dimension)]
+                        node_dofs = [n.idx*self.function_size+i for i in range(self.function_size)]
                         dofmap += self.node_dofs[n.idx]
 
                     result.append(c.get_finite_element(
@@ -41,7 +41,7 @@ class FunctionSpace:
                 if not c.is_boundary:
                     dofmap = []
                     for n in c.nodes:
-                        node_dofs = [n.idx*self.function_dimension+i for i in range(self.function_dimension)]
+                        node_dofs = [n.idx*self.function_size+i for i in range(self.function_size)]
                         dofmap += self.node_dofs[n.idx]
                     result.append(c.get_finite_element(
                         self,
