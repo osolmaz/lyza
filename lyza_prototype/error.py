@@ -2,6 +2,7 @@ from math import log
 import numpy as np
 from lyza_prototype.form import LinearForm
 from lyza_prototype.element_interface import LinearElementInterface
+from lyza_prototype.analytic_solution import get_analytic_solution_vector
 import logging
 import itertools
 
@@ -98,16 +99,6 @@ class DerivativeLpNormInterface(LinearElementInterface):
         return result
 
 
-def get_exact_solution_vector(function_space, exact):
-    exact_solution_vector = np.zeros((function_space.get_system_size(), 1))
-
-    for n in function_space.mesh.nodes:
-        exact_val = exact(n.coor)
-        for n, dof in enumerate(function_space.node_dofs[n.idx]):
-            exact_solution_vector[dof] = exact_val[n]
-
-    return exact_solution_vector
-
 
 def absolute_error(function, exact, exact_deriv, quadrature_degree, error='l2'):
     logging.debug('Calculating error')
@@ -115,7 +106,7 @@ def absolute_error(function, exact, exact_deriv, quadrature_degree, error='l2'):
         result = absolute_error_lp(function, exact, 2, quadrature_degree)
     elif error == 'linf':
         # TODO: decide on how to calculate the infinity norm
-        # result = abs(function.vector - get_exact_solution_vector(function.function_space, exact)).max()
+        # result = abs(function.vector - get_analytic_solution_vector(function.function_space, exact)).max()
         result = absolute_error_linf(function, exact, quadrature_degree)
     elif error == 'h1':
         l2 = absolute_error_lp(function, exact, 2, quadrature_degree)

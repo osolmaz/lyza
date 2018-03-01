@@ -25,6 +25,24 @@ class PoissonMatrix(BilinearElementInterface):
 
         return K
 
+
+class MassMatrix(BilinearElementInterface):
+
+    def matrix(self):
+
+        K = np.zeros((self.elem2.n_dof, self.elem1.n_dof))
+
+        for q1, q2 in zip(self.elem1.quad_points, self.elem2.quad_points):
+
+            for I,J in itertools.product(
+                    range(self.elem1.n_node),
+                    range(self.elem2.n_node)):
+
+                K[I, J] += q1.N[I]*q2.N[J]*q1.det_jac*q1.weight
+
+        return K
+
+
 class LinearElasticity(BilinearElementInterface):
 
     def __init__(self, C, plane_stress=False, plane_strain=False):

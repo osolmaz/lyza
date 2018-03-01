@@ -1,4 +1,5 @@
 import sympy as sp
+import numpy as np
 import itertools
 
 
@@ -73,4 +74,17 @@ class AnalyticSolution:
             return [[j(*pos[:self.n_dim]) for j in i] for i in lambdas]
 
         return result
+
+
+def get_analytic_solution_vector(function_space, function):
+    result = np.zeros((function_space.get_system_size(), 1))
+
+    for n in function_space.mesh.nodes:
+        analytic_val = function(n.coor)
+        for n, dof in enumerate(function_space.node_dofs[n.idx]):
+            result[dof] = analytic_val[n]
+
+    return result
+
+
 

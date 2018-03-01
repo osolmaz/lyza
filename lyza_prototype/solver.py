@@ -220,3 +220,6 @@ def solve_petsc(mat, vec):
 
     # import ipdb; ipdb.set_trace()
     return u.getArray().reshape(vec.shape)
+
+def solve_scipy_sparse(A, b):
+    return spsolve(A, b).reshape(b.shape)

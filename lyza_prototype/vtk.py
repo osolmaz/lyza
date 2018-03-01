@@ -10,6 +10,9 @@ class VTKFile:
         elif not mesh:
             mesh = functions[0].function_space.mesh
 
+        if not isinstance(functions, list):
+            functions = [functions]
+
         logging.info('Writing %s'%self.path)
 
         f = open(self.path,'w')
