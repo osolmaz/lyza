@@ -33,7 +33,7 @@ class AnalyticSolution:
         lambdas = [sp.lambdify(self.position, i) for i in f_expr]
         n_dim = self.n_dim
 
-        def result(pos):
+        def result(pos, t):
 
             # import ipdb; ipdb.set_trace()
             return [i(*pos[:self.n_dim]) for i in lambdas]
@@ -45,7 +45,7 @@ class AnalyticSolution:
 
         lambdas = [sp.lambdify(self.position, i) for i in self.u]
 
-        def result(pos):
+        def result(pos, t):
             return [i(*pos[:self.n_dim]) for i in lambdas]
 
         return result
@@ -70,17 +70,17 @@ class AnalyticSolution:
                 row.append(sp.lambdify(self.position, gradient_expr[i,j]))
             lambdas.append(row)
 
-        def result(pos):
+        def result(pos, t):
             return [[j(*pos[:self.n_dim]) for j in i] for i in lambdas]
 
         return result
 
 
-def get_analytic_solution_vector(function_space, function):
+def get_analytic_solution_vector(function_space, function, time=0):
     result = np.zeros((function_space.get_system_size(), 1))
 
     for n in function_space.mesh.nodes:
-        analytic_val = function(n.coor)
+        analytic_val = function(n.coor, time)
         for n, dof in enumerate(function_space.node_dofs[n.idx]):
             result[dof] = analytic_val[n]
 

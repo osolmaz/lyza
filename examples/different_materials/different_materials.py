@@ -56,7 +56,7 @@ a2 = BilinearForm(V, V, matrix2, quadrature_degree, domain=LeftPart())
 
 b_neumann = LinearForm(
     V,
-    element_vectors.FunctionElementVector(lambda x: [0.,-P/C]),
+    element_vectors.FunctionInterface(lambda x: [0.,-P/C]),
     quadrature_degree,
     domain=LeftEnd())
 

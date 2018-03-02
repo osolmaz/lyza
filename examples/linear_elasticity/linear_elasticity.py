@@ -67,7 +67,7 @@ if __name__ == '__main__':
     V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
     u = Function(V)
     a = BilinearForm(V, V, bilinear_interfaces.IsotropicLinearElasticity(LAMBDA, MU, plane_strain=True), quadrature_degree)
-    b_body_force = LinearForm(V, linear_interfaces.FunctionElementVector(force_function), quadrature_degree)
+    b_body_force = LinearForm(V, linear_interfaces.FunctionInterface(force_function), quadrature_degree)
 
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]

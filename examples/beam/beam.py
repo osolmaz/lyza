@@ -71,7 +71,7 @@ element_degree = 1
 V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
 u = Function(V)
 a = BilinearForm(V, V, bilinear_interfaces.PlaneStressMatrix(E, NU), quadrature_degree)
-b_neumann = LinearForm(V, linear_interfaces.FunctionElementVector(
+b_neumann = LinearForm(V, linear_interfaces.FunctionInterface(
     lambda x: [0.,-6.*P/C/C/C*(C*C/4.-x[1]*x[1])]), quadrature_degree, domain=RightEnd())
     # lambda x: [0.,-P/C]), quadrature_degree, domain=RightEnd())
 

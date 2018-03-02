@@ -6,7 +6,6 @@ from petsc4py import PETSc
 import time
 
 from lyza_prototype.function import Function
-
 from lyza_prototype.form import AggregateBilinearForm, AggregateLinearForm
 
 

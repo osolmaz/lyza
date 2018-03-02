@@ -6,7 +6,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
-RESOLUTION = 100
+RESOLUTION = 10
 
 class PoissonAnalyticSolution(AnalyticSolution):
     def get_force_expression(self):
@@ -46,7 +46,7 @@ if __name__=='__main__':
     V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
     u = Function(V)
     a = BilinearForm(V, V, bilinear_interfaces.PoissonMatrix(), quadrature_degree)
-    b_body_force = LinearForm(V, linear_interfaces.FunctionElementVector(force_function), quadrature_degree)
+    b_body_force = LinearForm(V, linear_interfaces.FunctionInterface(force_function), quadrature_degree)
 
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]

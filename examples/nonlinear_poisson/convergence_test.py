@@ -29,7 +29,7 @@ for RESOLUTION in RESOLUTIONS:
     u = Function(V)
     a = NonlinearBilinearForm(V, V, NonlinearPoissonJacobian(), quadrature_degree)
     b_residual = NonlinearForm(V, NonlinearPoissonResidual(), quadrature_degree)
-    b_force = LinearForm(V, element_vectors.FunctionElementVector(force_function), quadrature_degree)
+    b_force = LinearForm(V, element_vectors.FunctionInterface(force_function), quadrature_degree)
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 

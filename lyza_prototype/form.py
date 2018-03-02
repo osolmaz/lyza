@@ -60,6 +60,10 @@ class BilinearForm:
 
         return K
 
+    def set_time(self, t):
+        for i in self.interfaces:
+            i.set_time(t)
+
     def __add__(self, a):
         if isinstance(a, BilinearForm):
             return AggregateBilinearForm([self, a])
@@ -114,6 +118,10 @@ class LinearForm:
             result += interface.evaluate()
 
         return result
+
+    def set_time(self, t):
+        for i in self.interfaces:
+            i.set_time(t)
 
     def __add__(self, a):
         if isinstance(a, LinearForm):
