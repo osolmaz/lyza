@@ -4,8 +4,7 @@ from reaction_advection_diffusion import *
 # import logging
 # logging.getLogger().setLevel(level=logging.DEBUG)
 
-
-RESOLUTIONS = [4, 6, 8, 10, 15, 20]
+RESOLUTIONS = [4, 6, 8, 10, 15, 20, 30, 40]
 # RESOLUTIONS = [4, 6, 8, 10]
 
 n_node_array = []
@@ -38,7 +37,7 @@ for RESOLUTION in RESOLUTIONS:
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
-    t_array = np.linspace(0, T_MAX, T_RESOLUTION)
+    t_array = np.linspace(0, T_MAX, RESOLUTION+1)
     u, f = implicit_euler(m, a, b, u, dirichlet_bcs, analytic_solution, t_array)
 
     h_max = 1./RESOLUTION
