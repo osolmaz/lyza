@@ -13,6 +13,7 @@ RESOLUTION = 10
 # RESOLUTION = 20
 
 PARAM_D = np.eye(2)
+# PARAM_D = 1e-6*np.eye(2)
 # PARAM_D = np.array([[2., 0.],[0., 1.]])
 
 # PARAM_C = np.array([2., 1.])

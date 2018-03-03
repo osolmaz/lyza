@@ -157,27 +157,26 @@ def absolute_error_deriv_lp(function, exact_deriv, p, quadrature_degree, time=0)
     return result
 
 
-def plot_convergence_rates(path, h_max_array, l2_array, linf_array, h1_array):
+def plot_convergence_rates(path, h_max_array, l2=None, linf=None, h1=None):
     import pylab as pl
 
     pl.figure()
 
-    linf_convergence_array = [float('nan')]
-    l2_convergence_array = [float('nan')]
-    h1_convergence_array = [float('nan')]
-
-    for i in range(len(h_max_array)):
-        if i >= 1:
-            base = h_max_array[i-1]/h_max_array[i]
-            # import ipdb; ipdb.set_trace()
-            l2_convergence_array.append(log(l2_array[i-1]/l2_array[i])/log(base))
-            linf_convergence_array.append(log(linf_array[i-1]/linf_array[i])/log(base))
-            h1_convergence_array.append(log(h1_array[i-1]/h1_array[i])/log(base))
-
-    # print(l2_convergence_array)
-    pl.semilogx(h_max_array, l2_convergence_array, '-o', label='$L^2$ Convergence rate')
-    pl.semilogx(h_max_array, linf_convergence_array, '-o', label='$L^\infty$ Convergence rate')
-    pl.semilogx(h_max_array, h1_convergence_array, '-o', label='$H^1$ Convergence rate')
+    if l2:
+        pl.semilogx(
+            h_max_array,
+            calculate_convergence(h_max_array, l2),
+            '-o', label='$L^2$ Convergence rate')
+    if linf:
+        pl.semilogx(
+            h_max_array,
+            calculate_convergence(h_max_array, linf),
+            '-o', label='$L^\infty$ Convergence rate')
+    if h1:
+        pl.semilogx(
+            h_max_array,
+            calculate_convergence(h_max_array, h1),
+            '-o', label='$H^1$ Convergence rate')
 
     pl.xlabel('$h_{max}$')
     pl.ylabel('$\log(\epsilon_{n-1}-\epsilon_{n})/\log(h_{max,n-1}-h_{max,n})$')
@@ -188,16 +187,29 @@ def plot_convergence_rates(path, h_max_array, l2_array, linf_array, h1_array):
 
     pl.savefig(path)
 
+def calculate_convergence(h_max_array, error_array):
+    convergence_array = [float('nan')]
 
-def plot_errors(path, h_max_array, l2_array, linf_array, h1_array):
+    for i in range(len(h_max_array)):
+        if i >= 1:
+            base = h_max_array[i-1]/h_max_array[i]
+            # import ipdb; ipdb.set_trace()
+            convergence_array.append(log(error_array[i-1]/error_array[i])/log(base))
+
+    return convergence_array
+
+def plot_errors(path, h_max_array, l2=None, linf=None, h1=None):
     import pylab as pl
 
     pl.figure()
 
     # Error figure
-    pl.loglog(h_max_array, l2_array, '-o', label='$L^2$ Error')
-    pl.loglog(h_max_array, linf_array, '-o', label='$L^\infty$ Error')
-    pl.loglog(h_max_array, h1_array, '-o', label='$H^1$ Error')
+    if l2:
+        pl.loglog(h_max_array, l2, '-o', label='$L^2$ Error')
+    if linf:
+        pl.loglog(h_max_array, linf, '-o', label='$L^\infty$ Error')
+    if h1:
+        pl.loglog(h_max_array, h1, '-o', label='$H^1$ Error')
 
 
     # pl.minorticks_on()

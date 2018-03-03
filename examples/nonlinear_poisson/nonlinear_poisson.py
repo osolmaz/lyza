@@ -6,14 +6,14 @@ import itertools
 import logging
 logging.basicConfig(level=logging.INFO)
 
-exact_solution = lambda x: [sin(2.*pi*x[0])*sin(2.*pi*x[1])]
+exact_solution = lambda x, t: [sin(2.*pi*x[0])*sin(2.*pi*x[1])]
 
-exact_solution_gradient = lambda x: [[
+exact_solution_gradient = lambda x, t: [[
     2.*pi*cos(2.*pi*x[0])*sin(2.*pi*x[1]),
     2.*pi*sin(2.*pi*x[0])*cos(2.*pi*x[1]),
 ]]
 
-exact_solution_divgrad = lambda x: -8.*pi*pi*sin(2.*pi*x[0])*sin(2.*pi*x[1])
+exact_solution_divgrad = lambda x, t: -8.*pi*pi*sin(2.*pi*x[0])*sin(2.*pi*x[1])
 
 g = lambda u: sqrt(exp(u))
 dgdu = lambda u: 0.5*sqrt(exp(u))
@@ -22,10 +22,10 @@ dgdu = lambda u: 0.5*sqrt(exp(u))
 # dgdu = lambda u: 0.
 
 
-def force_function(x):
-    u = exact_solution(x)[0]
-    grad_u = exact_solution_gradient(x)[0]
-    divgrad_u = exact_solution_divgrad(x)
+def force_function(x, t):
+    u = exact_solution(x, t)[0]
+    grad_u = exact_solution_gradient(x, t)[0]
+    divgrad_u = exact_solution_divgrad(x, t)
 
     grad_u_dot_grad_u = sum([i*i for i in grad_u])
     result = -(dgdu(u)*grad_u_dot_grad_u + g(u)*divgrad_u)
@@ -132,7 +132,7 @@ if __name__=='__main__':
     u = Function(V)
     a = NonlinearBilinearForm(V, V, NonlinearPoissonJacobian(), quadrature_degree)
     b_residual = NonlinearForm(V, NonlinearPoissonResidual(), quadrature_degree)
-    b_force = LinearForm(V, element_vectors.FunctionInterface(force_function), quadrature_degree)
+    b_force = LinearForm(V, linear_interfaces.FunctionInterface(force_function), quadrature_degree)
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 

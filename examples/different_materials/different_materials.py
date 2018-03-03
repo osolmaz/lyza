@@ -47,8 +47,8 @@ V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
 
 u = Function(V)
 
-matrix1 = element_matrices.LinearElasticityMatrix(10000., 1000.)
-matrix2 = element_matrices.LinearElasticityMatrix(1000., 100.)
+matrix1 = bilinear_interfaces.LinearElasticityMatrix(10000., 1000.)
+matrix2 = bilinear_interfaces.LinearElasticityMatrix(1000., 100.)
 
 a1 = BilinearForm(V, V, matrix1, quadrature_degree, domain=RightPart())
 a2 = BilinearForm(V, V, matrix2, quadrature_degree, domain=LeftPart())
@@ -56,7 +56,7 @@ a2 = BilinearForm(V, V, matrix2, quadrature_degree, domain=LeftPart())
 
 b_neumann = LinearForm(
     V,
-    element_vectors.FunctionInterface(lambda x: [0.,-P/C]),
+    linear_interfaces.FunctionInterface(lambda x: [0.,-P/C]),
     quadrature_degree,
     domain=LeftEnd())
 

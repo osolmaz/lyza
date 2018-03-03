@@ -11,39 +11,26 @@ from lyza_prototype.form import AggregateBilinearForm, AggregateLinearForm
 
 def solve(bilinear_form, linear_form, function, dirichlet_bcs, solver='scipy_sparse', solver_parameters={}):
 
-    # A = csr_matrix(self.assemble_stiffness_matrix())
     V = function.function_space
-    if not isinstance(bilinear_form, AggregateBilinearForm):
-        bilinear_form = AggregateBilinearForm([bilinear_form])
+    # if not isinstance(bilinear_form, AggregateBilinearForm):
+    #     bilinear_form = AggregateBilinearForm([bilinear_form])
 
-    if not isinstance(linear_form, AggregateLinearForm):
-        linear_form = AggregateLinearForm([linear_form])
+    # if not isinstance(linear_form, AggregateLinearForm):
+    #     linear_form = AggregateLinearForm([linear_form])
 
     A = bilinear_form.assemble()
-    # A_bc = A.copy()
-
     f_bc = linear_form.assemble()
 
     A_bc, f_bc = apply_bcs(A, f_bc, V, dirichlet_bcs)
 
-    # import matplotlib
-    # matplotlib.use('Qt4Agg')
-    # import pylab as pl
-    # pl.spy(A_bc)
-    # pl.show()
-
     n_dof = A.shape[0]
     logging.info('Attempting to solve %dx%d system'%(n_dof, n_dof))
 
-    if solver == 'scipy_sparse':
-        u = spsolve(A_bc, f_bc).reshape(f_bc.shape)
-    elif solver == 'petsc':
-        u = solve_petsc(A_bc, f_bc)
+    u = solve_linear_system(A_bc, f_bc, solver=solver, solver_parameters=solver_parameters)
 
     logging.debug('Solved')
 
     function.set_vector(u)
-
     rhs_function = Function(V)
     rhs_function.set_vector(A.dot(u))
 
@@ -60,11 +47,17 @@ def solve(bilinear_form, linear_form, function, dirichlet_bcs, solver='scipy_spa
 
     # print(force_resultant)
 
+    # import matplotlib
+    # matplotlib.use('Qt4Agg')
+    # import pylab as pl
+    # pl.spy(A_bc)
+    # pl.show()
+
 
     return function, rhs_function
 
 
-def nonlinear_solve(lhs_derivative, lhs_eval, rhs, function, dirichlet_bcs, tol=1e-12):
+def nonlinear_solve(lhs_derivative, lhs_eval, rhs, function, dirichlet_bcs, tol=1e-12, solver='scipy_sparse', solver_parameters={}):
 
     V = function.function_space
     n_dof = V.get_system_size()
@@ -83,12 +76,13 @@ def nonlinear_solve(lhs_derivative, lhs_eval, rhs, function, dirichlet_bcs, tol=
         # A_bc = A.copy()
         # n_dof = A.shape[0]
 
-        f_bc = (lhs_eval+rhs).assemble()
+        f = (lhs_eval+rhs).assemble()
 
-        A_bc, f_bc = apply_bcs(A_bc, f_bc, V, dirichlet_bcs)
+        A_bc, f_bc = apply_bcs(A, f, V, dirichlet_bcs)
 
-        logging.info('Attempting to solve %dx%d system'%(n_dof, n_dof))
-        update_vector = spsolve(A_bc, f_bc).reshape(f_bc.shape)
+        # logging.info('Attempting to solve %dx%d system'%(n_dof, n_dof))
+        update_vector = solve_linear_system(A_bc, f_bc, solver=solver, solver_parameters=solver_parameters)
+
         old_vector = function.vector
         new_vector = old_vector + update_vector
         # import ipdb; ipdb.set_trace()
@@ -168,6 +162,14 @@ def get_dirichlet_vector(function_space, dirichlet_bcs):
 
 #     return matrix, rhs_vector
 
+def solve_linear_system(A, b, solver='scipy_sparse', solver_parameters={}):
+    if solver == 'scipy_sparse':
+        u = spsolve(A, b).reshape(b.shape)
+    elif solver == 'petsc':
+        u = solve_petsc(A, b)
+
+    return u
+
 
 def solve_petsc(mat, vec):
 
@@ -222,3 +224,4 @@ def solve_petsc(mat, vec):
 
 def solve_scipy_sparse(A, b):
     return spsolve(A, b).reshape(b.shape)
+
