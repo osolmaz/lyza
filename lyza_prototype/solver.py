@@ -164,9 +164,11 @@ def get_dirichlet_vector(function_space, dirichlet_bcs):
 
 def solve_linear_system(A, b, solver='scipy_sparse', solver_parameters={}):
     if solver == 'scipy_sparse':
-        u = spsolve(A, b).reshape(b.shape)
+        u = solve_scipy_sparse(A, b)
     elif solver == 'petsc':
         u = solve_petsc(A, b)
+    else:
+        raise Exception('Unknown solver: %s'%solver)
 
     return u
 

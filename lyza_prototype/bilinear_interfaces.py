@@ -1,5 +1,6 @@
 import numpy as np
 from lyza_prototype.element_interface import BilinearElementInterface
+from lyza_prototype.quantity import Quantity
 import itertools
 
 def delta(i,j):
@@ -7,6 +8,15 @@ def delta(i,j):
         return 1
     else:
         return 0
+
+
+def to_voigt(matrix):
+    result = np.zeros((6,1))
+    voigt_index_map = [[0,3,5],[3,1,4],[5,4,2]]
+    for i, j in itertools.product(range(matrix.shape[0]), range(matrix.shape[1])):
+        result[voigt_index_map[i][j]] = matrix[i,j]
+    return result
+
 
 class PoissonMatrix(BilinearElementInterface):
 
@@ -45,6 +55,7 @@ class MassMatrix(BilinearElementInterface):
 
 class LinearElasticity(BilinearElementInterface):
 
+
     def __init__(self, C, plane_stress=False, plane_strain=False):
 
         if plane_stress and plane_strain:
@@ -76,7 +87,43 @@ class LinearElasticity(BilinearElementInterface):
             self.index_map = [[0,2],[2,1]]
         else:
             self.C = C
-            self.index_map = [[1,4,6],[4,2,5],[6,5,3]]
+            self.index_map = [[0,3,5],[3,1,4],[5,4,2]]
+
+
+    def init_quadrature_point_quantities(self, n_quad_point):
+        self.stress = Quantity((6, 1), n_quad_point)
+        self.strain = Quantity((6, 1), n_quad_point)
+
+
+    def calculate_stress(self, function):
+        V = function.function_space
+        voigt_index_map = [[0,3,5],[3,1,4],[5,4,2]]
+        if V != self.elem1.function_space:
+            raise Exception('Function spaces do not match')
+
+        for n_q, q in enumerate(self.elem1.quad_points):
+            grad_u = np.zeros((V.function_size, V.spatial_dimension))
+
+            for I in range(self.elem1.n_node):
+                val = function.get_node_val(self.elem1.nodes[I].idx)
+
+                for i, j in itertools.product(range(V.function_size), range(V.spatial_dimension)):
+                    grad_u[i, j] += val[i]*q.B[I][j]
+
+            strain = (grad_u + grad_u.T)/2.
+            stress = np.zeros((V.function_size, V.spatial_dimension))
+
+            for i, j, k, l in itertools.product(
+                    range(V.function_size), range(V.spatial_dimension),
+                    range(V.function_size), range(V.spatial_dimension)):
+                stress[i,j] += self.C[self.index_map[i][j], self.index_map[k][l]]*strain[k,l]
+
+            strain_voigt = to_voigt(strain)
+            stress_voigt = to_voigt(stress)
+
+            self.stress.vectors[n_q] = stress_voigt
+            self.strain.vectors[n_q] = strain_voigt
+            # import ipdb; ipdb.set_trace()
 
 
     def matrix(self):

@@ -20,6 +20,14 @@ ELASTICITY_TENSOR = plane_strain_tensor
 
 ELASTICITY_TENSOR = ELASTICITY_TENSOR.subs([(sp.Symbol('E'), E), (sp.Symbol('nu'), NU)])
 
+class LinearElasticityBilinearForm(BilinearForm):
+    def calculate_stresses(self, function):
+        for i in self.interfaces:
+            i.calculate_stress(function)
+            # i.prev_sol.vectors = []
+            # for quad_point_idx in range(i.n_quad_point):
+                # i.prev_sol.vectors.append(i.interpolate_at_quad_point(function, quad_point_idx))
+
 
 class LinearElasticityAnalyticSolution(AnalyticSolution):
     def get_force_expression(self):
@@ -66,7 +74,7 @@ if __name__ == '__main__':
 
     V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
     u = Function(V)
-    a = BilinearForm(V, V, bilinear_interfaces.IsotropicLinearElasticity(LAMBDA, MU, plane_strain=True), quadrature_degree)
+    a = LinearElasticityBilinearForm(V, V, bilinear_interfaces.IsotropicLinearElasticity(LAMBDA, MU, plane_strain=True), quadrature_degree)
     b_body_force = LinearForm(V, linear_interfaces.FunctionInterface(force_function), quadrature_degree)
 
 
@@ -74,6 +82,8 @@ if __name__ == '__main__':
     # dirichlet_bcs = [DirichletBC(analytic_solution, lambda x: True)]
 
     u, f = solve(a, b_body_force, u, dirichlet_bcs)
+
+    a.calculate_stresses(u)
 
     ofile = VTKFile('out_linear_elasticity.vtk')
 
