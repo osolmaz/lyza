@@ -35,7 +35,6 @@ class FunctionInterface(LinearElementInterface):
         f = np.zeros((n_dof,1))
 
         for q in self.elem.quad_points:
-            f_cont = np.zeros((n_dof,1))
 
             for I, i in itertools.product(range(n_node), range(self.elem.function_size)):
                 alpha = I*self.elem.function_size + i
@@ -58,9 +57,6 @@ class PointLoad(LinearElementInterface):
         n_dof = n_node*self.elem.function_size
 
         f = np.zeros((n_dof,1))
-
-        # for q in self.elem.quad_points:
-        #     f_cont = np.zeros((n_dof,1))
 
         for I in range(n_node):
             # f_val = self.function(q.global_coor)

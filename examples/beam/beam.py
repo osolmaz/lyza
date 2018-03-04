@@ -14,10 +14,10 @@ E = 10000.
 NU = 0.3
 I = 1./12.*C*C*C
 
-MU = E/2./(1.+NU)
+MU = E/(1.+NU)/2.
+LAMBDA = E*NU/(1.+NU)/(1.-2.*NU)
 
-
-def exact_solution(coor):
+def exact_solution(coor, t):
     x = coor[0]
     y = coor[1]
 
@@ -70,9 +70,9 @@ element_degree = 1
 
 V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
 u = Function(V)
-a = BilinearForm(V, V, bilinear_interfaces.PlaneStressMatrix(E, NU), quadrature_degree)
+a = BilinearForm(V, V, bilinear_interfaces.IsotropicLinearElasticity(LAMBDA, MU, plane_stress=True), quadrature_degree)
 b_neumann = LinearForm(V, linear_interfaces.FunctionInterface(
-    lambda x: [0.,-6.*P/C/C/C*(C*C/4.-x[1]*x[1])]), quadrature_degree, domain=RightEnd())
+    lambda x, t: [0.,-6.*P/C/C/C*(C*C/4.-x[1]*x[1])]), quadrature_degree, domain=RightEnd())
     # lambda x: [0.,-P/C]), quadrature_degree, domain=RightEnd())
 
 # b_neumann = LinearForm(V, linear_interfaces.PointLoadElementVector(
@@ -85,12 +85,15 @@ dirichlet_bcs = [DirichletBC(exact_solution, left_boundary)]
 # dirichlet_bcs = [DirichletBC(exact_solution, lambda x: True)]
 
 u, f = solve(a, b_neumann, u, dirichlet_bcs)
+stress = NodalProjection(a, u).calculate_stresses()
+
 ofile = VTKFile('out_beam.vtk')
 
 u.set_label('displacement')
 f.set_label('force')
+stress.set_label('stress')
 
-ofile.write(mesh, [u, f])
+ofile.write(mesh, [u, f, stress])
 
 
 # print(exact_solution([0.,-C/2.]))

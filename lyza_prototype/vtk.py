@@ -77,6 +77,19 @@ class VTKFile:
 
                         f.write('%.6e %.6e %.6e\n'%(vector[0], vector[1], vector[2]))
                     f.write('\n')
+                elif dim > 3:
+                    f.write('FIELD FieldData 1\n')
+                    f.write('%s %d %d float\n'%(function.label, dim, n_points))
+
+                    for n, i in enumerate(mesh.nodes):
+                        for j, k in enumerate(V.node_dofs[n]):
+                            f.write('%.6e'%function.vector[k])
+                            if j < dim-1:
+                                f.write(' ')
+                            elif j == dim-1:
+                                f.write('\n')
+                    f.write('\n')
+
                 else:
                     raise Exception()
 
