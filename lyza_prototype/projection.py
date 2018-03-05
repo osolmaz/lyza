@@ -3,9 +3,10 @@ from lyza_prototype.function import Function
 import numpy as np
 
 class NodalProjection:
-    def __init__(self, form, function):
+    def __init__(self, form, function, quantity_map):
         self.form = form
-        self.function_size = 6
+        self.quantity_map = quantity_map
+        self.function_size = quantity_map(self.form.interfaces[0]).shape[0]
         self.function = function
 
         self.function_space = FunctionSpace(
@@ -14,10 +15,7 @@ class NodalProjection:
             function.function_space.spatial_dimension,
             function.function_space.element_degree)
 
-    def calculate_stresses(self):
-        for i in self.form.interfaces:
-            i.calculate_stress(self.function)
-
+    def calculate(self):
 
         result = Function(self.function_space)
 
@@ -46,9 +44,9 @@ class NodalProjection:
         n_dof = self.function_size
         f = np.zeros((n_dof,1))
 
-        for q, stress_voigt in zip(interface.elem1.quad_points, interface.stress.vectors):
-            for i in range(6):
-                f[i] += stress_voigt[i]*q.N[node_idx]*q.det_jac*q.weight
+        for q, vector in zip(interface.elem1.quad_points, self.quantity_map(interface).vectors):
+            for i in range(vector.shape[0]):
+                f[i] += vector[i]*q.N[node_idx]*q.det_jac*q.weight
 
         return f
 
@@ -56,7 +54,7 @@ class NodalProjection:
         n_dof = self.function_size
         f = np.zeros((n_dof,1))
 
-        for q, stress_voigt in zip(interface.elem1.quad_points, interface.stress.vectors):
+        for q in interface.elem1.quad_points:
             for i in range(6):
                 f[i] += q.N[node_idx]*q.det_jac*q.weight
 

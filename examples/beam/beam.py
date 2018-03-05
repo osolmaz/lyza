@@ -75,7 +75,7 @@ b_neumann = LinearForm(V, linear_interfaces.FunctionInterface(
     lambda x, t: [0.,-6.*P/C/C/C*(C*C/4.-x[1]*x[1])]), quadrature_degree, domain=RightEnd())
     # lambda x: [0.,-P/C]), quadrature_degree, domain=RightEnd())
 
-# b_neumann = LinearForm(V, linear_interfaces.PointLoadElementVector(
+# b_neumann = LinearForm(V, linear_interfaces.PointLoad(
 #     left_bottom_point,
 #     [0.,-P]), quadrature_degree, domain=LeftEnd())
 
@@ -85,15 +85,21 @@ dirichlet_bcs = [DirichletBC(exact_solution, left_boundary)]
 # dirichlet_bcs = [DirichletBC(exact_solution, lambda x: True)]
 
 u, f = solve(a, b_neumann, u, dirichlet_bcs)
-stress = NodalProjection(a, u).calculate_stresses()
+
+for i in a.interfaces:
+    i.calculate_stress(u)
+
+stress = a.project_to_nodes(lambda i: i.stress)
+strain = a.project_to_nodes(lambda i: i.strain)
 
 ofile = VTKFile('out_beam.vtk')
 
 u.set_label('displacement')
 f.set_label('force')
 stress.set_label('stress')
+strain.set_label('strain')
 
-ofile.write(mesh, [u, f, stress])
+ofile.write(mesh, [u, f, stress, strain])
 
 
 # print(exact_solution([0.,-C/2.]))

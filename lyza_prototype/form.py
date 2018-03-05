@@ -3,6 +3,8 @@ import numpy as np
 import logging
 import progressbar
 from lyza_prototype.element_interface import BilinearElementInterface, LinearElementInterface
+from lyza_prototype.function_space import FunctionSpace
+from lyza_prototype.function import Function
 
 from copy import deepcopy, copy
 import time
@@ -71,6 +73,66 @@ class BilinearForm:
             return AggregateBilinearForm([a]+a.bilinear_forms)
         else:
             raise Exception('Cannot add types')
+
+    def project_to_nodes(self, quantity_map, function_space=1):
+        if function_space == 1:
+            target_space = self.function_space_1
+        elif function_space == 2:
+            target_space = self.function_space_2
+        else:
+            raise Exception('The function space can be either 1 or 2')
+
+        quantity_size = quantity_map(self.interfaces[0]).shape[0]
+
+        new_space = FunctionSpace(
+            target_space.mesh,
+            quantity_size,
+            target_space.spatial_dimension,
+            target_space.element_degree)
+
+
+        result = Function(new_space)
+
+        n_dof = new_space.get_system_size()
+        f = np.zeros((n_dof,1))
+        w = np.zeros((n_dof,1))
+
+        for n, interface in enumerate(self.interfaces):
+            for node_i, node in enumerate(interface.elem1.nodes):
+                f_elem = self._projection_vector(interface, quantity_map, node_i, quantity_size)
+                w_elem = self._projection_weight_vector(interface, node_i, quantity_size)
+                dofs = new_space.node_dofs[node.idx]
+
+                for dof_i, dof in enumerate(dofs):
+                    f[dof] += f_elem[dof_i]
+                    w[dof] += w_elem[dof_i]
+
+        projected_values = f/w
+        # import ipdb; ipdb.set_trace()
+        result.set_vector(projected_values)
+
+        return result
+
+    def _projection_vector(self, interface, quantity_map, node_idx, quantity_size):
+        n_dof = quantity_size
+        f = np.zeros((n_dof,1))
+
+        for q, vector in zip(interface.elem1.quad_points, quantity_map(interface).vectors):
+            for i in range(vector.shape[0]):
+                f[i] += vector[i]*q.N[node_idx]*q.det_jac*q.weight
+
+        return f
+
+    def _projection_weight_vector(self, interface, node_idx, quantity_size):
+        n_dof = quantity_size
+        f = np.zeros((n_dof,1))
+
+        for q in interface.elem1.quad_points:
+            for i in range(6):
+                f[i] += q.N[node_idx]*q.det_jac*q.weight
+
+        return f
+
 
 class LinearForm:
     def __init__(
