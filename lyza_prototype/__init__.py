@@ -8,7 +8,6 @@ from lyza_prototype.vtk import VTKFile
 from lyza_prototype.element_interface import BilinearElementInterface, LinearElementInterface
 from lyza_prototype.quantity import Quantity
 from lyza_prototype.analytic_solution import AnalyticSolution, get_analytic_solution_vector
-from lyza_prototype.projection import NodalProjection
 
 import lyza_prototype.meshes
 import lyza_prototype.error

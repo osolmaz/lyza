@@ -15,7 +15,6 @@ class QuadraturePoint:
         self.N = N
         self.B = B
 
-
     def set_global_coor(self, val):
         self.global_coor = val
 

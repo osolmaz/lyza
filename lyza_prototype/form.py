@@ -90,7 +90,6 @@ class BilinearForm:
             target_space.spatial_dimension,
             target_space.element_degree)
 
-
         result = Function(new_space)
 
         n_dof = new_space.get_system_size()
@@ -98,9 +97,16 @@ class BilinearForm:
         w = np.zeros((n_dof,1))
 
         for n, interface in enumerate(self.interfaces):
-            for node_i, node in enumerate(interface.elem1.nodes):
-                f_elem = self._projection_vector(interface, quantity_map, node_i, quantity_size)
-                w_elem = self._projection_weight_vector(interface, node_i, quantity_size)
+            if function_space == 1:
+                target_elem = interface.elem1
+            elif function_space == 2:
+                target_elem = interface.elem2
+
+            target_quantity = quantity_map(interface)
+
+            for node_i, node in enumerate(target_elem.nodes):
+                f_elem = self._projection_vector(target_elem, target_quantity, node_i)
+                w_elem = self._projection_weight_vector(target_elem, target_quantity, node_i)
                 dofs = new_space.node_dofs[node.idx]
 
                 for dof_i, dof in enumerate(dofs):
@@ -108,26 +114,25 @@ class BilinearForm:
                     w[dof] += w_elem[dof_i]
 
         projected_values = f/w
-        # import ipdb; ipdb.set_trace()
         result.set_vector(projected_values)
 
         return result
 
-    def _projection_vector(self, interface, quantity_map, node_idx, quantity_size):
-        n_dof = quantity_size
+    def _projection_vector(self, target_elem, target_quantity, node_idx):
+        n_dof = target_quantity.shape[0]
         f = np.zeros((n_dof,1))
 
-        for q, vector in zip(interface.elem1.quad_points, quantity_map(interface).vectors):
+        for q, vector in zip(target_elem.quad_points, target_quantity.vectors):
             for i in range(vector.shape[0]):
                 f[i] += vector[i]*q.N[node_idx]*q.det_jac*q.weight
 
         return f
 
-    def _projection_weight_vector(self, interface, node_idx, quantity_size):
-        n_dof = quantity_size
+    def _projection_weight_vector(self, target_elem, target_quantity, node_idx):
+        n_dof = target_quantity.shape[0]
         f = np.zeros((n_dof,1))
 
-        for q in interface.elem1.quad_points:
+        for q in target_elem.quad_points:
             for i in range(6):
                 f[i] += q.N[node_idx]*q.det_jac*q.weight
 
