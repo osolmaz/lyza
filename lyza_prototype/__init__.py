@@ -5,7 +5,7 @@ from lyza_prototype.form import BilinearForm, LinearForm
 from lyza_prototype.boundary_condition import DirichletBC, join_boundaries
 from lyza_prototype.domain import Domain
 from lyza_prototype.vtk import VTKFile
-from lyza_prototype.element_interface import BilinearElementInterface, LinearElementInterface
+from lyza_prototype.element_interface import ElementInterface
 from lyza_prototype.quantity import Quantity
 from lyza_prototype.analytic_solution import AnalyticSolution, get_analytic_solution_vector
 

@@ -57,7 +57,17 @@ def solve(bilinear_form, linear_form, function, dirichlet_bcs, solver='scipy_spa
     return function, rhs_function
 
 
-def nonlinear_solve(lhs_derivative, lhs_eval, rhs, function, dirichlet_bcs, tol=1e-12, solver='scipy_sparse', solver_parameters={}):
+def nonlinear_solve(
+        lhs_derivative,
+        lhs_eval,
+        rhs,
+        function,
+        dirichlet_bcs,
+        prev_sol_quantity_map,
+        prev_sol_grad_quantity_map,
+        tol=1e-12,
+        solver='scipy_sparse',
+        solver_parameters={}):
 
     V = function.function_space
     n_dof = V.get_system_size()
@@ -70,8 +80,19 @@ def nonlinear_solve(lhs_derivative, lhs_eval, rhs, function, dirichlet_bcs, tol=
     function.set_vector(np.zeros((n_dof, 1)))
 
     while rel_error >= tol:
-        lhs_derivative.set_prev_sol(function)
-        lhs_eval.set_prev_sol(function)
+        # lhs_derivative.set_prev_sol(function)
+        # lhs_eval.set_prev_sol(function)
+
+        lhs_derivative.project_to_quadrature_points(function, prev_sol_quantity_map)
+        lhs_derivative.project_gradient_to_quadrature_points(function, prev_sol_grad_quantity_map)
+
+        lhs_eval.project_to_quadrature_points(function, prev_sol_quantity_map)
+        lhs_eval.project_gradient_to_quadrature_points(function, prev_sol_grad_quantity_map)
+
+
+        # lhs_eval.set_prev_sol(function)
+
+
         A = lhs_derivative.assemble()
         # A_bc = A.copy()
         # n_dof = A.shape[0]

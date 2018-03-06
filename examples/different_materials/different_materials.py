@@ -47,8 +47,8 @@ V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
 
 u = Function(V)
 
-matrix1 = bilinear_interfaces.LinearElasticityMatrix(10000., 1000.)
-matrix2 = bilinear_interfaces.LinearElasticityMatrix(1000., 100.)
+matrix1 = bilinear_interfaces.IsotropicLinearElasticity(10000., 1000., plane_stress=True)
+matrix2 = bilinear_interfaces.IsotropicLinearElasticity(1000., 100., plane_stress=True)
 
 a1 = BilinearForm(V, V, matrix1, quadrature_degree, domain=RightPart())
 a2 = BilinearForm(V, V, matrix2, quadrature_degree, domain=LeftPart())
@@ -56,11 +56,11 @@ a2 = BilinearForm(V, V, matrix2, quadrature_degree, domain=LeftPart())
 
 b_neumann = LinearForm(
     V,
-    linear_interfaces.FunctionInterface(lambda x: [0.,-P/C]),
+    linear_interfaces.FunctionInterface(lambda x, t: [0.,-P/C]),
     quadrature_degree,
     domain=LeftEnd())
 
-dirichlet_bcs = [DirichletBC(lambda x: [0.,0.], right_boundary)]
+dirichlet_bcs = [DirichletBC(lambda x, t: [0.,0.], right_boundary)]
 
 u, f = solve(a1+a2, b_neumann, u, dirichlet_bcs)
 ofile = VTKFile('out_different_materials.vtk')

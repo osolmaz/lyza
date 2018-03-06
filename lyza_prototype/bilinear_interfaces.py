@@ -1,5 +1,5 @@
 import numpy as np
-from lyza_prototype.element_interface import BilinearElementInterface
+from lyza_prototype.element_interface import ElementInterface
 from lyza_prototype.quantity import Quantity
 import itertools
 
@@ -18,42 +18,42 @@ def to_voigt(matrix):
     return result
 
 
-class PoissonMatrix(BilinearElementInterface):
+class PoissonMatrix(ElementInterface):
 
     def matrix(self):
 
-        K = np.zeros((self.elem2.n_dof, self.elem1.n_dof))
+        K = np.zeros((self.elements[1].n_dof, self.elements[0].n_dof))
 
-        for q1, q2 in zip(self.elem1.quad_points, self.elem2.quad_points):
+        for q1, q2 in zip(self.elements[0].quad_points, self.elements[1].quad_points):
 
             for I,J,i in itertools.product(
-                    range(self.elem1.n_node),
-                    range(self.elem2.n_node),
-                    range(self.elem1.spatial_dimension)):
+                    range(self.elements[0].n_node),
+                    range(self.elements[1].n_node),
+                    range(self.elements[0].spatial_dimension)):
 
                 K[I, J] += q1.B[I][i]*q2.B[J][i]*q1.det_jac*q1.weight
 
         return K
 
 
-class MassMatrix(BilinearElementInterface):
+class MassMatrix(ElementInterface):
 
     def matrix(self):
 
-        K = np.zeros((self.elem2.n_dof, self.elem1.n_dof))
+        K = np.zeros((self.elements[1].n_dof, self.elements[0].n_dof))
 
-        for q1, q2 in zip(self.elem1.quad_points, self.elem2.quad_points):
+        for q1, q2 in zip(self.elements[0].quad_points, self.elements[1].quad_points):
 
             for I,J in itertools.product(
-                    range(self.elem1.n_node),
-                    range(self.elem2.n_node)):
+                    range(self.elements[0].n_node),
+                    range(self.elements[1].n_node)):
 
                 K[I, J] += q1.N[I]*q2.N[J]*q1.det_jac*q1.weight
 
         return K
 
 
-class LinearElasticity(BilinearElementInterface):
+class LinearElasticity(ElementInterface):
 
 
     def __init__(self, C, plane_stress=False, plane_strain=False):
@@ -98,14 +98,14 @@ class LinearElasticity(BilinearElementInterface):
     def calculate_stress(self, function):
         V = function.function_space
         voigt_index_map = [[0,3,5],[3,1,4],[5,4,2]]
-        if V != self.elem1.function_space:
+        if V != self.elements[0].function_space:
             raise Exception('Function spaces do not match')
 
-        for n_q, q in enumerate(self.elem1.quad_points):
+        for n_q, q in enumerate(self.elements[0].quad_points):
             grad_u = np.zeros((V.function_size, V.spatial_dimension))
 
-            for I in range(self.elem1.n_node):
-                val = function.get_node_val(self.elem1.nodes[I].idx)
+            for I in range(self.elements[0].n_node):
+                val = function.get_node_val(self.elements[0].nodes[I].idx)
 
                 for i, j in itertools.product(range(V.function_size), range(V.spatial_dimension)):
                     grad_u[i, j] += val[i]*q.B[I][j]
@@ -127,17 +127,17 @@ class LinearElasticity(BilinearElementInterface):
 
 
     def matrix(self):
-        n_node_1 = len(self.elem1.nodes)
-        n_node_2 = len(self.elem2.nodes)
+        n_node_1 = len(self.elements[0].nodes)
+        n_node_2 = len(self.elements[1].nodes)
 
-        n_dof_1 = n_node_1*self.elem1.function_size
-        n_dof_2 = n_node_2*self.elem2.function_size
+        n_dof_1 = n_node_1*self.elements[0].function_size
+        n_dof_2 = n_node_2*self.elements[1].function_size
 
-        spatial_dim = self.elem1.spatial_dimension
+        spatial_dim = self.elements[0].spatial_dimension
 
         K = np.zeros((n_dof_2,n_dof_1))
 
-        for q1, q2 in zip(self.elem1.quad_points, self.elem2.quad_points):
+        for q1, q2 in zip(self.elements[0].quad_points, self.elements[1].quad_points):
 
             for I,J,i,j,k,l in itertools.product(
                     range(n_node_1),

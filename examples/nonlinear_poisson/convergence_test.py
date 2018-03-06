@@ -14,11 +14,6 @@ h_max_array = []
 l2_array = []
 h1_array = []
 
-quadrature_degree = 1
-function_size = 1
-spatial_dimension = 2
-element_degree = 1
-
 
 for RESOLUTION in RESOLUTIONS:
 
@@ -26,15 +21,15 @@ for RESOLUTION in RESOLUTIONS:
 
     V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
     u = Function(V)
-    a = NonlinearBilinearForm(V, V, NonlinearPoissonJacobian(), quadrature_degree)
-    b_residual = NonlinearForm(V, NonlinearPoissonResidual(), quadrature_degree)
+    a = BilinearForm(V, V, NonlinearPoissonJacobian(), quadrature_degree)
+    b_residual = LinearForm(V, NonlinearPoissonResidual(), quadrature_degree)
     b_force = LinearForm(V, linear_interfaces.FunctionInterface(force_function), quadrature_degree)
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 
     dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
 
-    u, f = nonlinear_solve(a, b_residual, b_force, u, dirichlet_bcs, solver='petsc')
+    u, f = nonlinear_solve(a, b_residual, b_force, u, dirichlet_bcs, lambda i: i.prev_sol, lambda i: i.prev_sol_grad, solver='petsc')
 
     h_max = 1./RESOLUTION
     n_node = len(mesh.nodes)

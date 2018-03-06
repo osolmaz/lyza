@@ -1,13 +1,13 @@
 from math import log
 import numpy as np
 from lyza_prototype.form import LinearForm
-from lyza_prototype.element_interface import LinearElementInterface
+from lyza_prototype.element_interface import ElementInterface
 from lyza_prototype.analytic_solution import get_analytic_solution_vector
 import logging
 import itertools
 
 
-class LpNormInterface(LinearElementInterface):
+class LpNormInterface(ElementInterface):
     def __init__(self, function, exact, p):
         self.function = function
         self.exact = exact
@@ -15,20 +15,20 @@ class LpNormInterface(LinearElementInterface):
 
     def evaluate(self):
         result = 0.
-        n_node = len(self.elem.nodes)
+        n_node = len(self.elements[0].nodes)
 
-        coefficients = [self.function.vector[i,0] for i in self.elem.dofmap]
+        coefficients = [self.function.vector[i,0] for i in self.elements[0].dofmap]
 
-        for q in self.elem.quad_points:
-            u_h = [0. for i in range(self.elem.function_size)]
+        for q in self.elements[0].quad_points:
+            u_h = [0. for i in range(self.elements[0].function_size)]
 
-            for I, i in itertools.product(range(n_node), range(self.elem.function_size)):
-                u_h[i] += q.N[I]*coefficients[I*self.elem.function_size+i]
+            for I, i in itertools.product(range(n_node), range(self.elements[0].function_size)):
+                u_h[i] += q.N[I]*coefficients[I*self.elements[0].function_size+i]
 
             exact_val = self.exact(q.global_coor)
 
             inner_product = 0.
-            for i in range(self.elem.function_size):
+            for i in range(self.elements[0].function_size):
                 inner_product += (exact_val[i] - u_h[i])**2
 
             result += pow(inner_product, self.p/2.)*q.weight*q.det_jac
@@ -36,7 +36,7 @@ class LpNormInterface(LinearElementInterface):
         return result
 
 
-class LinfNormInterface(LinearElementInterface):
+class LinfNormInterface(ElementInterface):
     def __init__(self, function, exact):
         self.function = function
         self.exact = exact
@@ -44,22 +44,22 @@ class LinfNormInterface(LinearElementInterface):
         self.quad_point_values = None
 
     def evaluate(self):
-        n_node = len(self.elem.nodes)
+        n_node = len(self.elements[0].nodes)
 
-        coefficients = [self.function.vector[i,0] for i in self.elem.dofmap]
+        coefficients = [self.function.vector[i,0] for i in self.elements[0].dofmap]
 
         self.quad_point_values = []
 
-        for q in self.elem.quad_points:
-            u_h = [0. for i in range(self.elem.function_size)]
+        for q in self.elements[0].quad_points:
+            u_h = [0. for i in range(self.elements[0].function_size)]
 
-            for I, i in itertools.product(range(n_node), range(self.elem.function_size)):
-                u_h[i] += q.N[I]*coefficients[I*self.elem.function_size+i]
+            for I, i in itertools.product(range(n_node), range(self.elements[0].function_size)):
+                u_h[i] += q.N[I]*coefficients[I*self.elements[0].function_size+i]
 
             exact_val = self.exact(q.global_coor)
 
             inner_product = 0.
-            for i in range(self.elem.function_size):
+            for i in range(self.elements[0].function_size):
                 inner_product += (exact_val[i] - u_h[i])**2
 
             linf = pow(inner_product, 0.5)
@@ -68,7 +68,7 @@ class LinfNormInterface(LinearElementInterface):
         return 0
 
 
-class DerivativeLpNormInterface(LinearElementInterface):
+class DerivativeLpNormInterface(ElementInterface):
     def __init__(self, function, exact_deriv, p):
         self.function = function
         self.exact_deriv = exact_deriv
@@ -76,21 +76,21 @@ class DerivativeLpNormInterface(LinearElementInterface):
 
     def evaluate(self):
         result = 0.
-        n_node = len(self.elem.nodes)
+        n_node = len(self.elements[0].nodes)
 
-        coefficients = [self.function.vector[i,0] for i in self.elem.dofmap]
+        coefficients = [self.function.vector[i,0] for i in self.elements[0].dofmap]
 
-        for q in self.elem.quad_points:
-            u_h = np.zeros((self.elem.function_size, self.elem.spatial_dimension))
+        for q in self.elements[0].quad_points:
+            u_h = np.zeros((self.elements[0].function_size, self.elements[0].spatial_dimension))
 
-            for I, i, j in itertools.product(range(n_node), range(self.elem.function_size), range(self.elem.spatial_dimension)):
-                u_h[i][j] += q.B[I][j]*coefficients[I*self.elem.function_size+i]
+            for I, i, j in itertools.product(range(n_node), range(self.elements[0].function_size), range(self.elements[0].spatial_dimension)):
+                u_h[i][j] += q.B[I][j]*coefficients[I*self.elements[0].function_size+i]
 
             exact_val = np.array(self.exact_deriv(q.global_coor))
 
             inner_product = 0.
-            for i in range(self.elem.function_size):
-                for j in range(self.elem.spatial_dimension):
+            for i in range(self.elements[0].function_size):
+                for j in range(self.elements[0].spatial_dimension):
                     inner_product += (exact_val[i,j] - u_h[i,j])**2
 
 

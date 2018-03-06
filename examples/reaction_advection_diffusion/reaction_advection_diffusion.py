@@ -26,32 +26,32 @@ PARAM_R = 1.
 T_MAX = 1.
 T_RESOLUTION = 50
 
-class RADMatrix(BilinearElementInterface):
+class RADMatrix(ElementInterface):
 
     def matrix(self):
 
-        K = np.zeros((self.elem2.n_dof, self.elem1.n_dof))
+        K = np.zeros((self.elements[1].n_dof, self.elements[0].n_dof))
 
-        for q1, q2 in zip(self.elem1.quad_points, self.elem2.quad_points):
+        for q1, q2 in zip(self.elements[0].quad_points, self.elements[1].quad_points):
 
             for I,J,i,j in itertools.product(
-                    range(self.elem1.n_node),
-                    range(self.elem2.n_node),
-                    range(self.elem1.spatial_dimension),
-                    range(self.elem1.spatial_dimension)):
+                    range(self.elements[0].n_node),
+                    range(self.elements[1].n_node),
+                    range(self.elements[0].spatial_dimension),
+                    range(self.elements[0].spatial_dimension)):
 
                 K[I, J] += PARAM_D[i,j]*q2.B[J][j]*q1.B[I][i]*q1.det_jac*q1.weight
 
             for I,J,i in itertools.product(
-                    range(self.elem1.n_node),
-                    range(self.elem2.n_node),
-                    range(self.elem1.spatial_dimension)):
+                    range(self.elements[0].n_node),
+                    range(self.elements[1].n_node),
+                    range(self.elements[0].spatial_dimension)):
 
                 K[I, J] += -q2.N[J]*PARAM_C[i]*q1.B[I][i]*q1.det_jac*q1.weight
 
             for I,J in itertools.product(
-                    range(self.elem1.n_node),
-                    range(self.elem2.n_node)):
+                    range(self.elements[0].n_node),
+                    range(self.elements[1].n_node)):
                 K[I, J] += -PARAM_R*q2.N[J]*q1.N[I]*q1.det_jac*q1.weight
 
         return K

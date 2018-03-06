@@ -84,7 +84,7 @@ class FiniteElement:
 
         return result
 
-    def interpolate_deriv_at_quad_point(self, function, quad_point_idx):
+    def interpolate_gradient_at_quad_point(self, function, quad_point_idx):
         result = np.zeros((function.function_size,self.spatial_dimension))
 
         for I in range(self.n_node):

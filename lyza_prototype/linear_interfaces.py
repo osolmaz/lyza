@@ -1,50 +1,50 @@
-from lyza_prototype.element_interface import LinearElementInterface
+from lyza_prototype.element_interface import ElementInterface
 import numpy as np
 import itertools
 
-# class FunctionInterface(LinearElementInterface):
+# class FunctionInterface(ElementInterface):
 
 #     def __init__(self, function):
 #         self.function = function
 
 #     def vector(self):
-#         n_node = len(self.elem.nodes)
-#         n_dof = n_node*self.elem.function_size
+#         n_node = len(self.elements[0].nodes)
+#         n_dof = n_node*self.elements[0].function_size
 
 #         f = np.zeros((n_dof,1))
 
-#         for q in self.elem.quad_points:
+#         for q in self.elements[0].quad_points:
 #             f_cont = np.zeros((n_dof,1))
 
-#             for I, i in itertools.product(range(n_node), range(self.elem.function_size)):
-#                 alpha = I*self.elem.function_size + i
+#             for I, i in itertools.product(range(n_node), range(self.elements[0].function_size)):
+#                 alpha = I*self.elements[0].function_size + i
 #                 f_val = self.function(q.global_coor)
 #                 f[alpha] += f_val[i]*q.N[I]*q.det_jac*q.weight
 
 #         return f
 
-class FunctionInterface(LinearElementInterface):
+class FunctionInterface(ElementInterface):
 
     def __init__(self, function):
         self.function = function
 
     def vector(self):
-        n_node = len(self.elem.nodes)
-        n_dof = n_node*self.elem.function_size
+        n_node = len(self.elements[0].nodes)
+        n_dof = n_node*self.elements[0].function_size
 
         f = np.zeros((n_dof,1))
 
-        for q in self.elem.quad_points:
+        for q in self.elements[0].quad_points:
 
-            for I, i in itertools.product(range(n_node), range(self.elem.function_size)):
-                alpha = I*self.elem.function_size + i
+            for I, i in itertools.product(range(n_node), range(self.elements[0].function_size)):
+                alpha = I*self.elements[0].function_size + i
                 f_val = self.function(q.global_coor, self.time)
                 f[alpha] += f_val[i]*q.N[I]*q.det_jac*q.weight
 
         return f
 
 
-class PointLoad(LinearElementInterface):
+class PointLoad(ElementInterface):
 
     def __init__(self, position_function, value):
         self.position_function = position_function
@@ -53,17 +53,17 @@ class PointLoad(LinearElementInterface):
         # self.function = function
 
     def vector(self):
-        n_node = len(self.elem.nodes)
-        n_dof = n_node*self.elem.function_size
+        n_node = len(self.elements[0].nodes)
+        n_dof = n_node*self.elements[0].function_size
 
         f = np.zeros((n_dof,1))
 
         for I in range(n_node):
             # f_val = self.function(q.global_coor)
-            if self.position_function(self.elem.nodes[I].coor) and not self.applied:
-                for i in range(self.elem.function_size):
+            if self.position_function(self.elements[0].nodes[I].coor) and not self.applied:
+                for i in range(self.elements[0].function_size):
 
-                    alpha = I*self.elem.function_size + i
+                    alpha = I*self.elements[0].function_size + i
                     f[alpha] += self.value[i]
 
                 self.applied = True

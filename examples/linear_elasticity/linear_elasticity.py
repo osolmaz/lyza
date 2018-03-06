@@ -70,26 +70,30 @@ if __name__ == '__main__':
     a = BilinearForm(V, V, bilinear_interfaces.IsotropicLinearElasticity(LAMBDA, MU, plane_strain=True), quadrature_degree)
     b_body_force = LinearForm(V, linear_interfaces.FunctionInterface(force_function), quadrature_degree)
 
-    stress_projection = NodalProjection(a, u)
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
     # dirichlet_bcs = [DirichletBC(analytic_solution, lambda x: True)]
 
     u, f = solve(a, b_body_force, u, dirichlet_bcs)
 
-    stress = stress_projection.calculate_stresses()
+    for i in a.interfaces:
+        i.calculate_stress(u)
+
+    stress = a.project_to_nodes(lambda i: i.stress)
+    strain = a.project_to_nodes(lambda i: i.strain)
 
     ofile = VTKFile('out_linear_elasticity.vtk')
 
     u.set_label('u')
     f.set_label('f')
     stress.set_label('stress')
+    strain.set_label('strain')
 
     # tmp = Function(FunctionSpace(mesh, 5, spatial_dimension, element_degree))
     # tmp.set_label('tmp')
 
 
-    ofile.write(mesh, [u, f, stress])
+    ofile.write(mesh, [u, f, stress, strain])
 
     print('L2 Error: %e'%error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='l2'))
 

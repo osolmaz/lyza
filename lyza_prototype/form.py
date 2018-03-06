@@ -2,14 +2,95 @@ import numpy as np
 # from scipy.sparse import coo_matrix
 import logging
 import progressbar
-from lyza_prototype.element_interface import BilinearElementInterface, LinearElementInterface
+from lyza_prototype.element_interface import ElementInterface
 from lyza_prototype.function_space import FunctionSpace
 from lyza_prototype.function import Function
 
 from copy import deepcopy, copy
 import time
 
-class BilinearForm:
+class Form:
+    def project_to_nodes(self, quantity_map, function_space=1):
+        if function_space == 1:
+            target_space = self.function_space_1
+        elif function_space == 2:
+            target_space = self.function_space_2
+        else:
+            raise Exception('Function space can be either 1 or 2')
+
+        quantity_size = quantity_map(self.interfaces[0]).shape[0]
+
+        new_space = FunctionSpace(
+            target_space.mesh,
+            quantity_size,
+            target_space.spatial_dimension,
+            target_space.element_degree)
+
+        result = Function(new_space)
+
+        n_dof = new_space.get_system_size()
+        f = np.zeros((n_dof,1))
+        w = np.zeros((n_dof,1))
+
+        for n, interface in enumerate(self.interfaces):
+            target_elem = interface.elements[function_space-1]
+
+            target_quantity = quantity_map(interface)
+
+            for node_i, node in enumerate(target_elem.nodes):
+                f_elem = self._projection_vector(target_elem, target_quantity, node_i)
+                w_elem = self._projection_weight_vector(target_elem, target_quantity, node_i)
+                dofs = new_space.node_dofs[node.idx]
+
+                for dof_i, dof in enumerate(dofs):
+                    f[dof] += f_elem[dof_i]
+                    w[dof] += w_elem[dof_i]
+
+        projected_values = f/w
+        result.set_vector(projected_values)
+
+        return result
+
+    def _projection_vector(self, target_elem, target_quantity, node_idx):
+        n_dof = target_quantity.shape[0]
+        f = np.zeros((n_dof,1))
+
+        for q, vector in zip(target_elem.quad_points, target_quantity.vectors):
+            for i in range(n_dof):
+                f[i] += vector[i]*q.N[node_idx]*q.det_jac*q.weight
+
+        return f
+
+    def _projection_weight_vector(self, target_elem, target_quantity, node_idx):
+        n_dof = target_quantity.shape[0]
+        f = np.zeros((n_dof,1))
+
+        for q in target_elem.quad_points:
+            for i in range(n_dof):
+                f[i] += q.N[node_idx]*q.det_jac*q.weight
+
+        return f
+
+    def project_to_quadrature_points(self, function, quantity_map, function_space=1):
+
+        for interface in self.interfaces:
+            quantity = quantity_map(interface)
+            elem = interface.elements[function_space-1]
+
+            for i in range(interface.n_quad_point):
+                quantity.vectors[i] = elem.interpolate_at_quad_point(function, i)
+
+    def project_gradient_to_quadrature_points(self, function, quantity_map, function_space=1):
+
+        for interface in self.interfaces:
+            quantity = quantity_map(interface)
+            elem = interface.elements[function_space-1]
+
+            for i in range(interface.n_quad_point):
+                quantity.vectors[i] = elem.interpolate_gradient_at_quad_point(function, i)
+
+
+class BilinearForm(Form):
     def __init__(
             self,
             function_space_1,
@@ -39,7 +120,7 @@ class BilinearForm:
             new_interface = copy(element_interface)
             new_interface.init_node_quantities(elem1.n_node)
             new_interface.init_quadrature_point_quantities(elem1.n_node)
-            new_interface.set_elements(elem1, elem2)
+            new_interface.set_elements([elem1, elem2])
             self.interfaces.append(new_interface)
 
     def assemble(self):
@@ -54,8 +135,8 @@ class BilinearForm:
 
         for n, interface in enumerate(self.interfaces):
             K_elem = interface.matrix()
-            for i, I in enumerate(interface.elem1.dofmap):
-                for j, J in enumerate(interface.elem2.dofmap):
+            for i, I in enumerate(interface.elements[0].dofmap):
+                for j, J in enumerate(interface.elements[1].dofmap):
                     K[I, J] += K_elem[i,j]
             bar.update(n+1)
             # print(n)
@@ -74,72 +155,9 @@ class BilinearForm:
         else:
             raise Exception('Cannot add types')
 
-    def project_to_nodes(self, quantity_map, function_space=1):
-        if function_space == 1:
-            target_space = self.function_space_1
-        elif function_space == 2:
-            target_space = self.function_space_2
-        else:
-            raise Exception('The function space can be either 1 or 2')
-
-        quantity_size = quantity_map(self.interfaces[0]).shape[0]
-
-        new_space = FunctionSpace(
-            target_space.mesh,
-            quantity_size,
-            target_space.spatial_dimension,
-            target_space.element_degree)
-
-        result = Function(new_space)
-
-        n_dof = new_space.get_system_size()
-        f = np.zeros((n_dof,1))
-        w = np.zeros((n_dof,1))
-
-        for n, interface in enumerate(self.interfaces):
-            if function_space == 1:
-                target_elem = interface.elem1
-            elif function_space == 2:
-                target_elem = interface.elem2
-
-            target_quantity = quantity_map(interface)
-
-            for node_i, node in enumerate(target_elem.nodes):
-                f_elem = self._projection_vector(target_elem, target_quantity, node_i)
-                w_elem = self._projection_weight_vector(target_elem, target_quantity, node_i)
-                dofs = new_space.node_dofs[node.idx]
-
-                for dof_i, dof in enumerate(dofs):
-                    f[dof] += f_elem[dof_i]
-                    w[dof] += w_elem[dof_i]
-
-        projected_values = f/w
-        result.set_vector(projected_values)
-
-        return result
-
-    def _projection_vector(self, target_elem, target_quantity, node_idx):
-        n_dof = target_quantity.shape[0]
-        f = np.zeros((n_dof,1))
-
-        for q, vector in zip(target_elem.quad_points, target_quantity.vectors):
-            for i in range(vector.shape[0]):
-                f[i] += vector[i]*q.N[node_idx]*q.det_jac*q.weight
-
-        return f
-
-    def _projection_weight_vector(self, target_elem, target_quantity, node_idx):
-        n_dof = target_quantity.shape[0]
-        f = np.zeros((n_dof,1))
-
-        for q in target_elem.quad_points:
-            for i in range(6):
-                f[i] += q.N[node_idx]*q.det_jac*q.weight
-
-        return f
 
 
-class LinearForm:
+class LinearForm(Form):
     def __init__(
             self,
             function_space,
@@ -157,7 +175,7 @@ class LinearForm:
             new_interface = copy(element_interface)
             new_interface.init_quadrature_point_quantities(elem.n_node)
             new_interface.init_node_quantities(elem.n_node)
-            new_interface.set_element(elem)
+            new_interface.set_elements([elem])
             self.interfaces.append(new_interface)
 
 
@@ -172,7 +190,7 @@ class LinearForm:
         for n, interface in enumerate(self.interfaces):
             # bar.update(n+1)
             f_elem = interface.vector()
-            for i, I in enumerate(interface.elem.dofmap):
+            for i, I in enumerate(interface.elements[0].dofmap):
                 f[I] += f_elem[i]
         logging.debug('Finished getting finite elements')
 
