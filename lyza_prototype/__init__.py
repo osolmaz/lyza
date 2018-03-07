@@ -13,5 +13,6 @@ import lyza_prototype.meshes
 import lyza_prototype.error
 import lyza_prototype.bilinear_interfaces
 import lyza_prototype.linear_interfaces
-
+import lyza_prototype.time_integration
+import lyza_prototype.elasticity
 

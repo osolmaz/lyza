@@ -37,7 +37,7 @@ for RESOLUTION in RESOLUTIONS:
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
     t_array = np.linspace(0, T_MAX, RESOLUTION+1)
-    u, f = implicit_euler(m, a, b, u, dirichlet_bcs, analytic_solution, t_array)
+    u, f = time_integration.implicit_euler(m, a, b, u, dirichlet_bcs, analytic_solution, t_array)
 
     h_max = 1./RESOLUTION
     n_node = len(mesh.nodes)

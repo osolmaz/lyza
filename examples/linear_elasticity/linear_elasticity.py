@@ -12,8 +12,8 @@ RESOLUTION = 20
 E = 1000.
 NU = 0.3
 
-MU = E/(1.+NU)/2.
-LAMBDA = E*NU/(1.+NU)/(1.-2.*NU)
+MU = elasticity.mu_from_E_nu(E, NU)
+LAMBDA = elasticity.lambda_from_E_nu(E, NU)
 
 
 # ELASTICITY_TENSOR = plane_stress_tensor

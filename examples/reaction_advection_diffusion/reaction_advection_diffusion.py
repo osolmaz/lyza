@@ -1,6 +1,5 @@
 from lyza_prototype import *
 from lyza_prototype.solver import solve_scipy_sparse
-from solver import implicit_euler
 from math import *
 import itertools
 import numpy as np
@@ -99,7 +98,7 @@ if __name__=='__main__':
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
     t_array = np.linspace(0, T_MAX, T_RESOLUTION+1)
-    u, f = implicit_euler(m, a, b, u, dirichlet_bcs, analytic_solution, t_array)
+    u, f = time_integration.implicit_euler(m, a, b, u, dirichlet_bcs, analytic_solution, t_array)
 
     ofile = VTKFile('out_rad.vtk')
 

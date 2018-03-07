@@ -72,3 +72,11 @@ class PointLoad(ElementInterface):
 
         return f
 
+class ZeroVector(ElementInterface):
+    def vector(self):
+        n_node = len(self.elements[0].nodes)
+        n_dof = n_node*self.elements[0].function_size
+
+        f = np.zeros((n_dof,1))
+
+        return f

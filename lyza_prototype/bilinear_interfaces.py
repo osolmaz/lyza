@@ -55,7 +55,6 @@ class MassMatrix(ElementInterface):
 
 class LinearElasticity(ElementInterface):
 
-
     def __init__(self, C, plane_stress=False, plane_strain=False):
 
         if plane_stress and plane_strain:
