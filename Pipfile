@@ -11,6 +11,10 @@ ipython = "*"
 numpy = "*"
 sympy = "*"
 scipy = "*"
+petsc = "*"
+"mpi4py" = "*"
+"petsc4py" = "*"
+"progressbar2" = "*"
 
 
 [dev-packages]
@@ -19,4 +23,4 @@ scipy = "*"
 
 [requires]
 
-python_version = "3.4"
+python_version = "3.6"
