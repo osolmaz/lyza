@@ -13,3 +13,4 @@ dist/
 *.pdf
 out_*
 out-*
+Pipfile.lock
