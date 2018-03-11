@@ -1,8 +1,16 @@
 import logging
+import lyza_prototype.cells as cells
 
 class VTKFile:
     def __init__(self, path):
         self.path = path
+
+    def calculate_n_cell_data(self, mesh):
+        result = 0
+        for e in mesh.cells:
+            result += len(e.nodes)+1
+
+        return result
 
     def write(self, mesh=None, functions=[]):
         if not mesh and not functions:
@@ -17,32 +25,44 @@ class VTKFile:
 
         f = open(self.path,'w')
 
-        f.write("# vtk DataFile Version 3.1\n")
-        f.write("LYZA Output\n")
-        f.write("ASCII\n")
+        f.write('# vtk DataFile Version 3.1\n')
+        f.write('LYZA Output\n')
+        f.write('ASCII\n')
 
-        f.write("DATASET UNSTRUCTURED_GRID\n")
-        # f.write("DATASET POLYDATA\n")
+        f.write('DATASET UNSTRUCTURED_GRID\n')
+        # f.write('DATASET POLYDATA\n')
 
         n_points = len(mesh.nodes)
         n_cells = len([i for i in mesh.cells if not i.is_boundary])
-        f.write("POINTS  "+repr(n_points)+" FLOAT\n")
+        f.write('POINTS  '+repr(n_points)+' FLOAT\n')
 
         for n in mesh.nodes:
-            f.write("%.6e %.6e %.6e\n"%(n.coor[0],n.coor[1],0))
+            f.write('%.6e %.6e %.6e\n'%(n.coor[0],n.coor[1],n.coor[2]))
 
-        f.write('\nCELLS %d %d\n'%(n_cells, n_cells * 5))
+        f.write('\nCELLS %d %d\n'%(n_cells, self.calculate_n_cell_data(mesh)))
         for e in mesh.cells:
             if e.is_boundary: continue
-            f.write("4 ")
+            if isinstance(e, cells.Quad):
+                f.write('4 ')
+            if isinstance(e, cells.Hex):
+                f.write('8 ')
+            else:
+                raise Exception('Invalid cell for VTK file')
+
             for k in e.nodes:
-                f.write("%d "%(k.idx))
-            f.write("\n")
+                f.write('%d '%(k.idx))
+            f.write('\n')
 
         f.write('\nCELL_TYPES '+repr(n_cells)+'\n')
         for e in mesh.cells:
             if e.is_boundary: continue
-            f.write('9 ')
+            if isinstance(e, cells.Quad):
+                f.write('9 ')
+            if isinstance(e, cells.Hex):
+                f.write('12 ')
+            else:
+                raise Exception('Invalid cell for VTK file')
+
 
         if functions:
             f.write('\n\nPOINT_DATA %d\n'%(n_points))
@@ -97,7 +117,7 @@ class VTKFile:
 
         # f.write('VECTORS elem_local_force float\n')
         # for e in self.elems:
-        #     f.write("%.6e %.6e %.6e\n"%(e.local_forces[0], e.local_forces[1], e.local_forces[2]))
+        #     f.write('%.6e %.6e %.6e\n'%(e.local_forces[0], e.local_forces[1], e.local_forces[2]))
         # f.write('\n')
 
         f.close()

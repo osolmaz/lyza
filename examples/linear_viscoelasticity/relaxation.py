@@ -30,7 +30,14 @@ CREEP_TIME = 10.
 #         return [CREEP_DISTANCE, 0]
 
 def right_bc_function(x, t):
-    return [CREEP_DISTANCE, 0]
+    if t < T_MAX/2.:
+        return [CREEP_DISTANCE, 0]
+    else:
+        return [0, 0]
+
+
+# def right_bc_function(x, t):
+#     return [CREEP_DISTANCE, 0]
 
 INITIAL_CONDITION = lambda x, t: [0., 0.]
 
@@ -69,7 +76,6 @@ element_degree = 1
 
 if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
-
 
     V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
     u = Function(V)

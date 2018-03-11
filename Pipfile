@@ -15,6 +15,7 @@ petsc = "*"
 "mpi4py" = "*"
 "petsc4py" = "*"
 "progressbar2" = "*"
+ipdb = "*"
 
 
 [dev-packages]

@@ -56,6 +56,7 @@ def implicit_euler(m_form, a_form, b_form, u, dirichlet_bcs, u0_function, t_arra
 
         bar.update(i+1)
         # logging.info('T = %f'%(t))
+    bar.finish()
 
     u.set_vector(solution_vector)
     f = Function(u.function_space)

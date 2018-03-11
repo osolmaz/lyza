@@ -140,7 +140,7 @@ class BilinearForm(Form):
                     K[I, J] += K_elem[i,j]
             bar.update(n+1)
             # print(n)
-
+        bar.finish()
         return K
 
     def set_time(self, t):
