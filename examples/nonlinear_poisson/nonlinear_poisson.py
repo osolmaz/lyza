@@ -6,14 +6,20 @@ import itertools
 import logging
 logging.basicConfig(level=logging.INFO)
 
-exact_solution = lambda x, t: [sin(2.*pi*x[0])*sin(2.*pi*x[1])]
+# exact_solution = lambda x, t: [sin(2.*pi*x[0])*sin(2.*pi*x[1])]
+# exact_solution_gradient = lambda x, t: [[
+#     2.*pi*cos(2.*pi*x[0])*sin(2.*pi*x[1]),
+#     2.*pi*sin(2.*pi*x[0])*cos(2.*pi*x[1]),
+# ]]
+# exact_solution_divgrad = lambda x, t: -8.*pi*pi*sin(2.*pi*x[0])*sin(2.*pi*x[1])
 
+exact_solution = lambda x, t: [sin(2.*pi*x[0])*cos(2.*pi*x[1])]
 exact_solution_gradient = lambda x, t: [[
-    2.*pi*cos(2.*pi*x[0])*sin(2.*pi*x[1]),
-    2.*pi*sin(2.*pi*x[0])*cos(2.*pi*x[1]),
+    2.*pi*cos(2.*pi*x[0])*cos(2.*pi*x[1]),
+    -2.*pi*sin(2.*pi*x[0])*sin(2.*pi*x[1]),
 ]]
+exact_solution_divgrad = lambda x, t: -8.*pi*pi*sin(2.*pi*x[0])*cos(2.*pi*x[1])
 
-exact_solution_divgrad = lambda x, t: -8.*pi*pi*sin(2.*pi*x[0])*sin(2.*pi*x[1])
 
 g = lambda u: sqrt(exp(u))
 dgdu = lambda u: 0.5*sqrt(exp(u))

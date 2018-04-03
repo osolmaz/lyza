@@ -8,6 +8,7 @@ class VTKFile:
     def calculate_n_cell_data(self, mesh):
         result = 0
         for e in mesh.cells:
+            if e.is_boundary: continue
             result += len(e.nodes)+1
 
         return result
@@ -44,7 +45,7 @@ class VTKFile:
             if e.is_boundary: continue
             if isinstance(e, cells.Quad):
                 f.write('4 ')
-            if isinstance(e, cells.Hex):
+            elif isinstance(e, cells.Hex):
                 f.write('8 ')
             else:
                 raise Exception('Invalid cell for VTK file')
@@ -58,7 +59,7 @@ class VTKFile:
             if e.is_boundary: continue
             if isinstance(e, cells.Quad):
                 f.write('9 ')
-            if isinstance(e, cells.Hex):
+            elif isinstance(e, cells.Hex):
                 f.write('12 ')
             else:
                 raise Exception('Invalid cell for VTK file')

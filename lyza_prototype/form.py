@@ -89,6 +89,12 @@ class Form:
             for i in range(interface.n_quad_point):
                 quantity.vectors[i] = elem.interpolate_gradient_at_quad_point(function, i)
 
+    def copy_quantity(self, form, source_quantity_map, target_quantity_map):
+        for source_interface in self.interfaces:
+            parent_cell = source_interface.elements[0].parent_cell
+            target_interface = form.cell_interface_map[parent_cell]
+            quantity = quantity_map(interface)
+
 
 class BilinearForm(Form):
     def __init__(
@@ -109,6 +115,7 @@ class BilinearForm(Form):
         # A^IJ = a(N^J,N^I)
 
         self.interfaces = []
+        self.cell_interface_map = {}
 
         logging.debug('Getting bilinear form finite elements')
         elems_1 = self.function_space_1.get_finite_elements(quadrature_degree, domain=domain)
@@ -122,6 +129,7 @@ class BilinearForm(Form):
             new_interface.init_quadrature_point_quantities(elem1.n_node)
             new_interface.set_elements([elem1, elem2])
             self.interfaces.append(new_interface)
+            self.cell_interface_map[elem1.parent_cell] = new_interface
 
     def assemble(self):
 
@@ -131,16 +139,22 @@ class BilinearForm(Form):
         # K = coo_matrix((n_dof,n_dof))
 
         logging.debug('Calculating element matrices')
-        bar = progressbar.ProgressBar(max_value=len(self.interfaces))
+
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            bar = progressbar.ProgressBar(max_value=len(self.interfaces))
 
         for n, interface in enumerate(self.interfaces):
             K_elem = interface.matrix()
             for i, I in enumerate(interface.elements[0].dofmap):
                 for j, J in enumerate(interface.elements[1].dofmap):
                     K[I, J] += K_elem[i,j]
-            bar.update(n+1)
+
+            if logging.getLogger().isEnabledFor(logging.DEBUG):
+                bar.update(n+1)
             # print(n)
-        bar.finish()
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            bar.finish()
+
         return K
 
     def set_time(self, t):
@@ -169,6 +183,7 @@ class LinearForm(Form):
 
         elems = self.function_space.get_finite_elements(quadrature_degree, domain=domain)
         self.interfaces = []
+        self.cell_interface_map = {}
 
         for elem in elems:
             # new_interface = deepcopy(element_interface)
@@ -177,6 +192,7 @@ class LinearForm(Form):
             new_interface.init_node_quantities(elem.n_node)
             new_interface.set_elements([elem])
             self.interfaces.append(new_interface)
+            self.cell_interface_map[elem.parent_cell] = new_interface
 
 
     def assemble(self):

@@ -75,9 +75,12 @@ def nonlinear_solve(
     # if not isinstance(lhs, AggregateBilinearForm):
     #     lhs_bilinear = AggregateBilinearForm([lhs])
 
-
     rel_error = 1.
     function.set_vector(np.zeros((n_dof, 1)))
+
+    # update_vector = np.zeros((V.get_system_size(), 1))
+    old_vector = function.vector
+    u_dirichlet = get_dirichlet_vector(V, dirichlet_bcs)
 
     while rel_error >= tol:
         # lhs_derivative.set_prev_sol(function)
@@ -89,9 +92,7 @@ def nonlinear_solve(
         lhs_eval.project_to_quadrature_points(function, prev_sol_quantity_map)
         lhs_eval.project_gradient_to_quadrature_points(function, prev_sol_grad_quantity_map)
 
-
         # lhs_eval.set_prev_sol(function)
-
 
         A = lhs_derivative.assemble()
         # A_bc = A.copy()
@@ -99,17 +100,32 @@ def nonlinear_solve(
 
         f = (lhs_eval+rhs).assemble()
 
-        A_bc, f_bc = apply_bcs(A, f, V, dirichlet_bcs)
+        # A_bc, f_bc = apply_bcs(A, f, V, dirichlet_bcs)
+
+        A_bc = get_modified_matrix(A, V, dirichlet_bcs)
+        constrained_dofs = get_constrained_dofs(V, dirichlet_bcs)
+
+        update_dirichlet = np.zeros((V.get_system_size(), 1))
+        old_vector = function.vector
+
+        for n, constrained in enumerate(constrained_dofs):
+            if constrained:
+                update_dirichlet[n] = u_dirichlet[n] - old_vector[n]
+
+        f_bc = f - A.dot(update_dirichlet)
+
+        for n, constrained in enumerate(constrained_dofs):
+            if constrained:
+                f_bc[n] = update_dirichlet[n]
 
         # logging.info('Attempting to solve %dx%d system'%(n_dof, n_dof))
         update_vector = solve_linear_system(A_bc, f_bc, solver=solver, solver_parameters=solver_parameters)
 
-        old_vector = function.vector
         new_vector = old_vector + update_vector
-        # import ipdb; ipdb.set_trace()
+
         rel_error = np.linalg.norm(old_vector-new_vector)
         function.set_vector(new_vector)
-        logging.info(rel_error)
+        logging.info('rel_err: '+str(rel_error))
 
     rhs_function = Function(V)
     rhs_function.set_vector(A.dot(new_vector))
@@ -122,6 +138,8 @@ def apply_bcs(matrix, rhs_vector, function_space, dirichlet_bcs):
 
     u_dirichlet = get_dirichlet_vector(function_space, dirichlet_bcs)
     rhs_vector = rhs_vector - matrix.dot(u_dirichlet)
+
+    constrained_dofs = get_constrained_dofs(function_space, dirichlet_bcs)
 
     for bc in dirichlet_bcs:
         if bc.components:
@@ -144,6 +162,31 @@ def apply_bcs(matrix, rhs_vector, function_space, dirichlet_bcs):
 
     return matrix, rhs_vector
 
+
+def get_modified_matrix(matrix, function_space, dirichlet_bcs):
+    matrix = matrix.copy()
+
+    for bc in dirichlet_bcs:
+        if bc.components:
+            components = bc.components
+        else:
+            components = range(function_space.function_size)
+
+        for n in function_space.mesh.nodes:
+            if not bc.position_bool(n.coor): continue
+            value = bc.value(n.coor)
+            for I_i, I in enumerate(function_space.node_dofs[n.idx]):
+                if not I_i in components: continue
+                for i in range(matrix.shape[0]):
+                    matrix[i,I] = 0.
+                for i in range(matrix.shape[1]):
+                    matrix[I,i] = 0.
+
+                matrix[I,I] = 1.
+
+    return matrix
+
+
 def get_dirichlet_vector(function_space, dirichlet_bcs):
     u_dirichlet = np.zeros((function_space.get_system_size(), 1))
 
@@ -161,6 +204,24 @@ def get_dirichlet_vector(function_space, dirichlet_bcs):
                 u_dirichlet[I] = value[I_i]
 
     return u_dirichlet
+
+def get_constrained_dofs(function_space, dirichlet_bcs):
+    result = [False for i in range(function_space.get_system_size())]
+
+    for bc in dirichlet_bcs:
+        if bc.components:
+            components = bc.components
+        else:
+            components = range(function_space.function_size)
+
+        for n in function_space.mesh.nodes:
+            if not bc.position_bool(n.coor): continue
+            for I_i, I in enumerate(function_space.node_dofs[n.idx]):
+                if not I_i in components: continue
+                result[I] = True
+
+    return result
+
 
 # def apply_bcs(matrix, rhs_vector, function_space, dirichlet_bcs):
 #     matrix = matrix.copy()
