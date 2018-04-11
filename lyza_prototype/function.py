@@ -19,3 +19,8 @@ class Function:
         start_idx = idx*self.function_size
         end_idx = idx*self.function_size + self.function_size
         return self.vector[start_idx:end_idx]
+
+    def copy(self):
+        result = Function(self.function_space)
+        result.vector = self.vector.copy()
+        return result

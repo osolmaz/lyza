@@ -165,7 +165,7 @@ class BilinearForm(Form):
         if isinstance(a, BilinearForm):
             return AggregateBilinearForm([self, a])
         elif isinstance(a, AggregateBilinearForm):
-            return AggregateBilinearForm([a]+a.bilinear_forms)
+            return AggregateBilinearForm([self]+a.bilinear_forms)
         else:
             raise Exception('Cannot add types')
 
@@ -228,7 +228,7 @@ class LinearForm(Form):
         if isinstance(a, LinearForm):
             return AggregateLinearForm([self, a])
         elif isinstance(a, AggregateLinearForm):
-            return AggregateLinearForm([a]+a.linear_forms)
+            return AggregateLinearForm([self]+a.linear_forms)
         else:
             raise Exception('Cannot add types')
 

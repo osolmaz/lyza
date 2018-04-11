@@ -49,7 +49,7 @@ class PointLoad(ElementInterface):
     def __init__(self, position_function, value):
         self.position_function = position_function
         self.value = value
-        self.applied = False
+        # self.applied = False
         # self.function = function
 
     def vector(self):
@@ -59,15 +59,15 @@ class PointLoad(ElementInterface):
         f = np.zeros((n_dof,1))
 
         for I in range(n_node):
-            # f_val = self.function(q.global_coor)
-            if self.position_function(self.elements[0].nodes[I].coor) and not self.applied:
+            # if self.position_function(self.elements[0].nodes[I].coor) and not self.applied:
+            if self.position_function(self.elements[0].nodes[I].coor):
                 for i in range(self.elements[0].function_size):
 
                     alpha = I*self.elements[0].function_size + i
                     f[alpha] += self.value[i]
 
-                self.applied = True
-                break
+                # self.applied = True
+                # break
 
 
         return f

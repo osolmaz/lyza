@@ -7,7 +7,7 @@ import time
 
 from lyza_prototype.function import Function
 from lyza_prototype.form import AggregateBilinearForm, AggregateLinearForm
-
+from lyza_prototype.vtk import VTKFile
 
 def solve(bilinear_form, linear_form, function, dirichlet_bcs, solver='scipy_sparse', solver_parameters={}):
 
@@ -65,9 +65,11 @@ def nonlinear_solve(
         dirichlet_bcs,
         prev_sol_quantity_map,
         prev_sol_grad_quantity_map,
-        tol=1e-12,
+        tol=1e-10,
         solver='scipy_sparse',
         solver_parameters={}):
+
+    function = function.copy()
 
     V = function.function_space
     n_dof = V.get_system_size()
@@ -75,16 +77,17 @@ def nonlinear_solve(
     # if not isinstance(lhs, AggregateBilinearForm):
     #     lhs_bilinear = AggregateBilinearForm([lhs])
 
-    rel_error = 1.
-    function.set_vector(np.zeros((n_dof, 1)))
+    rel_error = tol + 1
+    # function.set_vector(np.zeros((n_dof, 1)))
 
     # update_vector = np.zeros((V.get_system_size(), 1))
     old_vector = function.vector
     u_dirichlet = get_dirichlet_vector(V, dirichlet_bcs)
 
+    phi0 = function.vector.copy()
+    n_iter = 0
+
     while rel_error >= tol:
-        # lhs_derivative.set_prev_sol(function)
-        # lhs_eval.set_prev_sol(function)
 
         lhs_derivative.project_to_quadrature_points(function, prev_sol_quantity_map)
         lhs_derivative.project_gradient_to_quadrature_points(function, prev_sol_grad_quantity_map)
@@ -92,7 +95,6 @@ def nonlinear_solve(
         lhs_eval.project_to_quadrature_points(function, prev_sol_quantity_map)
         lhs_eval.project_gradient_to_quadrature_points(function, prev_sol_grad_quantity_map)
 
-        # lhs_eval.set_prev_sol(function)
 
         A = lhs_derivative.assemble()
         # A_bc = A.copy()
@@ -121,16 +123,33 @@ def nonlinear_solve(
         # logging.info('Attempting to solve %dx%d system'%(n_dof, n_dof))
         update_vector = solve_linear_system(A_bc, f_bc, solver=solver, solver_parameters=solver_parameters)
 
+        f_final = A.dot(update_vector)
+
         new_vector = old_vector + update_vector
 
-        rel_error = np.linalg.norm(old_vector-new_vector)
+        # u = Function(function.function_space)
+        # u.vector = new_vector - phi0
+        # ofile = VTKFile('out_%03d.vtk'%n_iter)
+        # u.set_label('u')
+        # ofile.write(function.function_space.mesh, [u])
+
+        # rel_error = np.linalg.norm(old_vector-new_vector)
+        # abs_error = np.linalg.norm(f_final)
+
+        rel_error = np.max(np.abs(old_vector-new_vector))
+        abs_error = np.max(np.abs(f_final))
+
         function.set_vector(new_vector)
-        logging.info('rel_err: '+str(rel_error))
+        n_iter += 1
 
-    rhs_function = Function(V)
-    rhs_function.set_vector(A.dot(new_vector))
+        logging.info('#'+str(n_iter)+' rel_err: '+str(rel_error)+' abs_err: '+str(abs_error))
 
-    return function, rhs_function
+
+    residual_function = Function(V)
+    residual_function.set_vector(f_final)
+
+    return function, residual_function
+    # return function
 
 def apply_bcs(matrix, rhs_vector, function_space, dirichlet_bcs):
     matrix = matrix.copy()
