@@ -12,11 +12,6 @@ from lyza_prototype.vtk import VTKFile
 def solve(bilinear_form, linear_form, function, dirichlet_bcs, solver='scipy_sparse', solver_parameters={}):
 
     V = function.function_space
-    # if not isinstance(bilinear_form, AggregateBilinearForm):
-    #     bilinear_form = AggregateBilinearForm([bilinear_form])
-
-    # if not isinstance(linear_form, AggregateLinearForm):
-    #     linear_form = AggregateLinearForm([linear_form])
 
     A = bilinear_form.assemble()
     f_bc = linear_form.assemble()
@@ -74,13 +69,9 @@ def nonlinear_solve(
     V = function.function_space
     n_dof = V.get_system_size()
 
-    # if not isinstance(lhs, AggregateBilinearForm):
-    #     lhs_bilinear = AggregateBilinearForm([lhs])
-
     rel_error = tol + 1
     # function.set_vector(np.zeros((n_dof, 1)))
 
-    # update_vector = np.zeros((V.get_system_size(), 1))
     old_vector = function.vector
     u_dirichlet = get_dirichlet_vector(V, dirichlet_bcs)
 
@@ -88,6 +79,7 @@ def nonlinear_solve(
     n_iter = 0
 
     while rel_error >= tol:
+        old_vector = function.vector
 
         lhs_derivative.project_to_quadrature_points(function, prev_sol_quantity_map)
         lhs_derivative.project_gradient_to_quadrature_points(function, prev_sol_grad_quantity_map)
@@ -95,20 +87,13 @@ def nonlinear_solve(
         lhs_eval.project_to_quadrature_points(function, prev_sol_quantity_map)
         lhs_eval.project_gradient_to_quadrature_points(function, prev_sol_grad_quantity_map)
 
-
         A = lhs_derivative.assemble()
-        # A_bc = A.copy()
-        # n_dof = A.shape[0]
-
         f = (lhs_eval+rhs).assemble()
-
-        # A_bc, f_bc = apply_bcs(A, f, V, dirichlet_bcs)
 
         A_bc = get_modified_matrix(A, V, dirichlet_bcs)
         constrained_dofs = get_constrained_dofs(V, dirichlet_bcs)
 
         update_dirichlet = np.zeros((V.get_system_size(), 1))
-        old_vector = function.vector
 
         for n, constrained in enumerate(constrained_dofs):
             if constrained:
@@ -120,7 +105,6 @@ def nonlinear_solve(
             if constrained:
                 f_bc[n] = update_dirichlet[n]
 
-        # logging.info('Attempting to solve %dx%d system'%(n_dof, n_dof))
         update_vector = solve_linear_system(A_bc, f_bc, solver=solver, solver_parameters=solver_parameters)
 
         f_final = A.dot(update_vector)
@@ -144,12 +128,10 @@ def nonlinear_solve(
 
         logging.info('#'+str(n_iter)+' rel_err: '+str(rel_error)+' abs_err: '+str(abs_error))
 
-
     residual_function = Function(V)
     residual_function.set_vector(f_final)
 
     return function, residual_function
-    # return function
 
 def apply_bcs(matrix, rhs_vector, function_space, dirichlet_bcs):
     matrix = matrix.copy()

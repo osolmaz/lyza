@@ -1,6 +1,5 @@
 from lyza_prototype import *
 from mesh import Cantilever3D
-# from responses import *
 from interfaces import *
 
 import logging
@@ -18,7 +17,6 @@ LAMBDA = elasticity.lambda_from_E_nu(E, NU)
 MU = elasticity.mu_from_E_nu(E, NU)
 
 LOAD = 2.*HORIZONTAL_WIDTH/2.
-# LOAD = 0.2*HORIZONTAL_WIDTH/2.
 
 left_boundary = lambda x: x[0] <= 1e-12
 
@@ -35,9 +33,8 @@ if __name__ == '__main__':
     quadrature_degree = 1
 
     V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
-    # phi = Function(V)
-    a = BilinearForm(V, V, LagrangianHyperElasticityTangent(LAMBDA, MU), quadrature_degree)
-    b_res = LinearForm(V, LagrangianHyperElasticityResidual(LAMBDA, MU), quadrature_degree)
+    a = BilinearForm(V, V, EulerianHyperElasticityTangent(LAMBDA, MU), quadrature_degree)
+    b_res = LinearForm(V, EulerianHyperElasticityResidual(LAMBDA, MU), quadrature_degree)
     b_1 = LinearForm(V, linear_interfaces.PointLoad(load_position_left,[0.,0.,-LOAD]), quadrature_degree)
     b_2 = LinearForm(V, linear_interfaces.PointLoad(load_position_right,[0.,0.,-LOAD]), quadrature_degree)
 
@@ -48,24 +45,12 @@ if __name__ == '__main__':
 
     u = Function(V)
     u.vector = phi.vector - phi0.vector
-    # for i in a.interfaces:
-    #     i.calculate_stress(u)
 
-    # responses = get_element_responses(a, u)
-    # print(tabulate_element_responses(responses))
-
-    # stress = a.project_to_nodes(lambda i: i.stress)
-    # strain = a.project_to_nodes(lambda i: i.strain)
-
-    ofile = VTKFile('out_hyperelastic_lagrangian.vtk')
+    ofile = VTKFile('out_hyperelastic_eulerian.vtk')
 
     u.set_label('u')
     phi.set_label('phi')
-    # f.set_label('f')
-    # stress.set_label('stress')
-    # strain.set_label('strain')
 
-    # ofile.write(mesh, [u, f, stress, strain])
     ofile.write(mesh, [u, phi])
 
 
