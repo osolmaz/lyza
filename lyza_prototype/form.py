@@ -242,7 +242,7 @@ class AggregateBilinearForm:
 
     def __add__(self, a):
         if isinstance(a, BilinearForm):
-            return AggregateBilinearForm([self.bilinear_forms, a])
+            return AggregateBilinearForm(self.bilinear_forms+[a])
         elif isinstance(a, AggregateBilinearForm):
             return AggregateBilinearForm(self.bilinear_forms+a.bilinear_forms)
         else:
@@ -262,7 +262,7 @@ class AggregateLinearForm:
 
     def __add__(self, a):
         if isinstance(a, LinearForm):
-            return AggregateLinearForm([self.linear_forms, a])
+            return AggregateLinearForm(self.linear_forms+[a])
         elif isinstance(a, AggregateLinearForm):
             return AggregateLinearForm(self.linear_forms+a.linear_forms)
         else:

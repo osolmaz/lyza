@@ -155,8 +155,8 @@ class EulerianHyperElasticityTangent(ElementInterface):
         for n, q in enumerate(self.elements[0].quad_points):
             F = self.F.vectors[n]
             Finvtra = np.linalg.inv(F).T
-            E = 0.5 * (F.T.dot(F) - identity)
-            S = self.lambda_*np.trace(E)*np.identity(3) + 2*self.mu*E
+            # E = 0.5 * (F.T.dot(F) - identity)
+            # S = self.lambda_*np.trace(E)*np.identity(3) + 2*self.mu*E
             b_ = F.dot(F.T)
             # tau = F.dot(S).dot(F.T)
             tau = (self.lambda_/2*(np.trace(b_)-3)-self.mu)*b_ + self.mu*(b_.dot(b_))
@@ -215,8 +215,8 @@ class EulerianHyperElasticityResidual(ElementInterface):
         for n, q in enumerate(self.elements[0].quad_points):
             F = self.F.vectors[n]
             Finvtra = np.linalg.inv(F).T
-            E = 0.5 * (F.T.dot(F) - identity)
-            S = self.lambda_*np.trace(E)*np.identity(3) + 2*self.mu*E
+            # E = 0.5 * (F.T.dot(F) - identity)
+            # S = self.lambda_*np.trace(E)*np.identity(3) + 2*self.mu*E
             b_ = F.dot(F.T)
             # tau = F.dot(S).dot(F.T)
             tau = (self.lambda_/2*(np.trace(b_)-3)-self.mu)*b_ + self.mu*(b_.dot(b_))
@@ -234,4 +234,43 @@ class EulerianHyperElasticityResidual(ElementInterface):
                 f[alpha] += -tau[a,b]*Bbar[gamma][b]*q.det_jac*q.weight
 
         return f
+
+
+
+class CalculateStrainStress(ElementInterface):
+
+    def __init__(self, lambda_, mu):
+        self.lambda_ = lambda_
+        self.mu = mu
+
+    def init_quadrature_point_quantities(self, n_quad_point):
+        self.phi = Quantity((3, 1), n_quad_point)
+        self.F = Quantity((3, 3), n_quad_point)
+        self.E = Quantity((6, 1), n_quad_point)
+        self.S = Quantity((6, 1), n_quad_point)
+        self.sigma = Quantity((6, 1), n_quad_point)
+
+    def matrix(self):
+        n_dof = self.get_element_n_dofs()
+        n_node = self.get_element_n_nodes()
+        spatial_dim = self.elements[0].spatial_dimension
+
+        K = np.zeros(n_dof)
+
+        identity = np.eye(3)
+
+        for n, q in enumerate(self.elements[0].quad_points):
+            F = self.F.vectors[n]
+            E = 0.5 * (F.T.dot(F) - identity)
+            S = self.lambda_*np.trace(E)*np.identity(3) + 2*self.mu*E
+            b_ = F.dot(F.T)
+            tau = (self.lambda_/2*(np.trace(b_)-3)-self.mu)*b_ + self.mu*(b_.dot(b_))
+            sigma = tau/np.linalg.det(F)
+
+            self.S.vectors[n] = to_voigt(S)
+            self.E.vectors[n] = to_voigt(E)
+            self.sigma.vectors[n] = to_voigt(sigma)
+
+        return K
+
 
