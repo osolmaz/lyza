@@ -55,7 +55,7 @@ class MassMatrix(ElementInterface):
 
 class LinearElasticity(ElementInterface):
 
-    def __init__(self, C, plane_stress=False, plane_strain=False):
+    def __init__(self, C, plane_stress=False, plane_strain=False, thickness=None):
 
         if plane_stress and plane_strain:
             raise Exception('Can be either plane stress or plane strain')
@@ -88,6 +88,7 @@ class LinearElasticity(ElementInterface):
             self.C = C
             self.index_map = [[0,3,5],[3,1,4],[5,4,2]]
 
+        self.thickness = thickness
 
     def init_quadrature_point_quantities(self, n_quad_point):
         self.stress = Quantity((6, 1), n_quad_point)
@@ -151,10 +152,13 @@ class LinearElasticity(ElementInterface):
                 C_val = self.C[self.index_map[i][k], self.index_map[j][l]]
                 K[alpha, beta] += q1.B[I][k]*C_val*q2.B[J][l]*q1.det_jac*q1.weight
 
+        if self.thickness:
+            K *= self.thickness
+
         return K
 
 class IsotropicLinearElasticity(LinearElasticity):
-    def __init__(self, lambda_, mu, plane_stress=False, plane_strain=False):
+    def __init__(self, lambda_, mu, plane_stress=False, plane_strain=False, thickness=None):
         C = np.array([
             [lambda_ + 2*mu, lambda_, lambda_, 0, 0, 0],
             [lambda_, lambda_ + 2*mu, lambda_, 0, 0, 0],
@@ -163,4 +167,4 @@ class IsotropicLinearElasticity(LinearElasticity):
             [0, 0, 0, 0, mu, 0],
             [0, 0, 0, 0, 0, mu]
         ])
-        super().__init__(C, plane_stress=plane_stress, plane_strain=plane_strain)
+        super().__init__(C, plane_stress=plane_stress, plane_strain=plane_strain, thickness=thickness)
