@@ -149,7 +149,7 @@ def apply_bcs(matrix, rhs_vector, function_space, dirichlet_bcs):
             components = range(function_space.function_size)
 
         for n in function_space.mesh.nodes:
-            if not bc.position_bool(n.coor): continue
+            if not bc.position_bool(n.coor, 0): continue
             value = bc.value(n.coor)
             for I_i, I in enumerate(function_space.node_dofs[n.idx]):
                 if not I_i in components: continue
@@ -174,7 +174,7 @@ def get_modified_matrix(matrix, function_space, dirichlet_bcs):
             components = range(function_space.function_size)
 
         for n in function_space.mesh.nodes:
-            if not bc.position_bool(n.coor): continue
+            if not bc.position_bool(n.coor, 0): continue
             value = bc.value(n.coor)
             for I_i, I in enumerate(function_space.node_dofs[n.idx]):
                 if not I_i in components: continue
@@ -198,7 +198,7 @@ def get_dirichlet_vector(function_space, dirichlet_bcs):
             components = range(function_space.function_size)
 
         for n in function_space.mesh.nodes:
-            if not bc.position_bool(n.coor): continue
+            if not bc.position_bool(n.coor, 0): continue
             value = bc.value(n.coor)
             for I_i, I in enumerate(function_space.node_dofs[n.idx]):
                 if not I_i in components: continue
@@ -216,7 +216,7 @@ def get_constrained_dofs(function_space, dirichlet_bcs):
             components = range(function_space.function_size)
 
         for n in function_space.mesh.nodes:
-            if not bc.position_bool(n.coor): continue
+            if not bc.position_bool(n.coor, 0): continue
             for I_i, I in enumerate(function_space.node_dofs[n.idx]):
                 if not I_i in components: continue
                 result[I] = True

@@ -149,12 +149,14 @@ class LinearElasticity(ElementInterface):
 
                 alpha = I*spatial_dim + i
                 beta = J*spatial_dim + j
+
                 C_val = self.C[self.index_map[i][k], self.index_map[j][l]]
                 K[alpha, beta] += q1.B[I][k]*C_val*q2.B[J][l]*q1.det_jac*q1.weight
 
         if self.thickness:
             K *= self.thickness
 
+        # import ipdb; ipdb.set_trace()
         return K
 
 class IsotropicLinearElasticity(LinearElasticity):

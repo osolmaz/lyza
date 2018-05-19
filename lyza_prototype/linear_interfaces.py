@@ -60,7 +60,7 @@ class PointLoad(ElementInterface):
 
         for I in range(n_node):
             # if self.position_function(self.elements[0].nodes[I].coor) and not self.applied:
-            if self.position_function(self.elements[0].nodes[I].coor):
+            if self.position_function(self.elements[0].nodes[I].coor, 0):
                 for i in range(self.elements[0].function_size):
 
                     alpha = I*self.elements[0].function_size + i
