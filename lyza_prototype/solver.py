@@ -17,14 +17,18 @@ def solve(matrix_assembler, vector_assembler, dirichlet_bcs, solver='scipy_spars
     A = matrix_assembler.assemble()
     f_bc = vector_assembler.assemble()
 
+    start_time = time.time()
     A_bc, f_bc = apply_bcs(A, f_bc, matrix_assembler.mesh, matrix_assembler.node_dofs, matrix_assembler.function_size, dirichlet_bcs)
+    logging.debug('Applied bcs in %f sec'%(time.time()-start_time))
 
     n_dof = A.shape[0]
-    logging.info('Attempting to solve %dx%d system'%(n_dof, n_dof))
+
+    logging.debug('Attempting to solve %dx%d system'%(n_dof, n_dof))
+    start_time = time.time()
 
     u = solve_linear_system(A_bc, f_bc, solver=solver, solver_parameters=solver_parameters)
+    logging.debug('Solved system in %f sec'%(time.time()-start_time))
 
-    logging.debug('Solved')
 
     function.set_vector(u)
     rhs_function = Function(matrix_assembler.mesh, matrix_assembler.function_size)

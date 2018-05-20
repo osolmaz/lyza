@@ -4,9 +4,11 @@ import numpy as np
 
 import itertools
 import logging
+# logging.basicConfig(level=logging.DEBUG)
 logging.basicConfig(level=logging.INFO)
 
 
+# RESOLUTION = 100
 RESOLUTION = 10
 
 class PoissonAnalyticSolution(AnalyticSolution):
@@ -35,6 +37,11 @@ right_boundary = lambda x, t: x[0] >= 1.-1e-12
 perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 # perimeter = lambda x: True
 
+quadrature_degree = 1
+function_size = 1
+spatial_dimension = 2
+element_degree = 1
+
 
 class PoissonMatrix(MatrixAssembler):
 
@@ -43,23 +50,22 @@ class PoissonMatrix(MatrixAssembler):
         n_dof = n_node*self.function_size
         K = np.zeros((n_dof, n_dof))
 
-        quad_weight_arr = self.quad_weight.get_quantity(cell)
-        B_arr = self.B.get_quantity(cell)
-        det_jac_arr = self.det_jac.get_quantity(cell)
+        W_arr = self.quantity_dict['W'].get_quantity(cell)
+        B_arr = self.quantity_dict['B'].get_quantity(cell)
+        DETJ_arr = self.quantity_dict['DETJ'].get_quantity(cell)
 
-        for idx in range(len(quad_weight_arr)):
+        for idx in range(len(W_arr)):
             B = B_arr[idx]
-            w = quad_weight_arr[idx][0,0]
-            j = det_jac_arr[idx][0,0]
+            W = W_arr[idx][0,0]
+            DETJ = DETJ_arr[idx][0,0]
 
             for I,J,i in itertools.product(
                     range(n_node),
                     range(n_node),
-                    range(B.shape[0])):
+                    range(B.shape[1])):
 
-                K[I, J] += B[i,I]*B[i,J]*w*j
+                K[I, J] += B[I,i]*B[J,i]*DETJ*W
 
-        # import ipdb; ipdb.set_trace()
         return K
 
 class FunctionVector(VectorAssembler):
@@ -72,23 +78,23 @@ class FunctionVector(VectorAssembler):
         n_dof = n_node*self.function_size
         K = np.zeros((n_dof, n_dof))
 
-        quad_weight_arr = self.quad_weight.get_quantity(cell)
-        N_arr = self.N.get_quantity(cell)
-        B_arr = self.B.get_quantity(cell)
-        det_jac_arr = self.det_jac.get_quantity(cell)
-        global_coor_arr = self.global_coor.get_quantity(cell)
+        W_arr = self.quantity_dict['W'].get_quantity(cell)
+        N_arr = self.quantity_dict['N'].get_quantity(cell)
+        B_arr = self.quantity_dict['B'].get_quantity(cell)
+        DETJ_arr = self.quantity_dict['DETJ'].get_quantity(cell)
+        XG_arr = self.quantity_dict['XG'].get_quantity(cell)
 
         f = np.zeros((n_dof,1))
 
-        for idx in range(len(quad_weight_arr)):
-            f_val = self.function(global_coor_arr[idx], self.time)
+        for idx in range(len(W_arr)):
+            f_val = self.function(XG_arr[idx], self.time)
             N = N_arr[idx]
-            w = quad_weight_arr[idx][0,0]
-            j = det_jac_arr[idx][0,0]
+            W = W_arr[idx][0,0]
+            DETJ = DETJ_arr[idx][0,0]
 
             for I, i in itertools.product(range(n_node), range(self.function_size)):
                 alpha = I*self.function_size + i
-                f[alpha] += f_val[i]*N[0,I]*j*w
+                f[alpha] += f_val[i]*N[I,0]*DETJ*W
 
         # import ipdb; ipdb.set_trace()
         return f
@@ -97,33 +103,26 @@ class FunctionVector(VectorAssembler):
 if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
-    quadrature_degree = 1
-    function_size = 1
-    spatial_dimension = 2
-    element_degree = 1
+    quantity_dict = mesh.get_basic_quantities(lambda c: quadrature_degree, spatial_dimension)
 
-    quad_weight, quad_coor = mesh.get_quadrature_quantities(lambda c: quadrature_degree)
+    a = PoissonMatrix(mesh, function_size, quantity_dict=quantity_dict)
+    b = FunctionVector(mesh, function_size, quantity_dict=quantity_dict)
 
-    N, B, jac, det_jac, jac_inv_tra, global_coor = mesh.get_basis_quantities(lambda c: quadrature_degree, spatial_dimension)
-
-    a = PoissonMatrix(mesh, function_size)
-    a.set_basic_quantities(N, B, jac, det_jac, jac_inv_tra, global_coor, quad_coor, quad_weight)
-
-    b = FunctionVector(mesh, function_size)
-    b.set_basic_quantities(N, B, jac, det_jac, jac_inv_tra, global_coor, quad_coor, quad_weight)
     b.set_param(force_function, 0)
-
-    # import ipdb; ipdb.set_trace()
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
-    u, f = solve(a, b, dirichlet_bcs)
+    u, f = solve(a, b, dirichlet_bcs, solver='petsc')
 
     ofile = VTKFile('out_poisson.vtk')
 
     u.set_label('u')
     f.set_label('f')
 
+    print(max(u.vector), min(u.vector))
     ofile.write(mesh, [u, f])
 
-    # print('L2 Error: %e'%error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='l2'))
+    print('L2 Error: %e'%error.absolute_error(u, analytic_solution, analytic_solution_gradient, quantity_dict, error='l2'))
+
+    # print('L2 Error: %e'%error.absolute_error_lp(u, analytic_solution, 2, quantity_dict))
+    # print('L2 Error: %e'%error.absolute_error_deriv_lp(u, analytic_solution_gradient, 2, quantity_dict))

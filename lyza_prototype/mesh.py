@@ -16,7 +16,6 @@ class Mesh:
         for idx, c in enumerate(self.cells):
             c.idx = idx
 
-
     def construct_mesh(self):
         pass
 
@@ -29,42 +28,67 @@ class Mesh:
     def get_n_nodes(self):
         return len(self.nodes)
 
-    def get_quadrature_quantities(self, quadrature_degree_map):
-        quad_weight_quantity = CellQuantity(self, (1,1))
-        quad_coor_quantity = CellQuantity(self, (3,1))
+    def get_basic_quantities(self, quadrature_degree_map, spatial_dim, domain=None, skip_basis=False):
+        quantity_dict = {}
+
+        quad_weight = CellQuantity(self, (1,1))
+        quad_coor = CellQuantity(self, (3,1))
 
         for idx, cell in enumerate(self.cells):
+            if domain:
+                pass
+            else:
+                if cell.is_boundary: continue
+
             degree = quadrature_degree_map(cell)
             quad_weights, quad_coors = cell.get_quad_points(degree)
 
             for weight in quad_weights:
-                quad_weight_quantity.add_quantity_by_cell_idx(idx, weight)
+                quad_weight.add_quantity_by_cell_idx(idx, weight)
 
             for coor in quad_coors:
-                quad_coor_quantity.add_quantity_by_cell_idx(idx, coor)
+                quad_coor.add_quantity_by_cell_idx(idx, coor)
 
-        return quad_weight_quantity, quad_coor_quantity
+        quantity_dict = {
+            'XL': quad_coor,
+            'W': quad_weight,
+        }
 
-    def get_basis_quantities(self, quadrature_degree_map, spatial_dim):
-        N = CellQuantity(self, (1,1))
-        B = CellQuantity(self, (spatial_dim,1))
-        jac = CellQuantity(self, (spatial_dim, 1))
-        det_jac = CellQuantity(self, (1,1))
-        jac_inv_tra = CellQuantity(self, (1,spatial_dim))
-        global_coor = CellQuantity(self, (3, 1))
+        if not skip_basis:
+            N = CellQuantity(self, (1,1))
+            B = CellQuantity(self, (1, spatial_dim))
+            J = CellQuantity(self, (spatial_dim, 1))
+            DETJ = CellQuantity(self, (1,1))
+            JINVT = CellQuantity(self, (1,spatial_dim))
+            XG = CellQuantity(self, (3, 1))
 
-        for idx, cell in enumerate(self.cells):
-            degree = quadrature_degree_map(cell)
+            for idx, cell in enumerate(self.cells):
+                if domain:
+                    pass
+                else:
+                    if cell.is_boundary: continue
 
-            N_arr, B_arr, jac_arr, det_jac_arr, jac_inv_tra_arr, global_coor_arr \
-                = cell.calculate_basis_values(spatial_dim, degree)
+                degree = quadrature_degree_map(cell)
 
-            for i in N_arr: N.add_quantity_by_cell_idx(idx, i)
-            for i in B_arr: B.add_quantity_by_cell_idx(idx, i)
-            for i in jac_arr: jac.add_quantity_by_cell_idx(idx, i)
-            for i in det_jac_arr: det_jac.add_quantity_by_cell_idx(idx, i)
-            for i in jac_inv_tra_arr: jac_inv_tra.add_quantity_by_cell_idx(idx, i)
-            for i in global_coor_arr: global_coor.add_quantity_by_cell_idx(idx, i)
+                N_arr, B_arr, J_arr, DETJ_arr, JINVT_arr, XG_arr \
+                    = cell.calculate_basis_values(spatial_dim, degree)
 
-        return N, B, jac, det_jac, jac_inv_tra, global_coor
+                for i in N_arr: N.add_quantity_by_cell_idx(idx, i)
+                for i in B_arr: B.add_quantity_by_cell_idx(idx, i)
+                for i in J_arr: J.add_quantity_by_cell_idx(idx, i)
+                for i in DETJ_arr: DETJ.add_quantity_by_cell_idx(idx, i)
+                for i in JINVT_arr: JINVT.add_quantity_by_cell_idx(idx, i)
+                for i in XG_arr: XG.add_quantity_by_cell_idx(idx, i)
+
+        quantity_dict = {
+            **quantity_dict,
+            'N': N,
+            'B': B,
+            'J': J,
+            'DETJ': DETJ,
+            'JINVT': JINVT,
+            'XG': XG,
+        }
+
+        return quantity_dict
 

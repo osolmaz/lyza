@@ -50,8 +50,8 @@ class Cell:
                 N.append(self.N[I](coor))
                 B.append(jac_inv_tra.dot(self.Bhat[I](coor)))
 
-            N_reshaped = np.hstack(N).reshape(-1,self.n_node)
-            B_reshaped = np.hstack(B).reshape(-1,self.n_node)
+            N_reshaped = np.hstack(N).reshape(-1,self.n_node).T
+            B_reshaped = np.hstack(B).reshape(-1,self.n_node).T
 
             N_arr.append(N_reshaped)
             B_arr.append(B_reshaped)
@@ -78,9 +78,15 @@ class Cell:
         J = np.zeros((spatial_dim,self.elem_dim))
 
         for I in range(len(self.nodes)):
-            for i in range(spatial_dim):
-                for j in range(self.elem_dim):
-                    J[i,j] += self.nodes[I].coor[i]*self.Bhat[I](xi)[j]
+            Bhat = self.Bhat[I](xi)
+            coor = self.nodes[I].coor[:spatial_dim]
+
+            J += coor*Bhat
+
+            # import ipdb; ipdb.set_trace()
+            # for i in range(spatial_dim):
+            #     for j in range(self.elem_dim):
+            #         J[i,j] += coor[i]*Bhat[j]
 
         return J
 

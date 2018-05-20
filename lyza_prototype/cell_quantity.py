@@ -29,3 +29,7 @@ class CellQuantity:
 
     def get_quantity(self, cell):
         return self.quantity_array_dict[cell]
+
+    def get_quantity_by_idx(self, cell_idx):
+        return self.quantity_array_list[cell_idx]
+

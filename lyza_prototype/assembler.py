@@ -1,10 +1,13 @@
 import numpy as np
+import logging
+import time
 
 class Assembler:
-    def __init__(self, mesh, function_size, domain=None):
+    def __init__(self, mesh, function_size, domain=None, quantity_dict={}):
         self.mesh = mesh
         self.function_size = function_size
         self.domain = domain
+        self.quantity_dict=quantity_dict
 
         self.node_dofs = []
         for n in self.mesh.nodes:
@@ -18,20 +21,6 @@ class Assembler:
                 dofmap += self.node_dofs[n.idx]
             self.cell_dofs.append(dofmap)
 
-    def set_basic_quantities(
-            self,
-            N, B, jac, det_jac, jac_inv_tra, global_coor,
-            quad_coor, quad_weight):
-
-        self.N = N
-        self.B = B
-        self.jac = jac
-        self.det_jac = det_jac
-        self.jac_inv_tra = jac_inv_tra
-        self.global_coor = global_coor
-        self.quad_coor = quad_coor
-        self.quad_weight = quad_weight
-
 
 class MatrixAssembler(Assembler):
     def calculate_element_matrix(self, cell):
@@ -40,6 +29,9 @@ class MatrixAssembler(Assembler):
     def assemble(self):
         n_dofs = len(self.mesh.nodes)*self.function_size
         result = np.zeros((n_dofs, n_dofs))
+
+        logging.debug('Beginning to assemble matrix')
+        start_time = time.time()
 
         for idx, cell in enumerate(self.mesh.cells):
             if self.domain:
@@ -54,6 +46,7 @@ class MatrixAssembler(Assembler):
                 for j, J in enumerate(dofmap):
                     result[I, J] += elem_matrix[i,j]
             # print(result[0:4,0:4])
+        logging.debug('Matrix assembled in %f sec'%(time.time()-start_time))
 
         return result
 
@@ -64,6 +57,9 @@ class VectorAssembler(Assembler):
     def assemble(self):
         n_dofs = len(self.mesh.nodes)*self.function_size
         result = np.zeros((n_dofs, 1))
+
+        logging.debug('Beginning to assemble vector')
+        start_time = time.time()
 
         for idx, cell in enumerate(self.mesh.cells):
             if self.domain:
@@ -76,6 +72,8 @@ class VectorAssembler(Assembler):
 
             for i, I in enumerate(dofmap):
                     result[I] += elem_vector[i]
+
+        logging.debug('Vector assembled in %f sec'%(time.time()-start_time))
 
         return result
 
