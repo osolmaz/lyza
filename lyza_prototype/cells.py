@@ -3,6 +3,7 @@ from lyza_prototype.elements import HexElement1, QuadElement1, LineElement1
 from lyza_prototype.quadrature_point import QuadraturePoint
 from math import sqrt
 import itertools
+import numpy as np
 
 quad_weights_0 = [0.]
 quad_coors_0 = [2.]
@@ -15,17 +16,28 @@ quad_coors_2 = [-sqrt(3./5), 0., sqrt(3./5)]
 
 
 class Hex(Cell):
+    elem_dim = 3
+    N = [
+        lambda xi: 0.125*(1.-xi[0])*(1.-xi[1])*(1.-xi[2]),
+        lambda xi: 0.125*(1.+xi[0])*(1.-xi[1])*(1.-xi[2]),
+        lambda xi: 0.125*(1.+xi[0])*(1.+xi[1])*(1.-xi[2]),
+        lambda xi: 0.125*(1.-xi[0])*(1.+xi[1])*(1.-xi[2]),
+        lambda xi: 0.125*(1.-xi[0])*(1.-xi[1])*(1.+xi[2]),
+        lambda xi: 0.125*(1.+xi[0])*(1.-xi[1])*(1.+xi[2]),
+        lambda xi: 0.125*(1.+xi[0])*(1.+xi[1])*(1.+xi[2]),
+        lambda xi: 0.125*(1.-xi[0])*(1.+xi[1])*(1.+xi[2]),
+    ]
 
-    def get_finite_element(self, function_space, element_degree, quadrature_degree):
-        if element_degree == 1:
-            return HexElement1(
-                self.nodes,
-                self,
-                function_space,
-                quadrature_degree)
-        else:
-            raise Exception('Invalid element degree: %d'%elem_degree)
-
+    Bhat = [
+        lambda xi: np.array([-0.125*(1.-xi[1])*(1.-xi[2]), -0.125*(1.-xi[0])*(1.-xi[2]), -0.125*(1.-xi[0])*(1.-xi[1])]),
+        lambda xi: np.array([+0.125*(1.-xi[1])*(1.-xi[2]), -0.125*(1.+xi[0])*(1.-xi[2]), -0.125*(1.+xi[0])*(1.-xi[1])]),
+        lambda xi: np.array([+0.125*(1.+xi[1])*(1.-xi[2]), +0.125*(1.+xi[0])*(1.-xi[2]), -0.125*(1.+xi[0])*(1.+xi[1])]),
+        lambda xi: np.array([-0.125*(1.+xi[1])*(1.-xi[2]), +0.125*(1.-xi[0])*(1.-xi[2]), -0.125*(1.-xi[0])*(1.+xi[1])]),
+        lambda xi: np.array([-0.125*(1.-xi[1])*(1.+xi[2]), -0.125*(1.-xi[0])*(1.+xi[2]), +0.125*(1.-xi[0])*(1.-xi[1])]),
+        lambda xi: np.array([+0.125*(1.-xi[1])*(1.+xi[2]), -0.125*(1.+xi[0])*(1.+xi[2]), +0.125*(1.+xi[0])*(1.-xi[1])]),
+        lambda xi: np.array([+0.125*(1.+xi[1])*(1.+xi[2]), +0.125*(1.+xi[0])*(1.+xi[2]), +0.125*(1.+xi[0])*(1.+xi[1])]),
+        lambda xi: np.array([-0.125*(1.+xi[1])*(1.+xi[2]), +0.125*(1.-xi[0])*(1.+xi[2]), +0.125*(1.-xi[0])*(1.+xi[1])]),
+    ]
 
     def get_quad_points(self, quadrature_degree):
         if quadrature_degree == 0:
@@ -40,24 +52,28 @@ class Hex(Cell):
         else:
             raise Exception('Invalid quadrature degree')
 
-        quad_weights = [i[0]*i[1]*i[2] for i in weight_perm]
-        quad_points = [QuadraturePoint(i, j) for i,j in zip(quad_coors, quad_weights)]
+        quad_coors = [np.array(list(i)) for i in quad_coors]
+        quad_weights = [np.array([[i[0]*i[1]*i[2]]]) for i in weight_perm]
+        # quad_points = [QuadraturePoint(i, j) for i,j in zip(quad_coors, quad_weights)]
 
-        return quad_points
+        return quad_weights, quad_coors
 
 
 class Quad(Cell):
+    elem_dim = 2
+    N = [
+        lambda xi: 0.25*(1.-xi[0])*(1.-xi[1]),
+        lambda xi: 0.25*(1.+xi[0])*(1.-xi[1]),
+        lambda xi: 0.25*(1.+xi[0])*(1.+xi[1]),
+        lambda xi: 0.25*(1.-xi[0])*(1.+xi[1]),
+    ]
 
-    def get_finite_element(self, function_space, element_degree, quadrature_degree):
-        if element_degree == 1:
-            return QuadElement1(
-                self.nodes,
-                self,
-                function_space,
-                quadrature_degree)
-        else:
-            raise Exception('Invalid element degree: %d'%elem_degree)
-
+    Bhat = [
+        lambda xi: np.array([-0.25*(1.-xi[1]), -0.25*(1.-xi[0])]),
+        lambda xi: np.array([+0.25*(1.-xi[1]), -0.25*(1.+xi[0])]),
+        lambda xi: np.array([+0.25*(1.+xi[1]), +0.25*(1.+xi[0])]),
+        lambda xi: np.array([-0.25*(1.+xi[1]), +0.25*(1.-xi[0])]),
+    ]
 
     def get_quad_points(self, quadrature_degree):
         if quadrature_degree == 0:
@@ -72,21 +88,24 @@ class Quad(Cell):
         else:
             raise Exception('Invalid quadrature degree')
 
-        quad_weights = [i[0]*i[1] for i in weight_perm]
-        quad_points = [QuadraturePoint(i, j) for i,j in zip(quad_coors, quad_weights)]
+        quad_coors = [np.array(list(i)+[0.]).reshape(3,1) for i in quad_coors]
+        quad_weights = [np.array([i[0]*i[1]]).reshape(1,1) for i in weight_perm]
+        # quad_points = [QuadraturePoint(i, j) for i,j in zip(quad_coors, quad_weights)]
 
-        return quad_points
+        return quad_weights, quad_coors
+        # return quad_points
 
 class Line(Cell):
-    def get_finite_element(self, function_space, element_degree, quadrature_degree):
-        if element_degree == 1:
-            return LineElement1(
-                self.nodes,
-                self,
-                function_space,
-                quadrature_degree)
-        else:
-            raise Exception('Invalid element degree: %d'%elem_degree)
+    elem_dim = 1
+    N = [
+        lambda xi: 0.5*(1.+xi[0]),
+        lambda xi: 0.5*(1.-xi[0]),
+    ]
+
+    Bhat = [
+        lambda xi: np.array([0.5]),
+        lambda xi: np.array([-0.5]),
+    ]
 
     def get_quad_points(self, quadrature_degree):
         if quadrature_degree == 0:
@@ -98,8 +117,10 @@ class Line(Cell):
         elif quadrature_degree == 2:
             quad_weights = quad_weights_2
             quad_coors = quad_coors_2
-        quad_coors = [[i] for i in quad_coors]
 
-        quad_points = [QuadraturePoint(i, j) for i,j in zip(quad_coors, quad_weights)]
+        quad_coors = [np.array([i,0.,0.]).reshape(3,1) for i in quad_coors]
+        quad_weights = [np.array([i]).reshape(1,1) for i in quad_weights]
+        # quad_points = [QuadraturePoint(i, j) for i,j in zip(quad_coors, quad_weights)]
 
-        return quad_points
+        return quad_weights, quad_coors
+        # return quad_points

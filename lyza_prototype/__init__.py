@@ -8,6 +8,7 @@ from lyza_prototype.vtk import VTKFile
 from lyza_prototype.element_interface import ElementInterface
 from lyza_prototype.quantity import Quantity
 from lyza_prototype.analytic_solution import AnalyticSolution, get_analytic_solution_vector
+from lyza_prototype.assembler import MatrixAssembler, VectorAssembler
 
 import lyza_prototype.meshes
 import lyza_prototype.error

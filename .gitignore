@@ -14,3 +14,7 @@ dist/
 out_*
 out-*
 Pipfile.lock
+*.pvsm
+*.ipynb
+*.tex
+*.png

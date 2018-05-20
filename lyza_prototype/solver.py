@@ -9,14 +9,15 @@ from lyza_prototype.function import Function
 from lyza_prototype.form import AggregateBilinearForm, AggregateLinearForm
 from lyza_prototype.vtk import VTKFile
 
-def solve(bilinear_form, linear_form, function, dirichlet_bcs, solver='scipy_sparse', solver_parameters={}):
+def solve(matrix_assembler, vector_assembler, dirichlet_bcs, solver='scipy_sparse', solver_parameters={}):
 
-    V = function.function_space
+    function = Function(matrix_assembler.mesh, matrix_assembler.function_size)
+    # V = function.function_space
 
-    A = bilinear_form.assemble()
-    f_bc = linear_form.assemble()
+    A = matrix_assembler.assemble()
+    f_bc = vector_assembler.assemble()
 
-    A_bc, f_bc = apply_bcs(A, f_bc, V, dirichlet_bcs)
+    A_bc, f_bc = apply_bcs(A, f_bc, matrix_assembler.mesh, matrix_assembler.node_dofs, matrix_assembler.function_size, dirichlet_bcs)
 
     n_dof = A.shape[0]
     logging.info('Attempting to solve %dx%d system'%(n_dof, n_dof))
@@ -26,7 +27,7 @@ def solve(bilinear_form, linear_form, function, dirichlet_bcs, solver='scipy_spa
     logging.debug('Solved')
 
     function.set_vector(u)
-    rhs_function = Function(V)
+    rhs_function = Function(matrix_assembler.mesh, matrix_assembler.function_size)
     rhs_function.set_vector(A.dot(u))
 
     # import ipdb; ipdb.set_trace()
@@ -133,25 +134,25 @@ def nonlinear_solve(
 
     return function, residual_function
 
-def apply_bcs(matrix, rhs_vector, function_space, dirichlet_bcs):
+def apply_bcs(matrix, rhs_vector, mesh, node_dofs, function_size, dirichlet_bcs):
     matrix = matrix.copy()
     rhs_vector = rhs_vector.copy()
 
-    u_dirichlet = get_dirichlet_vector(function_space, dirichlet_bcs)
+    u_dirichlet = get_dirichlet_vector(mesh, node_dofs, function_size, dirichlet_bcs)
     rhs_vector = rhs_vector - matrix.dot(u_dirichlet)
 
-    constrained_dofs = get_constrained_dofs(function_space, dirichlet_bcs)
+    constrained_dofs = get_constrained_dofs(mesh, node_dofs, function_size, dirichlet_bcs)
 
     for bc in dirichlet_bcs:
         if bc.components:
             components = bc.components
         else:
-            components = range(function_space.function_size)
+            components = range(function_size)
 
-        for n in function_space.mesh.nodes:
+        for n in mesh.nodes:
             if not bc.position_bool(n.coor, 0): continue
             value = bc.value(n.coor)
-            for I_i, I in enumerate(function_space.node_dofs[n.idx]):
+            for I_i, I in enumerate(node_dofs[n.idx]):
                 if not I_i in components: continue
                 for i in range(matrix.shape[0]):
                     matrix[i,I] = 0.
@@ -164,19 +165,19 @@ def apply_bcs(matrix, rhs_vector, function_space, dirichlet_bcs):
     return matrix, rhs_vector
 
 
-def get_modified_matrix(matrix, function_space, dirichlet_bcs):
+def get_modified_matrix(matrix, mesh, node_dofs, function_size, dirichlet_bcs):
     matrix = matrix.copy()
 
     for bc in dirichlet_bcs:
         if bc.components:
             components = bc.components
         else:
-            components = range(function_space.function_size)
+            components = range(function_size)
 
-        for n in function_space.mesh.nodes:
+        for n in mesh.nodes:
             if not bc.position_bool(n.coor, 0): continue
             value = bc.value(n.coor)
-            for I_i, I in enumerate(function_space.node_dofs[n.idx]):
+            for I_i, I in enumerate(node_dofs[n.idx]):
                 if not I_i in components: continue
                 for i in range(matrix.shape[0]):
                     matrix[i,I] = 0.
@@ -188,36 +189,38 @@ def get_modified_matrix(matrix, function_space, dirichlet_bcs):
     return matrix
 
 
-def get_dirichlet_vector(function_space, dirichlet_bcs):
-    u_dirichlet = np.zeros((function_space.get_system_size(), 1))
+def get_dirichlet_vector(mesh, node_dofs, function_size, dirichlet_bcs):
+    system_size = len(mesh.nodes)*function_size
+    u_dirichlet = np.zeros((system_size, 1))
 
     for bc in dirichlet_bcs:
         if bc.components:
             components = bc.components
         else:
-            components = range(function_space.function_size)
+            components = range(function_size)
 
-        for n in function_space.mesh.nodes:
+        for n in mesh.nodes:
             if not bc.position_bool(n.coor, 0): continue
             value = bc.value(n.coor)
-            for I_i, I in enumerate(function_space.node_dofs[n.idx]):
+            for I_i, I in enumerate(node_dofs[n.idx]):
                 if not I_i in components: continue
                 u_dirichlet[I] = value[I_i]
 
     return u_dirichlet
 
-def get_constrained_dofs(function_space, dirichlet_bcs):
-    result = [False for i in range(function_space.get_system_size())]
+def get_constrained_dofs(mesh, node_dofs, function_size, dirichlet_bcs):
+    system_size = len(mesh.nodes)*function_size
+    result = [False for i in range(system_size)]
 
     for bc in dirichlet_bcs:
         if bc.components:
             components = bc.components
         else:
-            components = range(function_space.function_size)
+            components = range(function_size)
 
-        for n in function_space.mesh.nodes:
+        for n in mesh.nodes:
             if not bc.position_bool(n.coor, 0): continue
-            for I_i, I in enumerate(function_space.node_dofs[n.idx]):
+            for I_i, I in enumerate(node_dofs[n.idx]):
                 if not I_i in components: continue
                 result[I] = True
 

@@ -1,6 +1,6 @@
 def join_boundaries(boundaries):
-    def result(x):
-        test = [b(x) for b in boundaries]
+    def result(x, t):
+        test = [b(x, t) for b in boundaries]
         return True in test
     return  result
 
