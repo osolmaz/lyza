@@ -21,10 +21,10 @@ for RESOLUTION in RESOLUTIONS:
 
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
-    quantity_dict = mesh.get_basic_quantities(lambda c: quadrature_degree, spatial_dimension)
+    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
 
-    a = PoissonMatrix(mesh, function_size, quantity_dict=quantity_dict)
-    b = FunctionVector(mesh, function_size, quantity_dict=quantity_dict)
+    a = matrix_assemblers.PoissonMatrix(mesh, function_size)
+    b = vector_assemblers.FunctionVector(mesh, function_size)
 
     b.set_param(force_function, 0)
 
@@ -34,8 +34,8 @@ for RESOLUTION in RESOLUTIONS:
 
     h_max = 1./RESOLUTION
     n_node = len(mesh.nodes)
-    l2 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, quantity_dict, error='l2')
-    h1 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, quantity_dict, error='h1')
+    l2 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='l2')
+    h1 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='h1')
 
     h_max_array.append(h_max)
     n_node_array.append(n_node)

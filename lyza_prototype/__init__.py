@@ -12,8 +12,10 @@ from lyza_prototype.assembler import MatrixAssembler, VectorAssembler
 
 import lyza_prototype.meshes
 import lyza_prototype.error
-import lyza_prototype.bilinear_interfaces
-import lyza_prototype.linear_interfaces
+import lyza_prototype.matrix_assemblers
+import lyza_prototype.vector_assemblers
+# import lyza_prototype.bilinear_interfaces
+# import lyza_prototype.linear_interfaces
 import lyza_prototype.time_integration
 import lyza_prototype.elasticity
 

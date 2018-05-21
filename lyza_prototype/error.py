@@ -15,10 +15,10 @@ class LpNormIntegrator(Integrator):
 
         coefficients = [self.function.vector[i,0] for i in self.cell_dofs[cell.idx]]
 
-        W_arr = self.quantity_dict['W'].get_quantity(cell)
-        XG_arr = self.quantity_dict['XG'].get_quantity(cell)
-        N_arr = self.quantity_dict['N'].get_quantity(cell)
-        DETJ_arr = self.quantity_dict['DETJ'].get_quantity(cell)
+        W_arr = self.mesh.quantities['W'].get_quantity(cell)
+        XG_arr = self.mesh.quantities['XG'].get_quantity(cell)
+        N_arr = self.mesh.quantities['N'].get_quantity(cell)
+        DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
 
         for idx in range(len(W_arr)):
             u_h = [0. for i in range(self.function_size)]
@@ -85,11 +85,11 @@ class DerivativeLpNormIntegrator(Integrator):
 
         coefficients = [self.function.vector[i,0] for i in self.cell_dofs[cell.idx]]
 
-        W_arr = self.quantity_dict['W'].get_quantity(cell)
-        XG_arr = self.quantity_dict['XG'].get_quantity(cell)
-        # N_arr = self.quantity_dict['N'].get_quantity(cell)
-        B_arr = self.quantity_dict['B'].get_quantity(cell)
-        DETJ_arr = self.quantity_dict['DETJ'].get_quantity(cell)
+        W_arr = self.mesh.quantities['W'].get_quantity(cell)
+        XG_arr = self.mesh.quantities['XG'].get_quantity(cell)
+        # N_arr = self.mesh.quantities['N'].get_quantity(cell)
+        B_arr = self.mesh.quantities['B'].get_quantity(cell)
+        DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
 
         spatial_dim = B_arr[0].shape[1]
 
@@ -116,17 +116,17 @@ class DerivativeLpNormIntegrator(Integrator):
 
 
 
-def absolute_error(function, exact, exact_deriv, quantity_dict, error='l2', time=0):
+def absolute_error(function, exact, exact_deriv, error='l2', time=0):
     logging.debug('Calculating error')
     if error == 'l2':
-        result = absolute_error_lp(function, exact, 2, quantity_dict, time=time)
+        result = absolute_error_lp(function, exact, 2, time=time)
     # elif error == 'linf':
     #     # TODO: decide on how to calculate the infinity norm
     #     # result = abs(function.vector - get_analytic_solution_vector(function.function_space, exact)).max()
     #     result = absolute_error_linf(function, exact, quantity_dicte, time=time)
     elif error == 'h1':
-        l2 = absolute_error_lp(function, exact, 2, quantity_dict, time=time)
-        l2d = absolute_error_deriv_lp(function, exact_deriv, 2, quantity_dict, time=time)
+        l2 = absolute_error_lp(function, exact, 2, time=time)
+        l2d = absolute_error_deriv_lp(function, exact_deriv, 2, time=time)
         result = pow(pow(l2,2.) + pow(l2d,2.), .5)
     else:
         raise Exception('Invalid error specification: %s'%error)
@@ -135,8 +135,8 @@ def absolute_error(function, exact, exact_deriv, quantity_dict, error='l2', time
     return result
 
 
-def absolute_error_lp(function, exact, p, quantity_dict, time=0):
-    integrator = LpNormIntegrator(function.mesh, function.function_size, quantity_dict=quantity_dict)
+def absolute_error_lp(function, exact, p, time=0):
+    integrator = LpNormIntegrator(function.mesh, function.function_size)
     integrator.function = function
     integrator.exact = lambda x: exact(x, time)
     integrator.p = p
@@ -161,8 +161,8 @@ def absolute_error_lp(function, exact, p, quantity_dict, time=0):
 #     return result
 
 
-def absolute_error_deriv_lp(function, exact_deriv, p, quantity_dict, time=0):
-    integrator = DerivativeLpNormIntegrator(function.mesh, function.function_size, quantity_dict=quantity_dict)
+def absolute_error_deriv_lp(function, exact_deriv, p, time=0):
+    integrator = DerivativeLpNormIntegrator(function.mesh, function.function_size)
     integrator.function = function
     integrator.exact_deriv = lambda x: exact_deriv(x, time)
     integrator.p = p

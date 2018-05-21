@@ -7,6 +7,7 @@ class Mesh:
         self.nodes = []
         self.cells = []
         self.boundary_cells = []
+        self.quantitites = {}
 
         self.construct_mesh()
 
@@ -28,8 +29,7 @@ class Mesh:
     def get_n_nodes(self):
         return len(self.nodes)
 
-    def get_basic_quantities(self, quadrature_degree_map, spatial_dim, domain=None, skip_basis=False):
-        quantity_dict = {}
+    def set_quadrature_degree(self, quadrature_degree_map, spatial_dim, domain=None, skip_basis=False):
 
         quad_weight = CellQuantity(self, (1,1))
         quad_coor = CellQuantity(self, (3,1))
@@ -49,7 +49,7 @@ class Mesh:
             for coor in quad_coors:
                 quad_coor.add_quantity_by_cell_idx(idx, coor)
 
-        quantity_dict = {
+        self.quantities = {
             'XL': quad_coor,
             'W': quad_weight,
         }
@@ -80,8 +80,8 @@ class Mesh:
                 for i in JINVT_arr: JINVT.add_quantity_by_cell_idx(idx, i)
                 for i in XG_arr: XG.add_quantity_by_cell_idx(idx, i)
 
-        quantity_dict = {
-            **quantity_dict,
+        self.quantities = {
+            **self.quantities,
             'N': N,
             'B': B,
             'J': J,
@@ -90,5 +90,4 @@ class Mesh:
             'XG': XG,
         }
 
-        return quantity_dict
 
