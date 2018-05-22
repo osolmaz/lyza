@@ -9,13 +9,13 @@ from lyza_prototype.element_interface import ElementInterface
 from lyza_prototype.quantity import Quantity
 from lyza_prototype.analytic_solution import AnalyticSolution, get_analytic_solution_vector
 from lyza_prototype.assembler import MatrixAssembler, VectorAssembler
+from lyza_prototype.cell_iterator import CellIterator
 
 import lyza_prototype.meshes
 import lyza_prototype.error
 import lyza_prototype.matrix_assemblers
 import lyza_prototype.vector_assemblers
-# import lyza_prototype.bilinear_interfaces
-# import lyza_prototype.linear_interfaces
+import lyza_prototype.iterators
 import lyza_prototype.time_integration
 import lyza_prototype.elasticity
 

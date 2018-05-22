@@ -1,10 +1,10 @@
 import numpy as np
 import logging
 import time
-from lyza_prototype.cell_processor import CellProcessor
+from lyza_prototype.cell_iterator import CellIterator
 
 
-class MatrixAssembler(CellProcessor):
+class MatrixAssembler(CellIterator):
     def calculate_element_matrix(self, cell):
         raise Exception('Do not use base class')
 
@@ -32,7 +32,7 @@ class MatrixAssembler(CellProcessor):
 
         return result
 
-class VectorAssembler(CellProcessor):
+class VectorAssembler(CellIterator):
     def calculate_element_vector(self, cell):
         raise Exception('Do not use base class')
 

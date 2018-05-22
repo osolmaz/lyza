@@ -1,6 +1,6 @@
-from lyza_prototype.cell_processor import CellProcessor
+from lyza_prototype.cell_iterator import CellIterator
 
-class Integrator(CellProcessor):
+class Integrator(CellIterator):
 
     def integrate(self):
         n_dofs = len(self.mesh.nodes)*self.function_size

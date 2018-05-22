@@ -14,7 +14,6 @@ class Function:
         for n in self.mesh.nodes:
             self.node_dofs.append([n.idx*function_size+i for i in range(function_size)])
 
-
     def set_vector(self, vector):
         self.vector = vector
 
@@ -30,3 +29,24 @@ class Function:
         result = Function(self.function_space)
         result.vector = self.vector.copy()
         return result
+
+
+    def project_to_quadrature_points(self, function, quantity_map, function_space=1):
+
+        for interface in self.interfaces:
+            quantity = quantity_map(interface)
+            elem = interface.elements[function_space-1]
+
+            for i in range(interface.n_quad_point):
+                quantity.vectors[i] = elem.interpolate_at_quad_point(function, i)
+
+    def project_gradient_to_quadrature_points(self, function, quantity_map, function_space=1):
+
+        for interface in self.interfaces:
+            quantity = quantity_map(interface)
+            elem = interface.elements[function_space-1]
+
+            for i in range(interface.n_quad_point):
+                quantity.vectors[i] = elem.interpolate_gradient_at_quad_point(function, i)
+
+

@@ -49,52 +49,54 @@ analytic_solution = analytic_solution_obj.get_analytic_solution_function()
 analytic_solution_gradient = analytic_solution_obj.get_gradient_function()
 force_function = analytic_solution_obj.get_rhs_function()
 
-bottom_boundary = lambda x: x[1] <= 1e-12
-top_boundary = lambda x: x[1] >= 1. -1e-12
-left_boundary = lambda x: x[0] <= 1e-12
-right_boundary = lambda x: x[0] >= 1.-1e-12
+bottom_boundary = lambda x, t: x[1] <= 1e-12
+top_boundary = lambda x, t: x[1] >= 1. -1e-12
+left_boundary = lambda x, t: x[0] <= 1e-12
+right_boundary = lambda x, t: x[0] >= 1.-1e-12
 
 perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
+
+spatial_dimension = 2
+function_size = 2
+element_degree = 1
+quadrature_degree = 1
 
 if __name__ == '__main__':
 
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
-    spatial_dimension = 2
-    function_size = 2
-    element_degree = 1
-    quadrature_degree = 1
+    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
 
-    V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
-    u = Function(V)
-    a = BilinearForm(V, V, bilinear_interfaces.IsotropicLinearElasticity(LAMBDA, MU, plane_strain=True), quadrature_degree)
-    b_body_force = LinearForm(V, linear_interfaces.FunctionInterface(force_function), quadrature_degree)
+    a = matrix_assemblers.LinearElasticity(mesh, function_size)
+    a.set_param_isotropic(LAMBDA, MU, plane_strain=True)
 
+    b = vector_assemblers.FunctionVector(mesh, function_size)
+    b.set_param(force_function, 0)
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
-    # dirichlet_bcs = [DirichletBC(analytic_solution, lambda x: True)]
 
-    u, f = solve(a, b_body_force, u, dirichlet_bcs)
+    u, f = solve(a, b, dirichlet_bcs)
 
-    for i in a.interfaces:
-        i.calculate_stress(u)
+    projector = iterators.SymmetricGradientProjector(mesh, function_size)
+    projector.set_param(u, 'EPS', spatial_dimension)
+    projector.execute()
 
-    stress = a.project_to_nodes(lambda i: i.stress)
-    strain = a.project_to_nodes(lambda i: i.strain)
+    stress_calc = iterators.LinearStressCalculator(mesh, function_size)
+    stress_calc.set_param_isotropic(LAMBDA, MU, plane_strain=True)
+    stress_calc.init_stress_quantity(spatial_dimension)
+    stress_calc.execute()
+
+    stress = mesh.quantities['SIGV'].get_function()
 
     ofile = VTKFile('out_linear_elasticity.vtk')
 
     u.set_label('u')
     f.set_label('f')
     stress.set_label('stress')
-    strain.set_label('strain')
 
-    # tmp = Function(FunctionSpace(mesh, 5, spatial_dimension, element_degree))
-    # tmp.set_label('tmp')
+    ofile.write(mesh, [u, f])
+    ofile.write(mesh, [u, f, stress])
 
-
-    ofile.write(mesh, [u, f, stress, strain])
-
-    print('L2 Error: %e'%error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='l2'))
+    print('L2 Error: %e'%error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='l2'))
 
 

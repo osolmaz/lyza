@@ -91,28 +91,3 @@ class Cell:
         return J
 
 
-    # def interpolate_at_quad_point(self, function, quad_point_idx):
-    #     result = np.zeros((function.function_size,1))
-
-    #     for I in range(self.n_node):
-    #         val = function.get_node_val(self.nodes[I].idx)
-    #         # shape_function_val = self.N[I](self.quad_points[quad_point_idx].coor)
-
-    #         for i in range(function.function_size):
-    #             result[i] += self.quad_points[quad_point_idx].N[I]*val[i]
-
-    #     return result
-
-    # def interpolate_gradient_at_quad_point(self, function, quad_point_idx):
-    #     result = np.zeros((function.function_size,self.spatial_dimension))
-
-    #     for I in range(self.n_node):
-    #         val = function.get_node_val(self.nodes[I].idx)
-    #         # shape_function_val = self.N[I](self.quad_points[quad_point_idx].coor)
-    #         for i in range(function.function_size):
-    #             for j in range(self.spatial_dimension):
-    #                 result[i,j] += self.quad_points[quad_point_idx].B[I][j]*val[i]
-
-    #     # import ipdb; ipdb.set_trace()
-
-    #     return result
