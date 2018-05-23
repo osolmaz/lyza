@@ -6,6 +6,9 @@ import itertools
 import logging
 logging.basicConfig(level=logging.INFO)
 
+
+RESOLUTION = 10
+
 quadrature_degree = 1
 function_size = 1
 spatial_dimension = 2
@@ -31,7 +34,6 @@ dgdu_function = lambda u: 0.5*sqrt(exp(u))
 # g_function = lambda u: 1.
 # dgdu_function = lambda u: 0.
 
-
 def force_function(x, t):
     u = exact_solution(x, t)[0]
     grad_u = exact_solution_gradient(x, t)[0]
@@ -41,7 +43,6 @@ def force_function(x, t):
     result = -(dgdu_function(u)*grad_u_dot_grad_u + g_function(u)*divgrad_u)
 
     return [result]
-
 
 class NonlinearPoissonJacobian(MatrixAssembler):
 
@@ -55,9 +56,7 @@ class NonlinearPoissonJacobian(MatrixAssembler):
         B_arr = self.mesh.quantities['B'].get_quantity(cell)
         DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
 
-        U_arr = self.mesh.quantities['U'].get_quantity(cell)
         GRADU_arr = self.mesh.quantities['GRADU'].get_quantity(cell)
-
         G_arr = self.mesh.quantities['G'].get_quantity(cell)
         DGDU_arr = self.mesh.quantities['DGDU'].get_quantity(cell)
 
@@ -67,7 +66,6 @@ class NonlinearPoissonJacobian(MatrixAssembler):
             W = W_arr[idx][0,0]
             DETJ = DETJ_arr[idx][0,0]
 
-            u_n = U_arr[idx][0,0]
             grad_u_n = GRADU_arr[idx][0,:]
             g_u_n = G_arr[idx][0,0]
             dgdu_u_n = DGDU_arr[idx][0,0]
@@ -79,7 +77,6 @@ class NonlinearPoissonJacobian(MatrixAssembler):
                             + g_u_n*B[J,i])*B[I,i]*DETJ*W
 
         return K
-
 
 class NonlinearPoissonResidual(VectorAssembler):
 
@@ -93,9 +90,7 @@ class NonlinearPoissonResidual(VectorAssembler):
         B_arr = self.mesh.quantities['B'].get_quantity(cell)
         DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
 
-        U_arr = self.mesh.quantities['U'].get_quantity(cell)
         GRADU_arr = self.mesh.quantities['GRADU'].get_quantity(cell)
-
         G_arr = self.mesh.quantities['G'].get_quantity(cell)
         DGDU_arr = self.mesh.quantities['DGDU'].get_quantity(cell)
 
@@ -104,7 +99,6 @@ class NonlinearPoissonResidual(VectorAssembler):
             W = W_arr[idx][0,0]
             DETJ = DETJ_arr[idx][0,0]
 
-            u_n = U_arr[idx][0,0]
             grad_u_n = GRADU_arr[idx][0,:]
             g_u_n = G_arr[idx][0,0]
             dgdu_u_n = DGDU_arr[idx][0,0]
@@ -135,16 +129,6 @@ class Calculator(CellIterator):
             self.mesh.quantities['G'].add_quantity_by_cell(cell, g)
             self.mesh.quantities['DGDU'].add_quantity_by_cell(cell, dgdu)
 
-
-
-RESOLUTION = 10
-
-bottom_boundary = lambda x, t: x[1] <= 1e-12
-top_boundary = lambda x, t: x[1] >= 1. -1e-12
-left_boundary = lambda x, t: x[0] <= 1e-12
-right_boundary = lambda x, t: x[0] >= 1.-1e-12
-
-
 def update_function(mesh, u):
     projector = iterators.Projector(mesh, u.function_size)
     projector.set_param(u, 'U')
@@ -158,21 +142,26 @@ def update_function(mesh, u):
     calculator.init_quantities()
     calculator.execute()
 
+bottom_boundary = lambda x, t: x[1] <= 1e-12
+top_boundary = lambda x, t: x[1] >= 1. -1e-12
+left_boundary = lambda x, t: x[0] <= 1e-12
+right_boundary = lambda x, t: x[0] >= 1.-1e-12
 
 if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
     mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
 
     a = NonlinearPoissonJacobian(mesh, function_size)
-    b_residual = NonlinearPoissonResidual(mesh, function_size)
-    b_force = vector_assemblers.FunctionVector(mesh, function_size)
-    b_force.set_param(force_function, 0)
+    b_1 = NonlinearPoissonResidual(mesh, function_size)
+    b_2 = vector_assemblers.FunctionVector(mesh, function_size)
+    b_2.set_param(force_function, 0)
+    b = b_1 + b_2
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 
     dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
 
-    u, f = nonlinear_solve(a, b_residual, b_force, dirichlet_bcs, update_function=update_function)
+    u, f = nonlinear_solve(a, b, dirichlet_bcs, update_function=update_function)
 
     ofile = VTKFile('out_poisson.vtk')
 

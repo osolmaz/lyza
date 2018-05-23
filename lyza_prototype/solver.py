@@ -35,18 +35,17 @@ def solve(matrix_assembler, vector_assembler, dirichlet_bcs, solver='scipy_spars
 
 
 def nonlinear_solve(
-        lhs_derivative,
-        lhs_eval,
-        rhs,
+        jacobian,
+        residual,
         dirichlet_bcs,
         update_function=None,
         tol=1e-10,
         solver='scipy_sparse',
         solver_parameters={}):
 
-    mesh = lhs_derivative.mesh
-    function_size = lhs_derivative.function_size
-    node_dofs = lhs_derivative.node_dofs
+    mesh = jacobian.mesh
+    function_size = jacobian.function_size
+    node_dofs = jacobian.node_dofs
 
     function = Function(mesh, function_size)
 
@@ -64,8 +63,8 @@ def nonlinear_solve(
         if update_function:
             update_function(mesh, function)
 
-        A = lhs_derivative.assemble()
-        f = (lhs_eval+rhs).assemble()
+        A = jacobian.assemble()
+        f = residual.assemble()
 
         A_bc = get_modified_matrix(A, mesh, node_dofs, function_size, dirichlet_bcs)
         constrained_dofs = get_constrained_dofs(mesh, node_dofs, function_size, dirichlet_bcs)

@@ -20,15 +20,16 @@ for RESOLUTION in RESOLUTIONS:
     mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
 
     a = NonlinearPoissonJacobian(mesh, function_size)
-    b_residual = NonlinearPoissonResidual(mesh, function_size)
-    b_force = vector_assemblers.FunctionVector(mesh, function_size)
-    b_force.set_param(force_function, 0)
+    b_1 = NonlinearPoissonResidual(mesh, function_size)
+    b_2 = vector_assemblers.FunctionVector(mesh, function_size)
+    b_2.set_param(force_function, 0)
+    b = b_1 + b_2
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 
     dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
 
-    u, f = nonlinear_solve(a, b_residual, b_force, dirichlet_bcs, update_function=update_function)
+    u, f = nonlinear_solve(a, b, dirichlet_bcs, update_function=update_function)
 
     h_max = 1./RESOLUTION
     n_node = len(mesh.nodes)
