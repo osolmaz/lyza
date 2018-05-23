@@ -90,8 +90,6 @@ class LinearStressCalculator(ElasticityBase, CellIterator):
         self.mesh.quantities[self.stress_key].reset_quantity_by_cell(cell)
 
         for idx in range(len(W_arr)):
-            # result = np.zeros((self.function.function_size,self.spatial_dimension))
-            # B = B_arr[idx]
             strain = EPS_arr[idx]
 
             # strain = (grad_u + grad_u.T)/2.

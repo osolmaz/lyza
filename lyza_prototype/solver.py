@@ -6,13 +6,11 @@ from petsc4py import PETSc
 import time
 
 from lyza_prototype.function import Function
-from lyza_prototype.form import AggregateBilinearForm, AggregateLinearForm
 from lyza_prototype.vtk import VTKFile
 
 def solve(matrix_assembler, vector_assembler, dirichlet_bcs, solver='scipy_sparse', solver_parameters={}):
 
     function = Function(matrix_assembler.mesh, matrix_assembler.function_size)
-    # V = function.function_space
 
     A = matrix_assembler.assemble()
     f_bc = vector_assembler.assemble()
@@ -29,30 +27,9 @@ def solve(matrix_assembler, vector_assembler, dirichlet_bcs, solver='scipy_spars
     u = solve_linear_system(A_bc, f_bc, solver=solver, solver_parameters=solver_parameters)
     logging.debug('Solved system in %f sec'%(time.time()-start_time))
 
-
     function.set_vector(u)
     rhs_function = Function(matrix_assembler.mesh, matrix_assembler.function_size)
     rhs_function.set_vector(A.dot(u))
-
-    # import ipdb; ipdb.set_trace()
-
-    # force_resultant = [0.,0.]
-    # for bc in neumann_bcs:
-    #     for n in self.nodes:
-    #         if not bc.position_bool(n.coor): continue
-
-    #         value = bc.value(n.coor)
-    #         for n,I in enumerate(n.dofmap):
-    #             force_resultant[n] += self.rhs_vector[I,0]
-
-    # print(force_resultant)
-
-    # import matplotlib
-    # matplotlib.use('Qt4Agg')
-    # import pylab as pl
-    # pl.spy(A_bc)
-    # pl.show()
-
 
     return function, rhs_function
 
@@ -61,24 +38,22 @@ def nonlinear_solve(
         lhs_derivative,
         lhs_eval,
         rhs,
-        function,
         dirichlet_bcs,
-        prev_sol_quantity_map,
-        prev_sol_grad_quantity_map,
+        update_function=None,
         tol=1e-10,
         solver='scipy_sparse',
         solver_parameters={}):
 
-    function = function.copy()
+    mesh = lhs_derivative.mesh
+    function_size = lhs_derivative.function_size
+    node_dofs = lhs_derivative.node_dofs
 
-    V = function.function_space
-    n_dof = V.get_system_size()
+    function = Function(mesh, function_size)
 
     rel_error = tol + 1
-    # function.set_vector(np.zeros((n_dof, 1)))
 
     old_vector = function.vector
-    u_dirichlet = get_dirichlet_vector(V, dirichlet_bcs)
+    u_dirichlet = get_dirichlet_vector(mesh, node_dofs, function_size, dirichlet_bcs)
 
     phi0 = function.vector.copy()
     n_iter = 0
@@ -86,19 +61,16 @@ def nonlinear_solve(
     while rel_error >= tol:
         old_vector = function.vector
 
-        lhs_derivative.project_to_quadrature_points(function, prev_sol_quantity_map)
-        lhs_derivative.project_gradient_to_quadrature_points(function, prev_sol_grad_quantity_map)
-
-        lhs_eval.project_to_quadrature_points(function, prev_sol_quantity_map)
-        lhs_eval.project_gradient_to_quadrature_points(function, prev_sol_grad_quantity_map)
+        if update_function:
+            update_function(mesh, function)
 
         A = lhs_derivative.assemble()
         f = (lhs_eval+rhs).assemble()
 
-        A_bc = get_modified_matrix(A, V, dirichlet_bcs)
-        constrained_dofs = get_constrained_dofs(V, dirichlet_bcs)
+        A_bc = get_modified_matrix(A, mesh, node_dofs, function_size, dirichlet_bcs)
+        constrained_dofs = get_constrained_dofs(mesh, node_dofs, function_size, dirichlet_bcs)
 
-        update_dirichlet = np.zeros((V.get_system_size(), 1))
+        update_dirichlet = np.zeros(u_dirichlet.shape)
 
         for n, constrained in enumerate(constrained_dofs):
             if constrained:
@@ -133,7 +105,7 @@ def nonlinear_solve(
 
         logging.info('#'+str(n_iter)+' rel_err: '+str(rel_error)+' abs_err: '+str(abs_error))
 
-    residual_function = Function(V)
+    residual_function = Function(mesh, function_size)
     residual_function.set_vector(f_final)
 
     return function, residual_function

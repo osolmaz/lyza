@@ -3,8 +3,36 @@ import logging
 import time
 from lyza_prototype.cell_iterator import CellIterator
 
+class Assembler(CellIterator):
+    def assemble(self):
+        raise Exception('Do not use base class')
 
-class MatrixAssembler(CellIterator):
+    def __add__(self, a):
+        if isinstance(a, Assembler):
+            return AggregateAssembler([self, a])
+        elif isinstance(a, AggregateAssembler):
+            return AggregateAssembler([self]+a.assemblers)
+        else:
+            raise Exception('Cannot add types')
+
+
+class AggregateAssembler(Assembler):
+    def __init__(self, assemblers):
+        self.assemblers = assemblers
+
+    def assemble(self):
+        return sum([i.assemble() for i in self.assemblers])
+
+    def __add__(self, a):
+        if isinstance(a, Assembler):
+            return AggregateAssembler(self.assemblers+[a])
+        elif isinstance(a, AggregateAssembler):
+            return AggregateAssembler(self.assemblers+a.assemblers)
+        else:
+            raise Exception('Cannot add types')
+
+
+class MatrixAssembler(Assembler):
     def calculate_element_matrix(self, cell):
         raise Exception('Do not use base class')
 
@@ -32,7 +60,7 @@ class MatrixAssembler(CellIterator):
 
         return result
 
-class VectorAssembler(CellIterator):
+class VectorAssembler(Assembler):
     def calculate_element_vector(self, cell):
         raise Exception('Do not use base class')
 

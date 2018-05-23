@@ -17,7 +17,8 @@ h1_array = []
 
 
 for RESOLUTION in RESOLUTIONS:
-    logging.info('Resolution = %d'%RESOLUTION)
+    logging.info('Solving for resolution %d'%RESOLUTION)
+
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
     mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)

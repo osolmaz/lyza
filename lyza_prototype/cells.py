@@ -1,6 +1,4 @@
 from lyza_prototype.cell import Cell
-from lyza_prototype.elements import HexElement1, QuadElement1, LineElement1
-from lyza_prototype.quadrature_point import QuadraturePoint
 from math import sqrt
 import itertools
 import numpy as np
