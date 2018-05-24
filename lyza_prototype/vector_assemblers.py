@@ -31,3 +31,42 @@ class FunctionVector(VectorAssembler):
                 f[alpha] += f_val[i]*N[I,0]*DETJ*W
 
         return f
+
+
+class PointLoadVector(VectorAssembler):
+
+    def set_param(self, position_function, value):
+        self.position_function = position_function
+        self.value = value
+        # self.applied = False
+        # self.function = function
+
+    def calculate_element_vector(self, cell):
+        n_node = len(cell.nodes)
+        n_dof = n_node*self.function_size
+
+        f = np.zeros((n_dof,1))
+
+        for I in range(n_node):
+            # if self.position_function(self.elements[0].nodes[I].coor) and not self.applied:
+            if self.position_function(cell.nodes[I].coor, 0):
+                for i in range(self.function_size):
+
+                    alpha = I*self.function_size + i
+                    f[alpha] += self.value[i]
+
+                # self.applied = True
+                # break
+
+
+        return f
+
+class ZeroVector(VectorAssembler):
+    def calculate_element_vector(self, cell):
+        n_node = len(cell.nodes)
+        n_dof = n_node*self.function_size
+
+        f = np.zeros((n_dof,1))
+
+        return f
+

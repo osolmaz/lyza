@@ -3,9 +3,10 @@ import logging
 from lyza_prototype.function import Function
 
 class CellQuantity:
-    def __init__(self, mesh, shape):
+    def __init__(self, mesh, shape, fixed=True):
         self.mesh = mesh
         self.shape = shape
+        self.fixed = fixed
 
         self.quantity_array_list = []
         self.quantity_array_dict = {}
@@ -19,20 +20,18 @@ class CellQuantity:
             self.quantity_array_dict[cell] = array
 
     def add_quantity_by_cell_idx(self, cell_idx, quantity_matrix):
-        if quantity_matrix.shape != self.shape:
-            logging.debug('Array shape %s does not match quantity shape %s'%(
-                quantity_matrix.shape, self.shape))
-            # raise Exception('Array shape %s does not match quantity shape %s'%(
-            #     quantity_matrix.shape, self.shape))
+        if self.shape:
+            if quantity_matrix.shape != self.shape:
+                raise Exception('Array shape %s does not match quantity shape %s'%(
+                    quantity_matrix.shape, self.shape))
 
         self.quantity_array_list[cell_idx].append(quantity_matrix)
 
     def add_quantity_by_cell(self, cell, quantity_matrix):
-        if quantity_matrix.shape != self.shape:
-            logging.debug('Array shape %s does not match quantity shape %s'%(
-                quantity_matrix.shape, self.shape))
-            # raise Exception('Array shape %s does not match quantity shape %s'%(
-            #     quantity_matrix.shape, self.shape))
+        if self.shape:
+            if quantity_matrix.shape != self.shape:
+                raise Exception('Array shape %s does not match quantity shape %s'%(
+                    quantity_matrix.shape, self.shape))
 
         self.quantity_array_dict[cell].append(quantity_matrix)
 
@@ -118,3 +117,5 @@ class CellQuantity:
                 f[i] += N[node_idx,0]*DETJ*W
 
         return f
+
+

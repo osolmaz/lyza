@@ -39,6 +39,7 @@ def nonlinear_solve(
         residual,
         dirichlet_bcs,
         update_function=None,
+        initial=None,
         tol=1e-10,
         solver='scipy_sparse',
         solver_parameters={}):
@@ -48,13 +49,15 @@ def nonlinear_solve(
     node_dofs = jacobian.node_dofs
 
     function = Function(mesh, function_size)
+    if initial:
+        function.vector = initial.vector.copy()
 
     rel_error = tol + 1
 
-    old_vector = function.vector
+
     u_dirichlet = get_dirichlet_vector(mesh, node_dofs, function_size, dirichlet_bcs)
 
-    phi0 = function.vector.copy()
+    # phi0 = function.vector.copy()
     n_iter = 0
 
     while rel_error >= tol:

@@ -50,8 +50,8 @@ class Hex(Cell):
         else:
             raise Exception('Invalid quadrature degree')
 
-        quad_coors = [np.array(list(i)) for i in quad_coors]
-        quad_weights = [np.array([[i[0]*i[1]*i[2]]]) for i in weight_perm]
+        quad_coors = [np.array(list(i)).reshape(3,1) for i in quad_coors]
+        quad_weights = [np.array([[i[0]*i[1]*i[2]]]).reshape(1,1) for i in weight_perm]
         # quad_points = [QuadraturePoint(i, j) for i,j in zip(quad_coors, quad_weights)]
 
         return quad_weights, quad_coors

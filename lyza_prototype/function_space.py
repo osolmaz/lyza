@@ -56,13 +56,3 @@ class FunctionSpace:
     def get_system_size(self):
         return self.mesh.get_n_nodes()*self.get_dimension()
 
-    def get_position_function(self):
-
-        function_space = FunctionSpace(self.mesh, self.spatial_dimension, self.spatial_dimension, self.element_degree)
-        result = Function(function_space)
-
-        for i, n in enumerate(self.mesh.nodes):
-            for j in range(self.spatial_dimension):
-                result.vector[i*self.spatial_dimension+j] = n.coor[j]
-
-        return result

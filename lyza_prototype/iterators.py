@@ -107,5 +107,35 @@ class LinearStressCalculator(ElasticityBase, CellIterator):
             self.mesh.quantities[self.stress_voigt_key].add_quantity_by_cell(cell, stress_voigt)
             # self.mesh.quantities[self.strain_key].add_quantity_by_cell(cell, stress)
 
+class VoigtConverter(CellIterator):
+    def to_voigt(self, matrix):
+        if matrix.shape == (3,3):
+            result = np.zeros((6,1))
+            voigt_index_map = [[0,3,5],[3,1,4],[5,4,2]]
+        elif matrix.shape == (2,2):
+            result = np.zeros((3,1))
+            voigt_index_map = [[0,2],[2,1]]
 
+        for i, j in itertools.product(range(matrix.shape[0]), range(matrix.shape[1])):
+            result[voigt_index_map[i][j]] = matrix[i,j]
+        return result
 
+    def set_param(self, source_quantity_key, target_quantity_key):
+        self.source_quantity_key = source_quantity_key
+        self.target_quantity_key = target_quantity_key
+
+        if self.mesh.quantities[source_quantity_key].shape == (3,3):
+            self.mesh.quantities[target_quantity_key] = CellQuantity(self.mesh, (6, 1))
+        elif self.mesh.quantities[source_quantity_key].shape == (2,2):
+            self.mesh.quantities[target_quantity_key] = CellQuantity(self.mesh, (3, 1))
+        else:
+            raise Exception('Invalid source quantity shape')
+
+    def iterate(self, cell):
+
+        n_node = len(cell.nodes)
+        source_arr = self.mesh.quantities[self.source_quantity_key].get_quantity(cell)
+        self.mesh.quantities[self.target_quantity_key].reset_quantity_by_cell(cell)
+
+        for source in source_arr:
+            self.mesh.quantities[self.target_quantity_key].add_quantity_by_cell(cell, self.to_voigt(source))

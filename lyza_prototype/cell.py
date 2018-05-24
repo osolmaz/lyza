@@ -28,6 +28,11 @@ class Cell:
         self.n_node = len(self.nodes)
 
         quad_weights, quad_coors = self.get_quad_points(quadrature_degree)
+
+        for i in quad_coors:
+            if i.shape != (3,1):
+                raise Exception('Invalid shape for quadrature point coordinates. Fix your element code.')
+
         N_arr = []
         B_arr = []
         jac_arr = []
@@ -55,8 +60,6 @@ class Cell:
 
             N_arr.append(N_reshaped)
             B_arr.append(B_reshaped)
-            # import ipdb; ipdb.set_trace()
-
 
             quad_point_global = [0. ,0., 0.]
             for I, i in itertools.product(range(self.n_node), range(3)):

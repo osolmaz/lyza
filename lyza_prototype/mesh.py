@@ -1,5 +1,6 @@
 from lyza_prototype.node import Node
 from lyza_prototype.cell_quantity import CellQuantity
+from lyza_prototype.function import Function
 
 class Mesh:
 
@@ -55,11 +56,11 @@ class Mesh:
         }
 
         if not skip_basis:
-            N = CellQuantity(self, (1,1))
-            B = CellQuantity(self, (1, spatial_dim))
-            J = CellQuantity(self, (spatial_dim, 1))
+            N = CellQuantity(self, None)
+            B = CellQuantity(self, None)
+            J = CellQuantity(self, None)
             DETJ = CellQuantity(self, (1,1))
-            JINVT = CellQuantity(self, (1,spatial_dim))
+            JINVT = CellQuantity(self, None)
             XG = CellQuantity(self, (3, 1))
 
             for idx, cell in enumerate(self.cells):
@@ -91,3 +92,14 @@ class Mesh:
         }
 
 
+    def get_position_function(self, spatial_dimension):
+        if spatial_dimension > 3:
+            raise Exception()
+
+        result = Function(self, spatial_dimension)
+
+        for i, n in enumerate(self.nodes):
+            for j in range(spatial_dimension):
+                result.vector[i*spatial_dimension+j] = n.coor[j]
+
+        return result
