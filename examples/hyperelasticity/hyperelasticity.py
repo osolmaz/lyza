@@ -81,7 +81,6 @@ def update_function(mesh, phi):
     calculator.init_quantities()
     calculator.execute()
 
-
 if __name__ == '__main__':
 
     mesh = Cantilever3D(RESOLUTION, LENGTH, HORIZONTAL_WIDTH, VERTICAL_WIDTH)

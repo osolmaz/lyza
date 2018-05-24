@@ -19,12 +19,14 @@ class PoissonMatrix(MatrixAssembler):
             W = W_arr[idx][0,0]
             DETJ = DETJ_arr[idx][0,0]
 
-            for I,J,i in itertools.product(
-                    range(n_node),
-                    range(n_node),
-                    range(B.shape[1])):
+            K += np.einsum('ij, kj ->  ik', B, B)*DETJ*W
 
-                K[I, J] += B[I,i]*B[J,i]*DETJ*W
+            # for I,J,i in itertools.product(
+            #         range(n_node),
+            #         range(n_node),
+            #         range(B.shape[1])):
+
+            #     K[I, J] += B[I,i]*B[J,i]*DETJ*W
 
         return K
 

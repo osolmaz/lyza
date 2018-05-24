@@ -7,8 +7,8 @@ import logging
 # logging.basicConfig(level=logging.DEBUG)
 logging.basicConfig(level=logging.INFO)
 
-# RESOLUTION = 100
-RESOLUTION = 10
+RESOLUTION = 100
+# RESOLUTION = 10
 
 class PoissonAnalyticSolution(AnalyticSolution):
     def get_force_expression(self):

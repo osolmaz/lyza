@@ -36,8 +36,8 @@ class CellQuantity:
         self.quantity_array_dict[cell].append(quantity_matrix)
 
     def reset_quantity_by_cell(self, cell):
-        self.quantity_array_dict[cell] = []
-
+        # self.quantity_array_dict[cell] = []
+        del self.quantity_array_dict[cell][:]
 
     def get_quantity(self, cell):
         return self.quantity_array_dict[cell]

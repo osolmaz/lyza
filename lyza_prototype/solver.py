@@ -66,8 +66,16 @@ def nonlinear_solve(
         if update_function:
             update_function(mesh, function)
 
+
+        start = time.time()
+        logging.debug('Started assembling Jacobian matrix')
         A = jacobian.assemble()
+        logging.debug('Finished assembling Jacobian matrix in %fs'%(time.time()-start))
+
+        start = time.time()
+        logging.debug('Started assembling residual vector')
         f = residual.assemble()
+        logging.debug('Finished assembling residual vector in %fs'%(time.time()-start))
 
         A_bc = get_modified_matrix(A, mesh, node_dofs, function_size, dirichlet_bcs)
         constrained_dofs = get_constrained_dofs(mesh, node_dofs, function_size, dirichlet_bcs)
@@ -105,7 +113,8 @@ def nonlinear_solve(
         function.set_vector(new_vector)
         n_iter += 1
 
-        logging.info('#'+str(n_iter)+' rel_err: '+str(rel_error)+' abs_err: '+str(abs_error))
+        # logging.info('#'+str(n_iter)+' rel_err: '+str(rel_error)+' abs_err: '+str(abs_error))
+        logging.info('#%d rel_err: %.3e abs_err: %.3e'%(n_iter, rel_error,abs_error))
 
     residual_function = Function(mesh, function_size)
     residual_function.set_vector(f_final)

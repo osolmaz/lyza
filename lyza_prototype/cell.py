@@ -41,6 +41,7 @@ class Cell:
         global_coor_arr = []
 
         for coor in quad_coors:
+
             jac = self.jacobian(coor, spatial_dim)
             det_jac = determinant(jac)
             jac_inv_tra = inverse(jac).transpose()
@@ -62,8 +63,11 @@ class Cell:
             B_arr.append(B_reshaped)
 
             quad_point_global = [0. ,0., 0.]
-            for I, i in itertools.product(range(self.n_node), range(3)):
-                quad_point_global[i] += N[I]*self.nodes[I].coor[i]
+            coor_matrix = np.hstack([i.coor for i in self.nodes]).T
+            quad_point_global = coor_matrix.T.dot(N_reshaped)
+
+            # for I in itertools.product(range(self.n_node)):
+            #     quad_point_global[i] += N[I]*self.nodes[I].coor[i]
 
             global_coor_arr.append(np.array(quad_point_global))
 
@@ -82,9 +86,10 @@ class Cell:
 
         for I in range(len(self.nodes)):
             Bhat = self.Bhat[I](xi)
-            coor = self.nodes[I].coor[:spatial_dim]
+            coor = self.nodes[I].coor[:self.elem_dim]
 
-            J += coor*Bhat
+            # import ipdb; ipdb.set_trace()
+            J += coor*Bhat.T
 
             # import ipdb; ipdb.set_trace()
             # for i in range(spatial_dim):
