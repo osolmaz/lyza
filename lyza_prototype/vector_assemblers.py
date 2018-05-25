@@ -21,14 +21,19 @@ class FunctionVector(VectorAssembler):
         f = np.zeros((n_dof,1))
 
         for idx in range(len(W_arr)):
-            f_val = self.function(XG_arr[idx], self.time)
+            # f_val = self.function(XG_arr[idx], self.time)
+            f_val = self.function(XG_arr[idx][:,0].tolist(), self.time)
             N = N_arr[idx]
             W = W_arr[idx][0,0]
             DETJ = DETJ_arr[idx][0,0]
 
-            for I, i in itertools.product(range(n_node), range(self.function_size)):
-                alpha = I*self.function_size + i
-                f[alpha] += f_val[i]*N[I,0]*DETJ*W
+            f_contrib = np.einsum('i,j->j', f_val, N[:,0])*DETJ*W
+            f_contrib = f_contrib.reshape(f.shape)
+            f += f_contrib
+
+            # for I, i in itertools.product(range(n_node), range(self.function_size)):
+            #     alpha = I*self.function_size + i
+            #     f[alpha] += f_val[i]*N[I,0]*DETJ*W
 
         return f
 

@@ -41,7 +41,6 @@ class Cell:
         global_coor_arr = []
 
         for coor in quad_coors:
-
             jac = self.jacobian(coor, spatial_dim)
             det_jac = determinant(jac)
             jac_inv_tra = inverse(jac).transpose()
@@ -50,34 +49,28 @@ class Cell:
             det_jac_arr.append(np.array(det_jac).reshape(1,1))
             jac_inv_tra_arr.append(jac_inv_tra)
 
-            B = []
-            N = []
+            N = np.zeros((self.n_node,1))
+            B = np.zeros((self.n_node,spatial_dim))
+
             for I in range(len(self.N)):
-                N.append(self.N[I](coor))
-                B.append(jac_inv_tra.dot(self.Bhat[I](coor)))
+                N[I] = self.N[I](coor)
+                B[I] = jac_inv_tra.dot(self.Bhat[I](coor)).T
 
-            N_reshaped = np.hstack(N).reshape(-1,self.n_node).T
-            B_reshaped = np.hstack(B).reshape(-1,self.n_node).T
-
-            N_arr.append(N_reshaped)
-            B_arr.append(B_reshaped)
+            N_arr.append(N)
+            B_arr.append(B)
 
             quad_point_global = [0. ,0., 0.]
-            coor_matrix = np.hstack([i.coor for i in self.nodes]).T
-            quad_point_global = coor_matrix.T.dot(N_reshaped)
+
+            coor_matrix = np.zeros((self.n_node, 3))
+            for idx, n in enumerate(self.nodes):
+                coor_matrix[idx] = n.coor.T
+
+            quad_point_global = coor_matrix.T.dot(N)
 
             # for I in itertools.product(range(self.n_node)):
             #     quad_point_global[i] += N[I]*self.nodes[I].coor[i]
 
             global_coor_arr.append(np.array(quad_point_global))
-
-
-        # self.quad_intp_matrix = np.zeros((self.n_quad_point, self.n_node))
-        # for i, quad_point in enumerate(self.quad_points):
-        #     for j, shape_function in enumerate(self.N):
-        #         self.quad_intp_matrix[i,j] = shape_function(quad_point.coor)
-
-        # self.quad_intp_matrix_inv = inverse(self.quad_intp_matrix)
 
         return N_arr, B_arr, jac_arr, det_jac_arr, jac_inv_tra_arr, global_coor_arr
 
@@ -88,7 +81,6 @@ class Cell:
             Bhat = self.Bhat[I](xi)
             coor = self.nodes[I].coor[:self.elem_dim]
 
-            # import ipdb; ipdb.set_trace()
             J += coor*Bhat.T
 
             # import ipdb; ipdb.set_trace()

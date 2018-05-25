@@ -4,8 +4,8 @@ import numpy as np
 
 import itertools
 import logging
-# logging.basicConfig(level=logging.DEBUG)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.INFO)
 
 RESOLUTION = 100
 # RESOLUTION = 10

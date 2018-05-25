@@ -1,6 +1,8 @@
 from lyza_prototype.node import Node
 from lyza_prototype.cell_quantity import CellQuantity
 from lyza_prototype.function import Function
+import time
+import logging
 
 class Mesh:
 
@@ -31,6 +33,8 @@ class Mesh:
         return len(self.nodes)
 
     def set_quadrature_degree(self, quadrature_degree_map, spatial_dim, domain=None, skip_basis=False):
+        start = time.time()
+        logging.debug('Started setting quadrature degree')
 
         quad_weight = CellQuantity(self, (1,1))
         quad_coor = CellQuantity(self, (3,1))
@@ -91,6 +95,7 @@ class Mesh:
             'XG': XG,
         }
 
+        logging.debug('Finished setting quadrature degree in %fs'%(time.time()-start))
 
     def get_position_function(self, spatial_dimension):
         if spatial_dimension > 3:

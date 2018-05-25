@@ -52,9 +52,12 @@ class MatrixAssembler(Assembler):
             elem_matrix = self.calculate_element_matrix(cell)
             dofmap = self.cell_dofs[idx]
 
-            for i, I in enumerate(dofmap):
-                for j, J in enumerate(dofmap):
-                    result[I, J] += elem_matrix[i,j]
+            result[np.ix_(dofmap,dofmap)] += elem_matrix
+
+            # for i, I in enumerate(dofmap):
+            #     for j, J in enumerate(dofmap):
+            #         result[I, J] += elem_matrix[i,j]
+
             # print(result[0:4,0:4])
         logging.debug('Matrix assembled in %f sec'%(time.time()-start_time))
 
@@ -80,8 +83,10 @@ class VectorAssembler(Assembler):
             elem_vector = self.calculate_element_vector(cell)
             dofmap = self.cell_dofs[idx]
 
-            for i, I in enumerate(dofmap):
-                    result[I] += elem_vector[i]
+            result[dofmap] += elem_vector
+
+            # for i, I in enumerate(dofmap):
+                    # result[I] += elem_vector[i]
 
         logging.debug('Vector assembled in %f sec'%(time.time()-start_time))
 
