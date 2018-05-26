@@ -27,6 +27,9 @@ class CellIterator:
         for key, value in param_dict.items():
             self.param[key] = value
 
+    def set_time(self, time):
+        self.time = time
+
     def execute(self):
         logging.debug('Beginning to assemble matrix')
         start_time = time.time()

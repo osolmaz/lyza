@@ -25,33 +25,50 @@ PARAM_R = 1.
 T_MAX = 1.
 T_RESOLUTION = 50
 
-class RADMatrix(ElementInterface):
+class RADMatrix(lyza_prototype.MatrixAssembler):
 
-    def matrix(self):
+    def calculate_element_matrix(self, cell):
+        n_node = len(cell.nodes)
+        n_dof = n_node*self.function_size
 
-        K = np.zeros((self.elements[1].n_dof, self.elements[0].n_dof))
+        B_arr = self.mesh.quantities['B'].get_quantity(cell)
+        N_arr = self.mesh.quantities['N'].get_quantity(cell)
+        W_arr = self.mesh.quantities['W'].get_quantity(cell)
+        DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
 
-        for q1, q2 in zip(self.elements[0].quad_points, self.elements[1].quad_points):
+        K = np.zeros((n_dof,n_dof))
 
-            for I,J,i,j in itertools.product(
-                    range(self.elements[0].n_node),
-                    range(self.elements[1].n_node),
-                    range(self.elements[0].spatial_dimension),
-                    range(self.elements[0].spatial_dimension)):
+        for idx in range(len(W_arr)):
+            B = B_arr[idx]
+            N = N_arr[idx][:,0]
+            W = W_arr[idx][0,0]
+            DETJ = DETJ_arr[idx][0,0]
 
-                K[I, J] += PARAM_D[i,j]*q2.B[J][j]*q1.B[I][i]*q1.det_jac*q1.weight
+            K_diffusion = np.einsum('kl,jl,ik->ij', PARAM_D, B, B)*DETJ*W
+            K_convection = -1*np.einsum('j,k,ik->ij', N, PARAM_C, B)*DETJ*W
+            K_reaction = -1*PARAM_R*np.einsum('j,i->ij', N, N)*DETJ*W
 
-            for I,J,i in itertools.product(
-                    range(self.elements[0].n_node),
-                    range(self.elements[1].n_node),
-                    range(self.elements[0].spatial_dimension)):
+            K += K_diffusion + K_convection + K_reaction
 
-                K[I, J] += -q2.N[J]*PARAM_C[i]*q1.B[I][i]*q1.det_jac*q1.weight
+            # for I,J,i,j in itertools.product(
+            #         range(self.elements[0].n_node),
+            #         range(self.elements[1].n_node),
+            #         range(self.elements[0].spatial_dimension),
+            #         range(self.elements[0].spatial_dimension)):
 
-            for I,J in itertools.product(
-                    range(self.elements[0].n_node),
-                    range(self.elements[1].n_node)):
-                K[I, J] += -PARAM_R*q2.N[J]*q1.N[I]*q1.det_jac*q1.weight
+            #     K[I, J] += PARAM_D[i,j]*q2.B[J][j]*q1.B[I][i]*q1.det_jac*q1.weight
+
+            # for I,J,i in itertools.product(
+            #         range(self.elements[0].n_node),
+            #         range(self.elements[1].n_node),
+            #         range(self.elements[0].spatial_dimension)):
+
+            #     K[I, J] += -q2.N[J]*PARAM_C[i]*q1.B[I][i]*q1.det_jac*q1.weight
+
+            # for I,J in itertools.product(
+            #         range(B.shape[0]),
+            #         range(B.shape[0])):
+            #     K[I, J] += -PARAM_R*N[J]*N[I]*DETJ*W
 
         return K
 
@@ -73,32 +90,33 @@ force_function = lambda x, t: [
       + sin(2*pi*x[0])*sin(2*pi*x[1]))*exp(-t)
 ]
 
-bottom_boundary = lambda x: x[1] <= 1e-12
-top_boundary = lambda x: x[1] >= 1. -1e-12
-left_boundary = lambda x: x[0] <= 1e-12
-right_boundary = lambda x: x[0] >= 1.-1e-12
+quadrature_degree = 1
+function_size = 1
+spatial_dimension = 2
+element_degree = 1
+
+bottom_boundary = lambda x, t: x[1] <= 1e-12
+top_boundary = lambda x, t: x[1] >= 1. -1e-12
+left_boundary = lambda x, t: x[0] <= 1e-12
+right_boundary = lambda x, t: x[0] >= 1.-1e-12
 perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 # perimeter = lambda x: True
 
 
 if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
+    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
 
-    quadrature_degree = 1
-    function_size = 1
-    spatial_dimension = 2
-    element_degree = 1
+    a = RADMatrix(mesh, function_size)
+    m = matrix_assemblers.MassMatrix(mesh, function_size)
 
-    V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
-    u = Function(V)
-    a = BilinearForm(V, V, RADMatrix(), quadrature_degree)
-    m = BilinearForm(V, V, bilinear_interfaces.MassMatrix(), quadrature_degree)
-    b = LinearForm(V, linear_interfaces.FunctionInterface(force_function), quadrature_degree)
+    b = vector_assemblers.FunctionVector(mesh, function_size)
+    b.set_param(force_function, 0)
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
     t_array = np.linspace(0, T_MAX, T_RESOLUTION+1)
-    u, f = time_integration.implicit_euler(m, a, b, u, dirichlet_bcs, analytic_solution, t_array)
+    u, f = time_integration.implicit_euler(m, a, b, dirichlet_bcs, analytic_solution, t_array)
 
     ofile = VTKFile('out_rad.vtk')
 
@@ -107,4 +125,4 @@ if __name__=='__main__':
 
     ofile.write(mesh, [u, f])
 
-    print('L2 Error: %e'%error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='l2', time=T_MAX))
+    print('L2 Error: %e'%error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='l2', time=T_MAX))

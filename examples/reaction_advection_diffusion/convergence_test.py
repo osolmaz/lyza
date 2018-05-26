@@ -13,36 +13,27 @@ h_max_array = []
 l2_array = []
 h1_array = []
 
-quadrature_degree = 1
-function_size = 1
-spatial_dimension = 2
-element_degree = 1
-
-
 for RESOLUTION in RESOLUTIONS:
 
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
-    quadrature_degree = 1
-    function_size = 1
-    spatial_dimension = 2
-    element_degree = 1
+    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
 
-    V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
-    u = Function(V)
-    a = BilinearForm(V, V, RADMatrix(), quadrature_degree)
-    m = BilinearForm(V, V, bilinear_interfaces.MassMatrix(), quadrature_degree)
-    b = LinearForm(V, linear_interfaces.FunctionInterface(force_function), quadrature_degree)
+    a = RADMatrix(mesh, function_size)
+    m = matrix_assemblers.MassMatrix(mesh, function_size)
+
+    b = vector_assemblers.FunctionVector(mesh, function_size)
+    b.set_param(force_function, 0)
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
-    t_array = np.linspace(0, T_MAX, RESOLUTION+1)
-    u, f = time_integration.implicit_euler(m, a, b, u, dirichlet_bcs, analytic_solution, t_array)
+    t_array = np.linspace(0, T_MAX, T_RESOLUTION+1)
+    u, f = time_integration.implicit_euler(m, a, b, dirichlet_bcs, analytic_solution, t_array)
 
     h_max = 1./RESOLUTION
     n_node = len(mesh.nodes)
-    l2 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='l2', time=T_MAX)
-    h1 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='h1', time=T_MAX)
+    l2 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='l2', time=T_MAX)
+    h1 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='h1', time=T_MAX)
 
     h_max_array.append(h_max)
     n_node_array.append(n_node)
