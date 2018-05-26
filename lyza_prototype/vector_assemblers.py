@@ -23,11 +23,12 @@ class FunctionVector(VectorAssembler):
         for idx in range(len(W_arr)):
             # f_val = self.function(XG_arr[idx], self.time)
             f_val = self.function(XG_arr[idx][:,0].tolist(), self.time)
-            N = N_arr[idx]
+            N = N_arr[idx][:,0]
             W = W_arr[idx][0,0]
             DETJ = DETJ_arr[idx][0,0]
 
-            f_contrib = np.einsum('i,j->j', f_val, N[:,0])*DETJ*W
+            f_contrib = np.einsum('i,j->ji', f_val, N)*DETJ*W
+
             f_contrib = f_contrib.reshape(f.shape)
             f += f_contrib
 

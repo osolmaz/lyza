@@ -12,8 +12,8 @@ RESOLUTION = 20
 E = 1000.
 NU = 0.3
 
-MU = elasticity.mu_from_E_nu(E, NU)
-LAMBDA = elasticity.lambda_from_E_nu(E, NU)
+MU = mechanics.mu_from_E_nu(E, NU)
+LAMBDA = mechanics.lambda_from_E_nu(E, NU)
 
 
 # ELASTICITY_TENSOR = plane_stress_tensor
@@ -64,7 +64,6 @@ quadrature_degree = 1
 if __name__ == '__main__':
 
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
-
     mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
 
     a = matrix_assemblers.LinearElasticity(mesh, function_size)
@@ -94,7 +93,6 @@ if __name__ == '__main__':
     f.set_label('f')
     stress.set_label('stress')
 
-    ofile.write(mesh, [u, f])
     ofile.write(mesh, [u, f, stress])
 
     print('L2 Error: %e'%error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='l2'))

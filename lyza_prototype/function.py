@@ -30,3 +30,10 @@ class Function:
         result.vector = self.vector.copy()
         return result
 
+    def set_analytic_solution(self, function, time=0):
+
+        for n in self.mesh.nodes:
+            analytic_val = function(n.coor, time)
+            for n, dof in enumerate(self.node_dofs[n.idx]):
+                self.vector[dof] = analytic_val[n]
+

@@ -15,6 +15,8 @@ class Assembler(CellIterator):
         else:
             raise Exception('Cannot add types')
 
+    def set_time(self, t):
+        self.t = t
 
 class AggregateAssembler(Assembler):
     def __init__(self, assemblers):

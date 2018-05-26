@@ -7,7 +7,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
-RESOLUTION = 10
+RESOLUTION = 20
 
 quadrature_degree = 1
 function_size = 1
@@ -61,7 +61,7 @@ class NonlinearPoissonJacobian(MatrixAssembler):
         DGDU_arr = self.mesh.quantities['DGDU'].get_quantity(cell)
 
         for idx in range(len(W_arr)):
-            N = N_arr[idx]
+            N = N_arr[idx][:,0]
             B = B_arr[idx]
             W = W_arr[idx][0,0]
             DETJ = DETJ_arr[idx][0,0]
@@ -70,11 +70,14 @@ class NonlinearPoissonJacobian(MatrixAssembler):
             g_u_n = G_arr[idx][0,0]
             dgdu_u_n = DGDU_arr[idx][0,0]
 
-            for I,J,i in itertools.product(
-                    range(B.shape[0]), range(B.shape[0]), range(B.shape[1])):
+            K_contrib = (dgdu_u_n*np.einsum('j, k, ik -> ij', N, grad_u_n, B) \
+                        + g_u_n*np.einsum('jk, ik -> ij', B, B))*DETJ*W
+            K += K_contrib
 
-                K[I, J] += (dgdu_u_n*N[J,0]*grad_u_n[i]
-                            + g_u_n*B[J,i])*B[I,i]*DETJ*W
+            # for I,J,i in itertools.product(
+            #         range(B.shape[0]), range(B.shape[0]), range(B.shape[1])):
+            #     K[I, J] += (dgdu_u_n*N[J]*grad_u_n[i]
+            #                 + g_u_n*B[J,i])*B[I,i]*DETJ*W
 
         return K
 
@@ -103,10 +106,15 @@ class NonlinearPoissonResidual(VectorAssembler):
             g_u_n = G_arr[idx][0,0]
             dgdu_u_n = DGDU_arr[idx][0,0]
 
-            for I,i in itertools.product(
-                    range(B.shape[0]),
-                    range(B.shape[1])):
-                f[I] += -1*g_u_n*grad_u_n[i]*B[I,i]*DETJ*W
+            f_contrib = -1*g_u_n*np.einsum('j, ij -> i', grad_u_n, B)*DETJ*W
+            f_contrib = f_contrib.reshape(f.shape)
+
+            f += f_contrib
+
+            # for I,i in itertools.product(
+            #         range(B.shape[0]),
+            #         range(B.shape[1])):
+            #     f[I] += -1*g_u_n*grad_u_n[i]*B[I,i]*DETJ*W
 
         return f
 

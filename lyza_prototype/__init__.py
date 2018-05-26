@@ -14,5 +14,5 @@ import lyza_prototype.matrix_assemblers
 import lyza_prototype.vector_assemblers
 import lyza_prototype.iterators
 import lyza_prototype.time_integration
-import lyza_prototype.elasticity
+import lyza_prototype.mechanics
 

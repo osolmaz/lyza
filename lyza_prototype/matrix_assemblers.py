@@ -1,6 +1,6 @@
 import itertools
 from lyza_prototype.assembler import MatrixAssembler
-from lyza_prototype.elasticity import ElasticityBase
+from lyza_prototype.mechanics import ElasticityBase
 import numpy as np
 
 class PoissonMatrix(MatrixAssembler):
@@ -33,6 +33,9 @@ class PoissonMatrix(MatrixAssembler):
 
 class MassMatrix(MatrixAssembler):
 
+    # def set_param(self, eta):
+    #     self.eta = eta
+
     def calculate_element_matrix(self, cell):
         n_node = len(cell.nodes)
         n_dof = n_node*self.function_size
@@ -43,15 +46,22 @@ class MassMatrix(MatrixAssembler):
         DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
 
         for idx in range(len(W_arr)):
-            N = N_arr[idx]
+            N = N_arr[idx][:,0]
             W = W_arr[idx][0,0]
             DETJ = DETJ_arr[idx][0,0]
 
-            for I,J,i in itertools.product(
-                    range(n_node),
-                    range(n_node)):
+            K += np.einsum('i, j ->  ij', N, N)*DETJ*W
 
-                K[I, J] += N[I,0]*N[J,0]*DETJ*W
+            # for I,J,i in itertools.product(
+            #         range(n_node),
+            #         range(n_node)):
+
+            #     K[I, J] += N[I,0]*N[J,0]*DETJ*W
+
+
+        # import ipdb; ipdb.set_trace()
+        # if 'eta':
+        # K = self.eta*K
 
         return K
 

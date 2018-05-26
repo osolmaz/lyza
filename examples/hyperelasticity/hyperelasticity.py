@@ -13,8 +13,8 @@ VERTICAL_WIDTH = 20.
 E = 200.
 NU = 0.3
 
-LAMBDA = elasticity.lambda_from_E_nu(E, NU)
-MU = elasticity.mu_from_E_nu(E, NU)
+LAMBDA = mechanics.lambda_from_E_nu(E, NU)
+MU = mechanics.mu_from_E_nu(E, NU)
 
 BENDING_LOAD = 2.*HORIZONTAL_WIDTH/2.
 AXIAL_LOAD = 10.
