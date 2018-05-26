@@ -17,7 +17,7 @@ class VTKFile:
         if not mesh and not functions:
             raise Exception('Input either a mesh or a function')
         elif not mesh:
-            mesh = functions[0].function_space.mesh
+            mesh = functions[0].mesh
 
         if not isinstance(functions, list):
             functions = [functions]
@@ -69,22 +69,22 @@ class VTKFile:
             f.write('\n\nPOINT_DATA %d\n'%(n_points))
 
             for function in functions:
-                V = function.function_space
+                # V = function.function_space
 
-                if V.mesh != mesh:
+                if function.mesh != mesh:
                     raise Exception('Function does not match input mesh')
 
                 if not function.label:
                     raise Exception('Function is not labeled')
 
-                dim = V.get_dimension()
+                dim = function.function_size
 
                 if dim == 1:
                     f.write('SCALARS %s float\n'%function.label)
                     f.write('LOOKUP_TABLE default\n')
 
                     for n, i in enumerate(mesh.nodes):
-                        val = function.vector[V.node_dofs[n][0]]
+                        val = function.vector[function.node_dofs[n][0]]
                         f.write('%.6e\n'%val)
                     f.write('\n')
 
@@ -93,7 +93,7 @@ class VTKFile:
 
                     for n, i in enumerate(mesh.nodes):
                         vector = [0., 0., 0.]
-                        for j, k in enumerate(V.node_dofs[n]):
+                        for j, k in enumerate(function.node_dofs[n]):
                             vector[j] = function.vector[k]
 
                         f.write('%.6e %.6e %.6e\n'%(vector[0], vector[1], vector[2]))
@@ -103,7 +103,7 @@ class VTKFile:
                     f.write('%s %d %d float\n'%(function.label, dim, n_points))
 
                     for n, i in enumerate(mesh.nodes):
-                        for j, k in enumerate(V.node_dofs[n]):
+                        for j, k in enumerate(function.node_dofs[n]):
                             f.write('%.6e'%function.vector[k])
                             if j < dim-1:
                                 f.write(' ')

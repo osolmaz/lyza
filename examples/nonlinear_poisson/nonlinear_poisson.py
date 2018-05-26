@@ -6,6 +6,14 @@ import itertools
 import logging
 logging.basicConfig(level=logging.INFO)
 
+
+RESOLUTION = 20
+
+quadrature_degree = 1
+function_size = 1
+spatial_dimension = 2
+element_degree = 1
+
 # exact_solution = lambda x, t: [sin(2.*pi*x[0])*sin(2.*pi*x[1])]
 # exact_solution_gradient = lambda x, t: [[
 #     2.*pi*cos(2.*pi*x[0])*sin(2.*pi*x[1]),
@@ -20,13 +28,11 @@ exact_solution_gradient = lambda x, t: [[
 ]]
 exact_solution_divgrad = lambda x, t: -8.*pi*pi*sin(2.*pi*x[0])*cos(2.*pi*x[1])
 
+g_function = lambda u: sqrt(exp(u))
+dgdu_function = lambda u: 0.5*sqrt(exp(u))
 
-g = lambda u: sqrt(exp(u))
-dgdu = lambda u: 0.5*sqrt(exp(u))
-
-# g = lambda u: 1.
-# dgdu = lambda u: 0.
-
+# g_function = lambda u: 1.
+# dgdu_function = lambda u: 0.
 
 def force_function(x, t):
     u = exact_solution(x, t)[0]
@@ -34,93 +40,136 @@ def force_function(x, t):
     divgrad_u = exact_solution_divgrad(x, t)
 
     grad_u_dot_grad_u = sum([i*i for i in grad_u])
-    result = -(dgdu(u)*grad_u_dot_grad_u + g(u)*divgrad_u)
+    result = -(dgdu_function(u)*grad_u_dot_grad_u + g_function(u)*divgrad_u)
 
     return [result]
 
+class NonlinearPoissonJacobian(MatrixAssembler):
 
-class NonlinearPoissonJacobian(ElementInterface):
+    def calculate_element_matrix(self, cell):
+        n_node = len(cell.nodes)
+        n_dof = n_node*self.function_size
+        K = np.zeros((n_dof, n_dof))
 
-    def init_quadrature_point_quantities(self, n_quad_point):
-        self.prev_sol = Quantity((1, 1), n_quad_point)
-        self.prev_sol_grad = Quantity((1, 2), n_quad_point)
+        W_arr = self.mesh.quantities['W'].get_quantity(cell)
+        N_arr = self.mesh.quantities['N'].get_quantity(cell)
+        B_arr = self.mesh.quantities['B'].get_quantity(cell)
+        DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
 
-    def matrix(self):
-        K = np.zeros((self.elements[1].n_dof, self.elements[0].n_dof))
+        GRADU_arr = self.mesh.quantities['GRADU'].get_quantity(cell)
+        G_arr = self.mesh.quantities['G'].get_quantity(cell)
+        DGDU_arr = self.mesh.quantities['DGDU'].get_quantity(cell)
 
-        for n, (q1, q2) in enumerate(zip(self.elements[0].quad_points, self.elements[1].quad_points)):
+        for idx in range(len(W_arr)):
+            N = N_arr[idx][:,0]
+            B = B_arr[idx]
+            W = W_arr[idx][0,0]
+            DETJ = DETJ_arr[idx][0,0]
 
-            u_n = self.prev_sol.vectors[n][0,0]
-            grad_u_n = self.prev_sol_grad.vectors[n][0,:]
-            g_u_n = g(u_n)
-            dgdu_u_n = dgdu(u_n)
+            grad_u_n = GRADU_arr[idx][0,:]
+            g_u_n = G_arr[idx][0,0]
+            dgdu_u_n = DGDU_arr[idx][0,0]
 
-            for I,J,i in itertools.product(
-                    range(self.elements[0].n_node),
-                    range(self.elements[1].n_node),
-                    range(self.elements[0].spatial_dimension)):
+            K_contrib = (dgdu_u_n*np.einsum('j, k, ik -> ij', N, grad_u_n, B) \
+                        + g_u_n*np.einsum('jk, ik -> ij', B, B))*DETJ*W
+            K += K_contrib
 
-                # K[I, J] += q1.B[I][i]*q2.B[J][i]*q1.det_jac*q1.weight
-                K[I, J] += (dgdu_u_n*q1.N[J]*grad_u_n[i]
-                            + g_u_n*q1.B[J][i])*q2.B[I][i] * q1.det_jac*q1.weight
-
-        # if self.elements[0].parent_cell.idx == 0:
-        #     import ipdb; ipdb.set_trace()
+            # for I,J,i in itertools.product(
+            #         range(B.shape[0]), range(B.shape[0]), range(B.shape[1])):
+            #     K[I, J] += (dgdu_u_n*N[J]*grad_u_n[i]
+            #                 + g_u_n*B[J,i])*B[I,i]*DETJ*W
 
         return K
 
+class NonlinearPoissonResidual(VectorAssembler):
 
-class NonlinearPoissonResidual(ElementInterface):
+    def calculate_element_vector(self, cell):
+        n_node = len(cell.nodes)
+        n_dof = n_node*self.function_size
 
-    def init_quadrature_point_quantities(self, n_quad_point):
-        self.prev_sol = Quantity((2, 1), n_quad_point)
-        self.prev_sol_grad = Quantity((1, 2), n_quad_point)
+        f = np.zeros((n_dof, 1))
 
-    def vector(self):
+        W_arr = self.mesh.quantities['W'].get_quantity(cell)
+        B_arr = self.mesh.quantities['B'].get_quantity(cell)
+        DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
 
-        f = np.zeros((self.elements[0].n_dof, 1))
+        GRADU_arr = self.mesh.quantities['GRADU'].get_quantity(cell)
+        G_arr = self.mesh.quantities['G'].get_quantity(cell)
+        DGDU_arr = self.mesh.quantities['DGDU'].get_quantity(cell)
 
-        for n, q in enumerate(self.elements[0].quad_points):
-            u_n = self.prev_sol.vectors[n][0,0]
-            grad_u_n = self.prev_sol_grad.vectors[n][0,:]
-            g_u_n = g(u_n)
-            # dgdu_u_n = dgdu(u_n)
+        for idx in range(len(W_arr)):
+            B = B_arr[idx]
+            W = W_arr[idx][0,0]
+            DETJ = DETJ_arr[idx][0,0]
 
-            for I,i in itertools.product(
-                    range(self.elements[0].n_node),
-                    range(self.elements[0].spatial_dimension)):
-                f[I] += -1*g_u_n*grad_u_n[i]*q.B[I][i] * q.det_jac*q.weight
+            grad_u_n = GRADU_arr[idx][0,:]
+            g_u_n = G_arr[idx][0,0]
+            dgdu_u_n = DGDU_arr[idx][0,0]
+
+            f_contrib = -1*g_u_n*np.einsum('j, ij -> i', grad_u_n, B)*DETJ*W
+            f_contrib = f_contrib.reshape(f.shape)
+
+            f += f_contrib
+
+            # for I,i in itertools.product(
+            #         range(B.shape[0]),
+            #         range(B.shape[1])):
+            #     f[I] += -1*g_u_n*grad_u_n[i]*B[I,i]*DETJ*W
 
         return f
 
+class Calculator(CellIterator):
+    def init_quantities(self):
+        self.mesh.quantities['G'] = CellQuantity(self.mesh, (1, 1))
+        self.mesh.quantities['DGDU'] = CellQuantity(self.mesh, (1, 1))
 
-RESOLUTION = 10
+    def iterate(self, cell):
 
+        U_arr = self.mesh.quantities['U'].get_quantity(cell)
 
-bottom_boundary = lambda x: x[1] <= 1e-12
-top_boundary = lambda x: x[1] >= 1. -1e-12
-left_boundary = lambda x: x[0] <= 1e-12
-right_boundary = lambda x: x[0] >= 1.-1e-12
+        self.mesh.quantities['G'].reset_quantity_by_cell(cell)
+        self.mesh.quantities['DGDU'].reset_quantity_by_cell(cell)
 
-quadrature_degree = 1
-function_size = 1
-spatial_dimension = 2
-element_degree = 1
+        for U in U_arr:
+            u = U[0,0]
+            g = np.array([[g_function(u)]])
+            dgdu = np.array([[dgdu_function(u)]])
+            self.mesh.quantities['G'].add_quantity_by_cell(cell, g)
+            self.mesh.quantities['DGDU'].add_quantity_by_cell(cell, dgdu)
+
+def update_function(mesh, u):
+    projector = iterators.Projector(mesh, u.function_size)
+    projector.set_param(u, 'U')
+    projector.execute()
+
+    projector = iterators.GradientProjector(mesh, u.function_size)
+    projector.set_param(u, 'GRADU', spatial_dimension)
+    projector.execute()
+
+    calculator = Calculator(mesh, u.function_size)
+    calculator.init_quantities()
+    calculator.execute()
+
+bottom_boundary = lambda x, t: x[1] <= 1e-12
+top_boundary = lambda x, t: x[1] >= 1. -1e-12
+left_boundary = lambda x, t: x[0] <= 1e-12
+right_boundary = lambda x, t: x[0] >= 1.-1e-12
 
 if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
+    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
 
-    V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
-    u = Function(V)
-    a = BilinearForm(V, V, NonlinearPoissonJacobian(), quadrature_degree)
-    b_residual = LinearForm(V, NonlinearPoissonResidual(), quadrature_degree)
-    b_force = LinearForm(V, linear_interfaces.FunctionInterface(force_function), quadrature_degree)
+    a = NonlinearPoissonJacobian(mesh, function_size)
+    b_1 = NonlinearPoissonResidual(mesh, function_size)
+    b_2 = vector_assemblers.FunctionVector(mesh, function_size)
+    b_2.set_param(force_function, 0)
+    b = b_1 + b_2
 
     perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 
     dirichlet_bcs = [DirichletBC(exact_solution, perimeter)]
 
-    u, f = nonlinear_solve(a, b_residual, b_force, u, dirichlet_bcs, lambda i: i.prev_sol, lambda i: i.prev_sol_grad)
+    u, f = nonlinear_solve(a, b, dirichlet_bcs, update_function=update_function)
 
     ofile = VTKFile('out_poisson.vtk')
 
@@ -129,4 +178,4 @@ if __name__=='__main__':
 
     ofile.write(mesh, [u, f])
 
-    print('L2 Error: %e'%error.absolute_error(u, exact_solution, exact_solution_gradient, quadrature_degree, error='l2'))
+    print('L2 Error: %e'%error.absolute_error(u, exact_solution, exact_solution_gradient, error='l2'))

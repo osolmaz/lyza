@@ -1,116 +1,131 @@
 from math import log
 import numpy as np
-from lyza_prototype.form import LinearForm
-from lyza_prototype.element_interface import ElementInterface
+from lyza_prototype.integrator import Integrator
 from lyza_prototype.analytic_solution import get_analytic_solution_vector
 import logging
 import itertools
 
 
-class LpNormInterface(ElementInterface):
-    def __init__(self, function, exact, p):
-        self.function = function
-        self.exact = exact
-        self.p = p # Lp error
+class LpNormIntegrator(Integrator):
 
-    def evaluate(self):
+    def calculate_element_integral(self, cell):
         result = 0.
-        n_node = len(self.elements[0].nodes)
+        n_node = len(cell.nodes)
 
-        coefficients = [self.function.vector[i,0] for i in self.elements[0].dofmap]
+        coefficients = [self.function.vector[i,0] for i in self.cell_dofs[cell.idx]]
 
-        for q in self.elements[0].quad_points:
-            u_h = [0. for i in range(self.elements[0].function_size)]
+        W_arr = self.mesh.quantities['W'].get_quantity(cell)
+        XG_arr = self.mesh.quantities['XG'].get_quantity(cell)
+        N_arr = self.mesh.quantities['N'].get_quantity(cell)
+        DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
 
-            for I, i in itertools.product(range(n_node), range(self.elements[0].function_size)):
-                u_h[i] += q.N[I]*coefficients[I*self.elements[0].function_size+i]
+        for idx in range(len(W_arr)):
+            u_h = [0. for i in range(self.function_size)]
+            W = W_arr[idx][0,0]
+            N = N_arr[idx]
+            XG = XG_arr[idx][:,0]
+            DETJ = DETJ_arr[idx][0,0]
 
-            exact_val = self.exact(q.global_coor)
+            for I, i in itertools.product(range(n_node), range(self.function_size)):
+                u_h[i] += N[I,0]*coefficients[I*self.function_size+i]
+
+            exact_val = self.exact(XG)
 
             inner_product = 0.
-            for i in range(self.elements[0].function_size):
+            for i in range(self.function_size):
                 inner_product += (exact_val[i] - u_h[i])**2
 
-            result += pow(inner_product, self.p/2.)*q.weight*q.det_jac
+            result += pow(inner_product, self.p/2.)*W*DETJ
 
         return result
 
 
-class LinfNormInterface(ElementInterface):
-    def __init__(self, function, exact):
-        self.function = function
-        self.exact = exact
+# class LinfNormInterface(ElementInterface):
+#     def __init__(self, function, exact):
+#         self.function = function
+#         self.exact = exact
 
-        self.quad_point_values = None
+#         self.quad_point_values = None
 
-    def evaluate(self):
-        n_node = len(self.elements[0].nodes)
+#     def evaluate(self):
+#         n_node = len(self.elements[0].nodes)
 
-        coefficients = [self.function.vector[i,0] for i in self.elements[0].dofmap]
+#         coefficients = [self.function.vector[i,0] for i in self.elements[0].dofmap]
 
-        self.quad_point_values = []
+#         self.quad_point_values = []
 
-        for q in self.elements[0].quad_points:
-            u_h = [0. for i in range(self.elements[0].function_size)]
+#         for q in self.elements[0].quad_points:
+#             u_h = [0. for i in range(self.elements[0].function_size)]
 
-            for I, i in itertools.product(range(n_node), range(self.elements[0].function_size)):
-                u_h[i] += q.N[I]*coefficients[I*self.elements[0].function_size+i]
+#             for I, i in itertools.product(range(n_node), range(self.elements[0].function_size)):
+#                 u_h[i] += q.N[I]*coefficients[I*self.elements[0].function_size+i]
 
-            exact_val = self.exact(q.global_coor)
+#             exact_val = self.exact(q.global_coor)
 
-            inner_product = 0.
-            for i in range(self.elements[0].function_size):
-                inner_product += (exact_val[i] - u_h[i])**2
+#             inner_product = 0.
+#             for i in range(self.elements[0].function_size):
+#                 inner_product += (exact_val[i] - u_h[i])**2
 
-            linf = pow(inner_product, 0.5)
-            self.quad_point_values.append(linf)
+#             linf = pow(inner_product, 0.5)
+#             self.quad_point_values.append(linf)
 
-        return 0
+#         return 0
 
 
-class DerivativeLpNormInterface(ElementInterface):
-    def __init__(self, function, exact_deriv, p):
-        self.function = function
-        self.exact_deriv = exact_deriv
-        self.p = p # Lp error
+class DerivativeLpNormIntegrator(Integrator):
+    # def __init__(self, function, exact_deriv, p):
+    #     self.function = function
+    #     self.exact_deriv = exact_deriv
+    #     self.p = p # Lp error
 
-    def evaluate(self):
+    def calculate_element_integral(self, cell):
         result = 0.
-        n_node = len(self.elements[0].nodes)
+        n_node = len(cell.nodes)
 
-        coefficients = [self.function.vector[i,0] for i in self.elements[0].dofmap]
+        coefficients = [self.function.vector[i,0] for i in self.cell_dofs[cell.idx]]
 
-        for q in self.elements[0].quad_points:
-            u_h = np.zeros((self.elements[0].function_size, self.elements[0].spatial_dimension))
+        W_arr = self.mesh.quantities['W'].get_quantity(cell)
+        XG_arr = self.mesh.quantities['XG'].get_quantity(cell)
+        # N_arr = self.mesh.quantities['N'].get_quantity(cell)
+        B_arr = self.mesh.quantities['B'].get_quantity(cell)
+        DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
 
-            for I, i, j in itertools.product(range(n_node), range(self.elements[0].function_size), range(self.elements[0].spatial_dimension)):
-                u_h[i][j] += q.B[I][j]*coefficients[I*self.elements[0].function_size+i]
+        spatial_dim = B_arr[0].shape[1]
 
-            exact_val = np.array(self.exact_deriv(q.global_coor))
+        for idx in range(len(W_arr)):
+            u_h = np.zeros((self.function_size, spatial_dim))
+            W = W_arr[idx][0,0]
+            B = B_arr[idx]
+            XG = XG_arr[idx][:,0]
+            DETJ = DETJ_arr[idx][0,0]
+
+            for I, i, j in itertools.product(range(n_node), range(self.function_size), range(spatial_dim)):
+                u_h[i][j] += B[I][j]*coefficients[I*self.function_size+i]
+
+            exact_val = np.array(self.exact_deriv(XG))
 
             inner_product = 0.
-            for i in range(self.elements[0].function_size):
-                for j in range(self.elements[0].spatial_dimension):
+            for i in range(self.function_size):
+                for j in range(spatial_dim):
                     inner_product += (exact_val[i,j] - u_h[i,j])**2
 
-
-            result += pow(inner_product, self.p/2.)*q.weight*q.det_jac
+            result += pow(inner_product, self.p/2.)*W*DETJ
 
         return result
 
 
 
-def absolute_error(function, exact, exact_deriv, quadrature_degree, error='l2', time=0):
+def absolute_error(function, exact, exact_deriv, error='l2', time=0):
     logging.debug('Calculating error')
     if error == 'l2':
-        result = absolute_error_lp(function, exact, 2, quadrature_degree, time=time)
-    elif error == 'linf':
-        # TODO: decide on how to calculate the infinity norm
-        # result = abs(function.vector - get_analytic_solution_vector(function.function_space, exact)).max()
-        result = absolute_error_linf(function, exact, quadrature_degree, time=time)
+        result = absolute_error_lp(function, exact, 2, time=time)
+    # elif error == 'linf':
+    #     # TODO: decide on how to calculate the infinity norm
+    #     # result = abs(function.vector - get_analytic_solution_vector(function.function_space, exact)).max()
+    #     result = absolute_error_linf(function, exact, quantity_dicte, time=time)
     elif error == 'h1':
-        l2 = absolute_error_lp(function, exact, 2, quadrature_degree, time=time)
-        l2d = absolute_error_deriv_lp(function, exact_deriv, 2, quadrature_degree, time=time)
+        l2 = absolute_error_lp(function, exact, 2, time=time)
+        l2d = absolute_error_deriv_lp(function, exact_deriv, 2, time=time)
         result = pow(pow(l2,2.) + pow(l2d,2.), .5)
     else:
         raise Exception('Invalid error specification: %s'%error)
@@ -119,39 +134,39 @@ def absolute_error(function, exact, exact_deriv, quadrature_degree, error='l2', 
     return result
 
 
-def absolute_error_lp(function, exact, p, quadrature_degree, time=0):
-    form = LinearForm(
-        function.function_space,
-        LpNormInterface(function, lambda x: exact(x, time), p),
-        quadrature_degree)
+def absolute_error_lp(function, exact, p, time=0):
+    integrator = LpNormIntegrator(function.mesh, function.function_size)
+    integrator.function = function
+    integrator.exact = lambda x: exact(x, time)
+    integrator.p = p
 
-    result = form.calculate()
+    result = integrator.integrate()
     result = pow(result, 1./p)
     return result
 
-def absolute_error_linf(function, exact, quadrature_degree, time=0):
-    form = LinearForm(
-        function.function_space,
-        LinfNormInterface(function, lambda x: exact(x, time)),
-        quadrature_degree)
+# def absolute_error_linf(function, exact, quadrature_degree, time=0):
+#     form = LinearForm(
+#         function.function_space,
+#         LinfNormInterface(function, lambda x: exact(x, time)),
+#         quadrature_degree)
 
-    form.calculate()
+#     form.calculate()
 
-    all_values = []
-    for i in form.interfaces:
-        all_values += i.quad_point_values
+#     all_values = []
+#     for i in form.interfaces:
+#         all_values += i.quad_point_values
 
-    result = max(all_values)
-    return result
+#     result = max(all_values)
+#     return result
 
 
-def absolute_error_deriv_lp(function, exact_deriv, p, quadrature_degree, time=0):
-    form = LinearForm(
-        function.function_space,
-        DerivativeLpNormInterface(function, lambda x: exact_deriv(x, time), p),
-        quadrature_degree)
+def absolute_error_deriv_lp(function, exact_deriv, p, time=0):
+    integrator = DerivativeLpNormIntegrator(function.mesh, function.function_size)
+    integrator.function = function
+    integrator.exact_deriv = lambda x: exact_deriv(x, time)
+    integrator.p = p
 
-    result = form.calculate()
+    result = integrator.integrate()
     result = pow(result, 1./p)
 
     return result

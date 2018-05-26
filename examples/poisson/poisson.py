@@ -1,11 +1,13 @@
 from lyza_prototype import *
 import sympy as sp
+import numpy as np
 
 import itertools
 import logging
+# logging.basicConfig(level=logging.DEBUG)
 logging.basicConfig(level=logging.INFO)
 
-
+# RESOLUTION = 100
 RESOLUTION = 10
 
 class PoissonAnalyticSolution(AnalyticSolution):
@@ -26,32 +28,32 @@ analytic_solution = analytic_solution_obj.get_analytic_solution_function()
 analytic_solution_gradient = analytic_solution_obj.get_gradient_function()
 force_function = analytic_solution_obj.get_rhs_function()
 
-
-bottom_boundary = lambda x: x[1] <= 1e-12
-top_boundary = lambda x: x[1] >= 1. -1e-12
-left_boundary = lambda x: x[0] <= 1e-12
-right_boundary = lambda x: x[0] >= 1.-1e-12
+bottom_boundary = lambda x, t: x[1] <= 1e-12
+top_boundary = lambda x, t: x[1] >= 1. -1e-12
+left_boundary = lambda x, t: x[0] <= 1e-12
+right_boundary = lambda x, t: x[0] >= 1.-1e-12
 perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 # perimeter = lambda x: True
+
+quadrature_degree = 1
+function_size = 1
+spatial_dimension = 2
+element_degree = 1
 
 
 if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
-    quadrature_degree = 1
-    function_size = 1
-    spatial_dimension = 2
-    element_degree = 1
+    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
 
-    V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
-    u = Function(V)
-    a = BilinearForm(V, V, bilinear_interfaces.PoissonMatrix(), quadrature_degree)
-    b_body_force = LinearForm(V, linear_interfaces.FunctionInterface(force_function), quadrature_degree)
+    a = matrix_assemblers.PoissonMatrix(mesh, function_size)
+    b = vector_assemblers.FunctionVector(mesh, function_size)
 
+    b.set_param(force_function, 0)
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
-    u, f = solve(a, b_body_force, u, dirichlet_bcs)
+    u, f = solve(a, b, dirichlet_bcs, solver='petsc')
 
     ofile = VTKFile('out_poisson.vtk')
 
@@ -60,4 +62,5 @@ if __name__=='__main__':
 
     ofile.write(mesh, [u, f])
 
-    print('L2 Error: %e'%error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='l2'))
+    print('L2 Error: %e'%error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='l2'))
+

@@ -6,6 +6,10 @@ import itertools
 import logging
 logging.basicConfig(level=logging.INFO)
 
+# The primary purpose of this example is to have a convergence analysis
+# with Timoshenko's analytic solution for cantilever beams
+# It is still work in progress.
+
 L = 4.
 C = 1.
 P = 1.
@@ -16,6 +20,11 @@ I = 1./12.*C*C*C
 
 MU = E/(1.+NU)/2.
 LAMBDA = E*NU/(1.+NU)/(1.-2.*NU)
+
+quadrature_degree = 1
+function_size = 2
+spatial_dimension = 2
+element_degree = 1
 
 def exact_solution(coor, t):
     x = coor[0]
@@ -42,16 +51,20 @@ def exact_solution(coor, t):
 
     return [u, v]
 
+ZERO_FUNCTION = lambda x, t: [0.,0.,0.]
+FORCE_FUNCTION = lambda x, t: [0.,-6.*P/C/C/C*(C*C/4.-x[1]*x[1])]
+# FORCE_FUNCTION = lambda x, t: [0.,-P/C]
+
 class RightEnd(Domain):
     def is_subset(self, cell):
-        is_in = not (False in [right_boundary(node.coor) for node in cell.nodes])
+        is_in = not (False in [right_boundary(node.coor, 0) for node in cell.nodes])
 
         return is_in and cell.is_boundary
 
-right_boundary = lambda x: x[0] >= L-1e-12
-left_boundary = lambda x: x[0] <= 1e-12
+right_boundary = lambda x, t: x[0] >= L-1e-12
+left_boundary = lambda x, t: x[0] <= 1e-12
 
-left_bottom_point = lambda x: x[0] <= 1e-12 and x[1] <= -C/2. + 1e-12
+left_bottom_point = lambda x, t: x[0] <= 1e-12 and x[1] <= -C/2. + 1e-12
 
 mesh = meshes.QuadMesh(
     40,
@@ -62,46 +75,26 @@ mesh = meshes.QuadMesh(
     [0., C/2.],
 )
 
-quadrature_degree = 1
-function_size = 2
-spatial_dimension = 2
-element_degree = 1
+mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension, domain=domain.AllDomain())
 
+a = matrix_assemblers.LinearElasticity(mesh, function_size)
+a.set_param_isotropic(LAMBDA, MU, plane_stress=True)
 
-V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
-u = Function(V)
-a = BilinearForm(V, V, bilinear_interfaces.IsotropicLinearElasticity(LAMBDA, MU, plane_stress=True), quadrature_degree)
-b_neumann = LinearForm(V, linear_interfaces.FunctionInterface(
-    lambda x, t: [0.,-6.*P/C/C/C*(C*C/4.-x[1]*x[1])]), quadrature_degree, domain=RightEnd())
-    # lambda x: [0.,-P/C]), quadrature_degree, domain=RightEnd())
-
-# b_neumann = LinearForm(V, linear_interfaces.PointLoad(
-#     left_bottom_point,
-#     [0.,-P]), quadrature_degree, domain=LeftEnd())
-
+b_neumann = vector_assemblers.FunctionVector(mesh, function_size, domain=RightEnd())
+b_neumann.set_param(FORCE_FUNCTION, 0)
 
 # dirichlet_bcs = [DirichletBC(lambda x: [0.,0.], right_boundary)]
-dirichlet_bcs = [DirichletBC(exact_solution, left_boundary)]
+dirichlet_bcs = [DirichletBC(ZERO_FUNCTION, left_boundary)]
+# dirichlet_bcs = [DirichletBC(exact_solution, left_boundary)]
 # dirichlet_bcs = [DirichletBC(exact_solution, lambda x: True)]
 
-u, f = solve(a, b_neumann, u, dirichlet_bcs)
-
-for i in a.interfaces:
-    i.calculate_stress(u)
-
-stress = a.project_to_nodes(lambda i: i.stress)
-strain = a.project_to_nodes(lambda i: i.strain)
+u, f = solve(a, b_neumann, dirichlet_bcs)
 
 ofile = VTKFile('out_beam.vtk')
 
-u.set_label('displacement')
-f.set_label('force')
-stress.set_label('stress')
-strain.set_label('strain')
+u.set_label('u')
+f.set_label('f')
 
-ofile.write(mesh, [u, f, stress, strain])
-
-
-# print(exact_solution([0.,-C/2.]))
+ofile.write(mesh, [u, f])
 
 

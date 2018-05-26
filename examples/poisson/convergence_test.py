@@ -15,29 +15,27 @@ h_max_array = []
 l2_array = []
 h1_array = []
 
-quadrature_degree = 1
-function_size = 1
-spatial_dimension = 2
-element_degree = 1
-
 
 for RESOLUTION in RESOLUTIONS:
+    logging.info('Solving for resolution %d'%RESOLUTION)
 
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
-    V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
-    u = Function(V)
-    a = BilinearForm(V, V, bilinear_interfaces.PoissonMatrix(), quadrature_degree)
-    b_body_force = LinearForm(V, linear_interfaces.FunctionInterface(force_function), quadrature_degree)
+    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
+
+    a = matrix_assemblers.PoissonMatrix(mesh, function_size)
+    b = vector_assemblers.FunctionVector(mesh, function_size)
+
+    b.set_param(force_function, 0)
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
-    u, f = solve(a, b_body_force, u, dirichlet_bcs, solver='petsc')
+    u, f = solve(a, b, dirichlet_bcs, solver='petsc')
 
     h_max = 1./RESOLUTION
     n_node = len(mesh.nodes)
-    l2 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='l2')
-    h1 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, quadrature_degree, error='h1')
+    l2 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='l2')
+    h1 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='h1')
 
     h_max_array.append(h_max)
     n_node_array.append(n_node)
