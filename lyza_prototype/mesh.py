@@ -112,3 +112,12 @@ class Mesh:
                 result.vector[i*spatial_dimension+j] = n.coor[j]
 
         return result
+
+    def init_quantity(self, key, shape):
+        result = CellQuantity(self, shape)
+
+        for cell in self.cells:
+            n_array = len(self.quantities['W'].get_quantity(cell))
+            result.add_zero_array(cell, n_array=n_array)
+
+        self.quantities[key] = result

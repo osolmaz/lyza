@@ -1,5 +1,4 @@
 from lyza_prototype import *
-from mesh import Cantilever3D
 from interfaces import *
 
 import logging
@@ -83,7 +82,7 @@ def update_function(mesh, phi):
 
 if __name__ == '__main__':
 
-    mesh = Cantilever3D(RESOLUTION, LENGTH, HORIZONTAL_WIDTH, VERTICAL_WIDTH)
+    mesh = meshes.Cantilever3D(RESOLUTION, LENGTH, HORIZONTAL_WIDTH, VERTICAL_WIDTH)
     mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
 
     a = HyperelasticityJacobian(mesh, function_size)

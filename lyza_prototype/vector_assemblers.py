@@ -76,3 +76,29 @@ class ZeroVector(VectorAssembler):
 
         return f
 
+
+class InelasticityResidualVector(VectorAssembler):
+
+    def calculate_element_vector(self, cell):
+        n_node = len(cell.nodes)
+        n_dof = n_node*self.function_size
+
+        f = np.zeros((n_dof,1))
+
+        W_arr = self.mesh.quantities['W'].get_quantity(cell)
+        B_arr = self.mesh.quantities['B'].get_quantity(cell)
+        DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
+        SIG_arr = self.mesh.quantities['SIG'].get_quantity(cell)
+
+        for idx in range(len(W_arr)):
+            B = B_arr[idx]
+            W = W_arr[idx][0,0]
+            DETJ = DETJ_arr[idx][0,0]
+            SIG = SIG_arr[idx]
+
+            f_contrib = -np.einsum('ab, ib -> ia', SIG, B)*DETJ*W
+            f_contrib = f_contrib.reshape(f.shape)
+            f += f_contrib
+
+        return f
+

@@ -66,7 +66,7 @@ if __name__ == '__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
     mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
 
-    a = matrix_assemblers.LinearElasticity(mesh, function_size)
+    a = matrix_assemblers.LinearElasticityMatrix(mesh, function_size)
     a.set_param_isotropic(LAMBDA, MU, plane_strain=True)
 
     b = vector_assemblers.FunctionVector(mesh, function_size)

@@ -46,8 +46,8 @@ mesh = meshes.QuadMesh(
 )
 mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension, domain=domain.AllDomain())
 
-a1 = matrix_assemblers.LinearElasticity(mesh, function_size, domain=RightPart())
-a2 = matrix_assemblers.LinearElasticity(mesh, function_size, domain=LeftPart())
+a1 = matrix_assemblers.LinearElasticityMatrix(mesh, function_size, domain=RightPart())
+a2 = matrix_assemblers.LinearElasticityMatrix(mesh, function_size, domain=LeftPart())
 
 a1.set_param_isotropic(10000., 1000., plane_stress=True)
 a2.set_param_isotropic(1000., 100., plane_stress=True)

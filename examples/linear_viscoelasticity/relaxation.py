@@ -45,7 +45,7 @@ def right_bc_function(x, t):
 INITIAL_CONDITION = lambda x, t: [0., 0.]
 
 
-class MassMatrix(matrix_assemblers.LinearElasticity):
+class MassMatrix(matrix_assemblers.LinearElasticityMatrix):
 
     def set_param_viscosity(self, eta, plane_stress=False, plane_strain=False, thickness=None):
         # matrix = np.array([
@@ -82,7 +82,7 @@ if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
     mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
 
-    a = matrix_assemblers.LinearElasticity(mesh, function_size)
+    a = matrix_assemblers.LinearElasticityMatrix(mesh, function_size)
     a.set_param_isotropic(LAMBDA, MU, plane_stress=True)
 
     m = MassMatrix(mesh, function_size)
@@ -102,7 +102,7 @@ if __name__=='__main__':
 
     u, f = time_integration.implicit_euler(
         m, a, b, dirichlet_bcs,
-        INITIAL_CONDITION, t_array, out_prefix='out/out_relaxation')
+        INITIAL_CONDITION, t_array, out_prefix=os.path.join(OUTPUT_DIR, 'out_relaxation'))
 
     u.set_label('u')
 

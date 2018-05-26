@@ -35,6 +35,11 @@ class CellQuantity:
 
         self.quantity_array_dict[cell].append(quantity_matrix)
 
+    def add_zero_array(self, cell, n_array=1):
+        for i in range(n_array):
+            self.quantity_array_dict[cell].append(np.zeros(self.shape))
+
+
     def reset_quantity_by_cell(self, cell):
         # self.quantity_array_dict[cell] = []
         del self.quantity_array_dict[cell][:]

@@ -55,18 +55,12 @@ class MassMatrix(MatrixAssembler):
             # for I,J,i in itertools.product(
             #         range(n_node),
             #         range(n_node)):
-
             #     K[I, J] += N[I,0]*N[J,0]*DETJ*W
-
-
-        # import ipdb; ipdb.set_trace()
-        # if 'eta':
-        # K = self.eta*K
 
         return K
 
 
-class LinearElasticity(ElasticityBase, MatrixAssembler):
+class LinearElasticityMatrix(ElasticityBase, MatrixAssembler):
 
     def calculate_element_matrix(self, cell):
         n_node = len(cell.nodes)
@@ -84,21 +78,54 @@ class LinearElasticity(ElasticityBase, MatrixAssembler):
             DETJ = DETJ_arr[idx][0,0]
             spatial_dim = B.shape[1]
 
-            for I,J,i,j,k,l in itertools.product(
-                    range(n_node),
-                    range(n_node),
-                    range(spatial_dim),
-                    range(spatial_dim),
-                    range(spatial_dim),
-                    range(spatial_dim)):
+            K_contrib = np.einsum('ic, acbd, jd -> iajb', B, self.C_unvoigt, B)*DETJ*W
+            K_contrib = K_contrib.reshape(K.shape)
+            K += K_contrib
 
-                alpha = I*spatial_dim + i
-                beta = J*spatial_dim + j
-
-                C_val = self.C[self.index_map[i][k], self.index_map[j][l]]
-                K[alpha, beta] += B[I,k]*C_val*B[J,l]*DETJ*W
+            # for I,J,i,j,k,l in itertools.product(
+            #         range(n_node),
+            #         range(n_node),
+            #         range(spatial_dim),
+            #         range(spatial_dim),
+            #         range(spatial_dim),
+            #         range(spatial_dim)):
+            #     alpha = I*spatial_dim + i
+            #     beta = J*spatial_dim + j
+            #     C_val = self.C[self.index_map[i][k], self.index_map[j][l]]
+            #     K[alpha, beta] += B[I,k]*C_val*B[J,l]*DETJ*W
 
         if self.thickness:
             K *= self.thickness
 
         return K
+
+
+class InelasticityJacobianMatrix(MatrixAssembler):
+
+    def calculate_element_matrix(self, cell):
+        n_node = len(cell.nodes)
+        n_dof = n_node*self.function_size
+
+        K = np.zeros((n_dof,n_dof))
+
+        W_arr = self.mesh.quantities['W'].get_quantity(cell)
+        B_arr = self.mesh.quantities['B'].get_quantity(cell)
+        DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
+        CTENSOR_arr = self.mesh.quantities['CTENSOR'].get_quantity(cell)
+
+        for idx in range(len(W_arr)):
+            B = B_arr[idx]
+            W = W_arr[idx][0,0]
+            DETJ = DETJ_arr[idx][0,0]
+            CTENSOR = CTENSOR_arr[idx]
+
+            K_contrib = np.einsum('ic, acbd, jd -> iajb', B, CTENSOR, B)*DETJ*W
+            K_contrib = K_contrib.reshape(K.shape)
+            K += K_contrib
+
+        return K
+
+
+
+
+
