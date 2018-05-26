@@ -7,10 +7,7 @@ class Integrator(CellIterator):
         result = 0.
 
         for idx, cell in enumerate(self.mesh.cells):
-            if self.domain:
-                pass
-            else:
-                if cell.is_boundary: continue
+            if not self.domain.is_subset(cell): continue
 
             elem_value = self.calculate_element_integral(cell)
             result += elem_value

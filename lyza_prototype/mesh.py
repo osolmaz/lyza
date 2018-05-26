@@ -1,6 +1,7 @@
 from lyza_prototype.node import Node
 from lyza_prototype.cell_quantity import CellQuantity
 from lyza_prototype.function import Function
+from lyza_prototype.domain import DefaultDomain
 import time
 import logging
 
@@ -32,18 +33,24 @@ class Mesh:
     def get_n_nodes(self):
         return len(self.nodes)
 
-    def set_quadrature_degree(self, quadrature_degree_map, spatial_dim, domain=None, skip_basis=False):
+    def set_quadrature_degree(
+            self,
+            quadrature_degree_map,
+            spatial_dim,
+            domain=DefaultDomain(),
+            skip_basis=False):
+
         start = time.time()
         logging.debug('Started setting quadrature degree')
+
+        # if not domain:
+            # domain = DefaultDomain()
 
         quad_weight = CellQuantity(self, (1,1))
         quad_coor = CellQuantity(self, (3,1))
 
         for idx, cell in enumerate(self.cells):
-            if domain:
-                pass
-            else:
-                if cell.is_boundary: continue
+            if not domain.is_subset(cell): continue
 
             degree = quadrature_degree_map(cell)
             quad_weights, quad_coors = cell.get_quad_points(degree)
@@ -68,10 +75,7 @@ class Mesh:
             XG = CellQuantity(self, (3, 1))
 
             for idx, cell in enumerate(self.cells):
-                if domain:
-                    pass
-                else:
-                    if cell.is_boundary: continue
+                if not domain.is_subset(cell): continue
 
                 degree = quadrature_degree_map(cell)
 

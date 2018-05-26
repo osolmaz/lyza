@@ -79,11 +79,10 @@ class Cell:
 
         for I in range(len(self.nodes)):
             Bhat = self.Bhat[I](xi)
-            coor = self.nodes[I].coor[:self.elem_dim]
+            coor = self.nodes[I].coor[:spatial_dim]
 
             J += coor*Bhat.T
 
-            # import ipdb; ipdb.set_trace()
             # for i in range(spatial_dim):
             #     for j in range(self.elem_dim):
             #         J[i,j] += coor[i]*Bhat[j]

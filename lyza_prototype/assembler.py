@@ -46,10 +46,7 @@ class MatrixAssembler(Assembler):
         start_time = time.time()
 
         for idx, cell in enumerate(self.mesh.cells):
-            if self.domain:
-                pass
-            else:
-                if cell.is_boundary: continue
+            if not self.domain.is_subset(cell): continue
 
             elem_matrix = self.calculate_element_matrix(cell)
             dofmap = self.cell_dofs[idx]
@@ -77,12 +74,10 @@ class VectorAssembler(Assembler):
         start_time = time.time()
 
         for idx, cell in enumerate(self.mesh.cells):
-            if self.domain:
-                pass
-            else:
-                if cell.is_boundary: continue
+            if not self.domain.is_subset(cell): continue
 
             elem_vector = self.calculate_element_vector(cell)
+            # print(elem_vector)
             dofmap = self.cell_dofs[idx]
 
             result[dofmap] += elem_vector
@@ -90,6 +85,7 @@ class VectorAssembler(Assembler):
             # for i, I in enumerate(dofmap):
                     # result[I] += elem_vector[i]
 
+        # import ipdb; ipdb.set_trace()
         logging.debug('Vector assembled in %f sec'%(time.time()-start_time))
 
         return result
