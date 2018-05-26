@@ -11,11 +11,18 @@ P = 1.
 LAMBDA = 10000.
 MU = 1000.
 
-right_boundary = lambda x: x[0] >= L-1e-12
-left_boundary = lambda x: x[0] <= 1e-12
+spatial_dimension = 2
+function_size = 2
+element_degree = 1
+quadrature_degree = 1
 
-left_part = lambda x: x[0] <= L/2.
-right_part = lambda x: x[0] >= L/2.
+right_boundary = lambda x, t: x[0] >= L-1e-12
+left_boundary = lambda x, t: x[0] <= 1e-12
+
+left_part = lambda x, t: x[0] <= L/2.
+right_part = lambda x, t: x[0] >= L/2.
+
+FUNCTION_VECTOR = lambda x, t: [0.,-P/C]
 
 class LeftEnd(Domain):
     def is_subset(self, cell):
@@ -37,39 +44,23 @@ mesh = meshes.QuadMesh(
     [L, C/2.],
     [0., C/2.],
 )
+mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension, domain=domain.AllDomain())
 
-spatial_dimension = 2
-function_size = 2
-element_degree = 1
-quadrature_degree = 1
+a1 = matrix_assemblers.LinearElasticity(mesh, function_size, domain=RightPart())
+a2 = matrix_assemblers.LinearElasticity(mesh, function_size, domain=LeftPart())
 
-V = FunctionSpace(mesh, function_size, spatial_dimension, element_degree)
+a1.set_param_isotropic(10000., 1000., plane_stress=True)
+a2.set_param_isotropic(1000., 100., plane_stress=True)
 
-u = Function(V)
-
-matrix1 = bilinear_interfaces.IsotropicLinearElasticity(10000., 1000., plane_stress=True)
-matrix2 = bilinear_interfaces.IsotropicLinearElasticity(1000., 100., plane_stress=True)
-
-a1 = BilinearForm(V, V, matrix1, quadrature_degree, domain=RightPart())
-a2 = BilinearForm(V, V, matrix2, quadrature_degree, domain=LeftPart())
-
-
-b_neumann = LinearForm(
-    V,
-    linear_interfaces.FunctionInterface(lambda x, t: [0.,-P/C]),
-    quadrature_degree,
-    domain=LeftEnd())
+b = vector_assemblers.FunctionVector(mesh, function_size, domain=LeftEnd())
+b.set_param(FUNCTION_VECTOR, 0)
 
 dirichlet_bcs = [DirichletBC(lambda x, t: [0.,0.], right_boundary)]
 
-u, f = solve(a1+a2, b_neumann, u, dirichlet_bcs)
+u, f = solve(a1+a2, b, dirichlet_bcs)
 ofile = VTKFile('out_different_materials.vtk')
 
-u.set_label('displacement')
-f.set_label('force')
+u.set_label('u')
+f.set_label('f')
 
 ofile.write(mesh, [u, f])
-
-# print(exact_solution([0.,-C/2.]))
-
-

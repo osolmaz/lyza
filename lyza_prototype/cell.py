@@ -15,8 +15,8 @@ class Cell:
         self.n_node = len(self.nodes)
         self.is_boundary = is_boundary
 
-    def all_nodes_in(self, position):
-        return not (False in [position(node.coor) for node in self.nodes])
+    def all_nodes_in(self, position, t=0):
+        return not (False in [position(node.coor, t) for node in self.nodes])
 
     def some_nodes_in(self, position):
         return True in [position(node.coor) for node in self.nodes]

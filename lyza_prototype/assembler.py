@@ -19,6 +19,9 @@ class Assembler(CellIterator):
 class AggregateAssembler(Assembler):
     def __init__(self, assemblers):
         self.assemblers = assemblers
+        self.mesh = self.assemblers[0].mesh
+        self.function_size = self.assemblers[0].function_size
+        self.node_dofs = self.assemblers[0].node_dofs
 
     def assemble(self):
         return sum([i.assemble() for i in self.assemblers])
