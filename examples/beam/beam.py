@@ -10,6 +10,10 @@ logging.basicConfig(level=logging.INFO)
 # with Timoshenko's analytic solution for cantilever beams
 # It is still work in progress.
 
+QUADRATURE_DEGREE = 1
+FUNCTION_SIZE = 2
+SPATIAL_DIMENSION = 2
+
 L = 4.
 C = 1.
 P = 1.
@@ -20,11 +24,6 @@ I = 1./12.*C*C*C
 
 MU = E/(1.+NU)/2.
 LAMBDA = E*NU/(1.+NU)/(1.-2.*NU)
-
-quadrature_degree = 1
-function_size = 2
-spatial_dimension = 2
-element_degree = 1
 
 def exact_solution(coor, t):
     x = coor[0]
@@ -75,12 +74,12 @@ mesh = meshes.QuadMesh(
     [0., C/2.],
 )
 
-mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension, domain=domain.AllDomain())
+mesh.set_quadrature_degree(lambda c: QUADRATURE_DEGREE, SPATIAL_DIMENSION, domain=domain.AllDomain())
 
-a = matrix_assemblers.LinearElasticityMatrix(mesh, function_size)
+a = matrix_assemblers.LinearElasticityMatrix(mesh, FUNCTION_SIZE)
 a.set_param_isotropic(LAMBDA, MU, plane_stress=True)
 
-b_neumann = vector_assemblers.FunctionVector(mesh, function_size, domain=RightEnd())
+b_neumann = vector_assemblers.FunctionVector(mesh, FUNCTION_SIZE, domain=RightEnd())
 b_neumann.set_param(FORCE_FUNCTION, 0)
 
 # dirichlet_bcs = [DirichletBC(lambda x: [0.,0.], right_boundary)]

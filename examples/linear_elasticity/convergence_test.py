@@ -21,12 +21,12 @@ for RESOLUTION in RESOLUTIONS:
 
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
-    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
+    mesh.set_quadrature_degree(lambda c: QUADRATURE_DEGREE, SPATIAL_DIMENSION)
 
-    a = matrix_assemblers.LinearElasticityMatrix(mesh, function_size)
+    a = matrix_assemblers.LinearElasticityMatrix(mesh, FUNCTION_SIZE)
     a.set_param_isotropic(LAMBDA, MU, plane_strain=True)
 
-    b = vector_assemblers.FunctionVector(mesh, function_size)
+    b = vector_assemblers.FunctionVector(mesh, FUNCTION_SIZE)
     b.set_param(force_function, 0)
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]

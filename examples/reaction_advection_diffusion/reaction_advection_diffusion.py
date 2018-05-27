@@ -7,6 +7,9 @@ import numpy as np
 import logging
 logging.basicConfig(level=logging.INFO)
 
+QUADRATURE_DEGREE = 1
+FUNCTION_SIZE = 1
+SPATIAL_DIMENSION = 2
 
 RESOLUTION = 10
 # RESOLUTION = 20
@@ -90,11 +93,6 @@ force_function = lambda x, t: [
       + sin(2*pi*x[0])*sin(2*pi*x[1]))*exp(-t)
 ]
 
-quadrature_degree = 1
-function_size = 1
-spatial_dimension = 2
-element_degree = 1
-
 bottom_boundary = lambda x, t: x[1] <= 1e-12
 top_boundary = lambda x, t: x[1] >= 1. -1e-12
 left_boundary = lambda x, t: x[0] <= 1e-12
@@ -105,12 +103,12 @@ perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right
 
 if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
-    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
+    mesh.set_quadrature_degree(lambda c: QUADRATURE_DEGREE, SPATIAL_DIMENSION)
 
-    a = RADMatrix(mesh, function_size)
-    m = matrix_assemblers.MassMatrix(mesh, function_size)
+    a = RADMatrix(mesh, FUNCTION_SIZE)
+    m = matrix_assemblers.MassMatrix(mesh, FUNCTION_SIZE)
 
-    b = vector_assemblers.FunctionVector(mesh, function_size)
+    b = vector_assemblers.FunctionVector(mesh, FUNCTION_SIZE)
     b.set_param(force_function, 0)
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]

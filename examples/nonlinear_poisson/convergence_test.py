@@ -17,11 +17,11 @@ for RESOLUTION in RESOLUTIONS:
     logging.info('Solving for resolution %d'%RESOLUTION)
 
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
-    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
+    mesh.set_quadrature_degree(lambda c: QUADRATURE_DEGREE, SPATIAL_DIMENSION)
 
-    a = NonlinearPoissonJacobian(mesh, function_size)
-    b_1 = NonlinearPoissonResidual(mesh, function_size)
-    b_2 = vector_assemblers.FunctionVector(mesh, function_size)
+    a = NonlinearPoissonJacobian(mesh, FUNCTION_SIZE)
+    b_1 = NonlinearPoissonResidual(mesh, FUNCTION_SIZE)
+    b_2 = vector_assemblers.FunctionVector(mesh, FUNCTION_SIZE)
     b_2.set_param(force_function, 0)
     b = b_1 + b_2
 

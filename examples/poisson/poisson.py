@@ -7,6 +7,10 @@ import logging
 # logging.basicConfig(level=logging.DEBUG)
 logging.basicConfig(level=logging.INFO)
 
+QUADRATURE_DEGREE = 1
+FUNCTION_SIZE = 1
+SPATIAL_DIMENSION = 2
+
 # RESOLUTION = 100
 RESOLUTION = 10
 
@@ -35,19 +39,14 @@ right_boundary = lambda x, t: x[0] >= 1.-1e-12
 perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 # perimeter = lambda x: True
 
-quadrature_degree = 1
-function_size = 1
-spatial_dimension = 2
-element_degree = 1
-
 
 if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
-    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
+    mesh.set_quadrature_degree(lambda c: QUADRATURE_DEGREE, SPATIAL_DIMENSION)
 
-    a = matrix_assemblers.PoissonMatrix(mesh, function_size)
-    b = vector_assemblers.FunctionVector(mesh, function_size)
+    a = matrix_assemblers.PoissonMatrix(mesh, FUNCTION_SIZE)
+    b = vector_assemblers.FunctionVector(mesh, FUNCTION_SIZE)
 
     b.set_param(force_function, 0)
 

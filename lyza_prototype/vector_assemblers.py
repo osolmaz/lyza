@@ -102,3 +102,37 @@ class InelasticityResidualVector(VectorAssembler):
 
         return f
 
+
+class HyperelasticityResidual(VectorAssembler):
+
+    def calculate_element_vector(self, cell):
+        n_node = len(cell.nodes)
+        n_dof = n_node*self.function_size
+
+        FINVT_arr = self.mesh.quantities['FINVT'].get_quantity(cell)
+        BBAR_arr = self.mesh.quantities['BBAR'].get_quantity(cell)
+        B_arr = self.mesh.quantities['B'].get_quantity(cell)
+        LCG_arr = self.mesh.quantities['LCG'].get_quantity(cell)
+        TAU_arr = self.mesh.quantities['TAU'].get_quantity(cell)
+        W_arr = self.mesh.quantities['W'].get_quantity(cell)
+        DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
+
+        f = np.zeros((n_dof, 1))
+
+        for idx in range(len(W_arr)):
+            Finvtra = FINVT_arr[idx]
+            Bbar = BBAR_arr[idx]
+            B = B_arr[idx]
+            W = W_arr[idx][0,0]
+            DETJ = DETJ_arr[idx][0,0]
+            b_ = LCG_arr[idx]
+            tau = TAU_arr[idx]
+
+            n_node = B.shape[0]
+            spatial_dim = B.shape[1]
+
+            f_higher = -np.einsum('ab, ib -> ia', tau, Bbar)*DETJ*W
+            f_higher = f_higher.reshape((n_node*spatial_dim,1))
+            f += f_higher
+
+        return f

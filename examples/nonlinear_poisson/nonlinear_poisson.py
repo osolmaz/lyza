@@ -6,13 +6,11 @@ import itertools
 import logging
 logging.basicConfig(level=logging.INFO)
 
+QUADRATURE_DEGREE = 1
+FUNCTION_SIZE = 1
+SPATIAL_DIMENSION = 2
 
 RESOLUTION = 20
-
-quadrature_degree = 1
-function_size = 1
-spatial_dimension = 2
-element_degree = 1
 
 # exact_solution = lambda x, t: [sin(2.*pi*x[0])*sin(2.*pi*x[1])]
 # exact_solution_gradient = lambda x, t: [[
@@ -143,7 +141,7 @@ def update_function(mesh, u):
     projector.execute()
 
     projector = iterators.GradientProjector(mesh, u.function_size)
-    projector.set_param(u, 'GRADU', spatial_dimension)
+    projector.set_param(u, 'GRADU', SPATIAL_DIMENSION)
     projector.execute()
 
     calculator = Calculator(mesh, u.function_size)
@@ -157,11 +155,11 @@ right_boundary = lambda x, t: x[0] >= 1.-1e-12
 
 if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
-    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
+    mesh.set_quadrature_degree(lambda c: QUADRATURE_DEGREE, SPATIAL_DIMENSION)
 
-    a = NonlinearPoissonJacobian(mesh, function_size)
-    b_1 = NonlinearPoissonResidual(mesh, function_size)
-    b_2 = vector_assemblers.FunctionVector(mesh, function_size)
+    a = NonlinearPoissonJacobian(mesh, FUNCTION_SIZE)
+    b_1 = NonlinearPoissonResidual(mesh, FUNCTION_SIZE)
+    b_2 = vector_assemblers.FunctionVector(mesh, FUNCTION_SIZE)
     b_2.set_param(force_function, 0)
     b = b_1 + b_2
 

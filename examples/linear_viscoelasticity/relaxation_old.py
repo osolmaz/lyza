@@ -8,6 +8,10 @@ import os
 import logging
 logging.basicConfig(level=logging.INFO)
 
+QUADRATURE_DEGREE = 1
+FUNCTION_SIZE = 2
+SPATIAL_DIMENSION = 2
+
 # RESOLUTION = 10
 RESOLUTION = 20
 
@@ -73,22 +77,17 @@ top_boundary = lambda x, t: x[1] >= 1. -1e-12
 left_boundary = lambda x, t: x[0] <= 1e-12
 right_boundary = lambda x, t: x[0] >= 1.-1e-12
 
-quadrature_degree = 1
-function_size = 2
-spatial_dimension = 2
-element_degree = 1
-
 if __name__=='__main__':
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
-    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
+    mesh.set_quadrature_degree(lambda c: QUADRATURE_DEGREE, SPATIAL_DIMENSION)
 
-    a = matrix_assemblers.LinearElasticityMatrix(mesh, function_size)
+    a = matrix_assemblers.LinearElasticityMatrix(mesh, FUNCTION_SIZE)
     a.set_param_isotropic(LAMBDA, MU, plane_stress=True)
 
-    m = MassMatrix(mesh, function_size)
+    m = MassMatrix(mesh, FUNCTION_SIZE)
     m.set_param_viscosity(ETA, plane_stress=True)
 
-    b = vector_assemblers.ZeroVector(mesh, function_size)
+    b = vector_assemblers.ZeroVector(mesh, FUNCTION_SIZE)
 
     dirichlet_bcs = [
         DirichletBC(lambda x,t: [0.,0.], left_boundary),

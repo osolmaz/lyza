@@ -7,6 +7,10 @@ import itertools
 import logging
 logging.basicConfig(level=logging.INFO)
 
+SPATIAL_DIMENSION = 2
+FUNCTION_SIZE = 2
+QUADRATURE_DEGREE = 1
+
 RESOLUTION = 20
 
 E = 1000.
@@ -56,33 +60,29 @@ right_boundary = lambda x, t: x[0] >= 1.-1e-12
 
 perimeter = join_boundaries([bottom_boundary, top_boundary, left_boundary, right_boundary])
 
-spatial_dimension = 2
-function_size = 2
-element_degree = 1
-quadrature_degree = 1
 
 if __name__ == '__main__':
 
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
-    mesh.set_quadrature_degree(lambda c: quadrature_degree, spatial_dimension)
+    mesh.set_quadrature_degree(lambda c: QUADRATURE_DEGREE, SPATIAL_DIMENSION)
 
-    a = matrix_assemblers.LinearElasticityMatrix(mesh, function_size)
+    a = matrix_assemblers.LinearElasticityMatrix(mesh, FUNCTION_SIZE)
     a.set_param_isotropic(LAMBDA, MU, plane_strain=True)
 
-    b = vector_assemblers.FunctionVector(mesh, function_size)
+    b = vector_assemblers.FunctionVector(mesh, FUNCTION_SIZE)
     b.set_param(force_function, 0)
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
     u, f = solve(a, b, dirichlet_bcs)
 
-    projector = iterators.SymmetricGradientProjector(mesh, function_size)
-    projector.set_param(u, 'EPS', spatial_dimension)
+    projector = iterators.SymmetricGradientProjector(mesh, FUNCTION_SIZE)
+    projector.set_param(u, 'EPS', SPATIAL_DIMENSION)
     projector.execute()
 
-    stress_calc = iterators.LinearStressCalculator(mesh, function_size)
+    stress_calc = iterators.LinearStressCalculator(mesh, FUNCTION_SIZE)
     stress_calc.set_param_isotropic(LAMBDA, MU, plane_strain=True)
-    stress_calc.init_stress_quantity(spatial_dimension)
+    stress_calc.init_stress_quantity(SPATIAL_DIMENSION)
     stress_calc.execute()
 
     stress = mesh.quantities['SIGV'].get_function()
