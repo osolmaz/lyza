@@ -3,10 +3,9 @@ import logging
 from lyza_prototype.function import Function
 
 class CellQuantity:
-    def __init__(self, mesh, shape, fixed=True):
+    def __init__(self, mesh, shape):
         self.mesh = mesh
         self.shape = shape
-        self.fixed = fixed
 
         self.quantity_array_list = []
         self.quantity_array_dict = {}
@@ -124,3 +123,10 @@ class CellQuantity:
         return f
 
 
+    def copy(self):
+        result = CellQuantity(self.mesh, self.shape)
+
+        for cell in self.mesh.cells:
+            del result.quantity_array_dict[cell][:]
+            result.quantity_array_dict[cell].extend(self.quantity_array_dict[cell])
+        return result

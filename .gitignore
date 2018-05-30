@@ -19,3 +19,6 @@ Pipfile.lock
 *.tex
 *.png
 tmp.txt
+*.mp4
+*.jpg
+

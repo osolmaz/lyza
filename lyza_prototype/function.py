@@ -30,6 +30,20 @@ class Function:
         result.vector = self.vector.copy()
         return result
 
+    def separate_components(self, index_list):
+        result = Function(self.mesh, len(index_list))
+
+        result_dofs = []
+
+        for dofs in self.node_dofs:
+            for idx in index_list:
+                result_dofs.append(dofs[idx])
+
+        result.vector = self.vector.copy()[result_dofs]
+
+        return result
+        # import ipdb; ipdb.set_trace()
+
     def set_analytic_solution(self, function, time=0):
 
         for n in self.mesh.nodes:

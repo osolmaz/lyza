@@ -1,5 +1,5 @@
 from lyza_prototype import *
-from interfaces import *
+import numpy as np
 
 import logging
 logging.basicConfig(level=logging.INFO)
