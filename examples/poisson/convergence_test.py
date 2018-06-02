@@ -30,7 +30,7 @@ for RESOLUTION in RESOLUTIONS:
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
-    u, f = solve(a, b, dirichlet_bcs, solver='petsc')
+    u, f = solve(a, b, dirichlet_bcs)
 
     h_max = 1./RESOLUTION
     n_node = len(mesh.nodes)

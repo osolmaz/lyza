@@ -1,5 +1,5 @@
 from lyza_prototype.analytic_solution import get_analytic_solution_vector
-from lyza_prototype.solver import apply_bcs, solve_scipy_sparse, solve_petsc
+from lyza_prototype.solver import apply_bcs, solve_scipy_sparse
 from lyza_prototype.function import Function
 from lyza_prototype.vtk import VTKFile
 import logging
@@ -51,8 +51,8 @@ def implicit_euler(m_form, a_form, b_form, dirichlet_bcs, u0_function, t_array, 
         matrix_bc, vector_bc = apply_bcs(matrix, vector, mesh, node_dofs, function_size, dirichlet_bcs)
         # matrix_bc, vector_bc = apply_bcs(matrix, vector, u.function_space, dirichlet_bcs)
         previous_solution_vector = solution_vector
-        solution_vector = solve_petsc(matrix_bc, vector_bc)
-        # solution_vector = solve_scipy_sparse(matrix_bc, vector_bc)
+        # solution_vector = solve_petsc(matrix_bc, vector_bc)
+        solution_vector = solve_scipy_sparse(matrix_bc, vector_bc)
 
         if out_prefix:
             u.set_vector(solution_vector)

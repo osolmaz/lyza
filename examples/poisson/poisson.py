@@ -52,7 +52,7 @@ if __name__=='__main__':
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
-    u, f = solve(a, b, dirichlet_bcs, solver='petsc')
+    u, f = solve(a, b, dirichlet_bcs)
 
     ofile = VTKFile('out_poisson.vtk')
 

@@ -28,8 +28,8 @@ setup(
         'numpy',
         'sympy',
         'scipy',
-        'petsc',
-        'petsc4py',
+        # 'petsc',
+        # 'petsc4py',
         'progressbar2',
     ],
 
