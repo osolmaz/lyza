@@ -14,9 +14,11 @@ OUTPUT_DIR = 'out'
 QUADRATURE_DEGREE = 1
 FUNCTION_SIZE = 2
 SPATIAL_DIMENSION = 2
+DOF_ORDERING = [[0],[1]]
 
 # RESOLUTION = 10
-RESOLUTION = 30
+# RESOLUTION = 30
+RESOLUTION = 50
 
 DT = 5e-6
 T_MAX = DT*200
@@ -29,30 +31,6 @@ M = np.eye(2)
 alpha = 0.01*np.eye(2)
 
 initial_distribution = lambda x,t: [0.63 + 0.02*(0.5 - random.random()), 0.0]
-
-
-def matrix_juxtapose_dofs(A):
-    size = A.shape[0]
-    dofs = []
-    for i in range(size//2):
-        dofs.append(i)
-        dofs.append(i+size//2)
-
-    result, _, _, _ = partition_matrix(A, dofs, sort=False)
-
-    return result
-
-
-def vector_juxtapose_dofs(v):
-    size = v.shape[0]
-    dofs = []
-    for i in range(size//2):
-        dofs.append(i)
-        dofs.append(i+size//2)
-
-    result, _ = partition_vector(v, dofs, sort=False)
-
-    return result
 
 
 class CahnHilliardJacobianMatrix(lyza_prototype.MatrixAssembler):
@@ -90,7 +68,6 @@ class CahnHilliardJacobianMatrix(lyza_prototype.MatrixAssembler):
             E += np.einsum('i, j -> ij', N, N)*DETJ*W
 
         K = np.vstack([np.hstack([A,B_]), np.hstack([D,E])])
-        K = matrix_juxtapose_dofs(K)
 
         return K
 
@@ -141,7 +118,6 @@ class CahnHilliardResidualVector(VectorAssembler):
             f += f_contrib.reshape(f.shape)
 
         r = np.vstack([c,f])
-        r = vector_juxtapose_dofs(r)
         r *= -1
 
         return r
@@ -185,8 +161,8 @@ if __name__ == '__main__':
     mesh.quantities['CN'] = mesh.quantities['C'].copy()
     mesh.quantities['MUN'] = mesh.quantities['MU'].copy()
 
-    a = CahnHilliardJacobianMatrix(mesh, FUNCTION_SIZE)
-    b = CahnHilliardResidualVector(mesh, FUNCTION_SIZE)
+    a = CahnHilliardJacobianMatrix(mesh, FUNCTION_SIZE, dof_ordering=DOF_ORDERING)
+    b = CahnHilliardResidualVector(mesh, FUNCTION_SIZE, dof_ordering=DOF_ORDERING)
     dirichlet_bcs = []
 
     t = 0

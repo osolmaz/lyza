@@ -3,8 +3,10 @@ import logging
 import time
 from lyza_prototype.domain import DefaultDomain
 
+flatten = lambda l: [item for sublist in l for item in sublist]
+
 class CellIterator:
-    def __init__(self, mesh, function_size, domain=DefaultDomain()):
+    def __init__(self, mesh, function_size, dof_ordering=None, domain=DefaultDomain()):
         self.mesh = mesh
         self.function_size = function_size
         self.domain = domain
@@ -17,10 +19,20 @@ class CellIterator:
 
         self.cell_dofs = []
         for c in self.mesh.cells:
-            dofmap = []
-            for n in c.nodes:
-                node_dofs = [n.idx*self.function_size+i for i in range(self.function_size)]
-                dofmap += self.node_dofs[n.idx]
+            # for n in c.nodes:
+                # node_dofs = [n.idx*self.function_size+i for i in range(self.function_size)]
+                # dofmap += self.node_dofs[n.idx]
+
+            node_dofs = [self.node_dofs[n.idx] for n in c.nodes]
+            if not dof_ordering:
+                dofmap = flatten(node_dofs)
+            else:
+                dofmap = []
+                for indices in dof_ordering:
+                    for idx in indices:
+                        for dofs in node_dofs:
+                            dofmap.append(dofs[idx])
+
             self.cell_dofs.append(dofmap)
 
     def set_param(self, param_dict):
