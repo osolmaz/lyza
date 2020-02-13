@@ -1,7 +1,7 @@
-from lyza_prototype.analytic_solution import get_analytic_solution_vector
-from lyza_prototype.solver import apply_bcs, solve_scipy_sparse
-from lyza_prototype.function import Function
-from lyza_prototype.vtk import VTKFile
+from lyza.analytic_solution import get_analytic_solution_vector
+from lyza.solver import apply_bcs, solve_scipy_sparse
+from lyza.function import Function
+from lyza.vtk import VTKFile
 import logging
 import numpy as np
 import progressbar

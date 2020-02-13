@@ -1,5 +1,5 @@
 import itertools
-from lyza_prototype.assembler import VectorAssembler
+from lyza.assembler import VectorAssembler
 import numpy as np
 
 class FunctionVector(VectorAssembler):

@@ -4,8 +4,8 @@ from scipy.sparse.linalg import spsolve
 from scipy.sparse import csr_matrix
 import time
 
-from lyza_prototype.function import Function
-from lyza_prototype.vtk import VTKFile
+from lyza.function import Function
+from lyza.vtk import VTKFile
 
 def solve(matrix_assembler, vector_assembler, dirichlet_bcs, solver='scipy_sparse', solver_parameters={}):
 
@@ -238,7 +238,7 @@ def solve_linear_system(A, b, solver='scipy_sparse', solver_parameters={}):
     if solver == 'scipy_sparse':
         u = solve_scipy_sparse(A, b)
     elif solver == 'petsc':
-        from lyza_prototype.petsc import solve_petsc
+        from lyza.petsc import solve_petsc
         u = solve_petsc(A, b)
     else:
         raise Exception('Unknown solver: %s'%solver)

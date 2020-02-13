@@ -1,6 +1,6 @@
 import itertools
-from lyza_prototype.assembler import MatrixAssembler
-from lyza_prototype.mechanics import ElasticityBase
+from lyza.assembler import MatrixAssembler
+from lyza.mechanics import ElasticityBase
 import numpy as np
 
 class PoissonMatrix(MatrixAssembler):

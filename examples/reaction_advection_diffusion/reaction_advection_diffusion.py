@@ -1,5 +1,5 @@
-from lyza_prototype import *
-from lyza_prototype.solver import solve_scipy_sparse
+from lyza import *
+from lyza.solver import solve_scipy_sparse
 from math import *
 import itertools
 import numpy as np
@@ -28,7 +28,7 @@ PARAM_R = 1.
 T_MAX = 1.
 T_RESOLUTION = 50
 
-class RADMatrix(lyza_prototype.MatrixAssembler):
+class RADMatrix(lyza.MatrixAssembler):
 
     def calculate_element_matrix(self, cell):
         n_node = len(cell.nodes)

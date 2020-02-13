@@ -1,6 +1,6 @@
 from math import pi as pi_val
-from lyza_prototype.mesh import Mesh
-from lyza_prototype.cells import Hex, Quad, Line
+from lyza.mesh import Mesh
+from lyza.cells import Hex, Quad, Line
 import copy
 
 def locate_midpoint(coor1, coor2, percent):

@@ -1,5 +1,5 @@
 import logging
-import lyza_prototype.cells as cells
+import lyza.cells as cells
 
 class VTKFile:
     def __init__(self, path):

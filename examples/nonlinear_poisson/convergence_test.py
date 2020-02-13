@@ -1,4 +1,4 @@
-from lyza_prototype import *
+from lyza import *
 from nonlinear_poisson import *
 
 # import logging

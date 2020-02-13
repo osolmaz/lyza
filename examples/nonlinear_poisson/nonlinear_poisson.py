@@ -1,4 +1,4 @@
-from lyza_prototype import *
+from lyza import *
 from math import *
 import numpy as np
 

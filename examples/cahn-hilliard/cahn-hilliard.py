@@ -1,10 +1,10 @@
-from lyza_prototype import *
+from lyza import *
 from math import *
 import numpy as np
 import os
 import random
 
-from lyza_prototype.partition_system import partition_matrix, partition_vector
+from lyza.partition_system import partition_matrix, partition_vector
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -33,7 +33,7 @@ alpha = 0.01*np.eye(2)
 initial_distribution = lambda x,t: [0.63 + 0.02*(0.5 - random.random()), 0.0]
 
 
-class CahnHilliardJacobianMatrix(lyza_prototype.MatrixAssembler):
+class CahnHilliardJacobianMatrix(lyza.MatrixAssembler):
 
     def calculate_element_matrix(self, cell):
         n_node = len(cell.nodes)

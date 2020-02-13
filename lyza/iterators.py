@@ -1,6 +1,6 @@
-from lyza_prototype.cell_iterator import CellIterator
-from lyza_prototype.cell_quantity import CellQuantity
-from lyza_prototype.mechanics import ElasticityBase
+from lyza.cell_iterator import CellIterator
+from lyza.cell_quantity import CellQuantity
+from lyza.mechanics import ElasticityBase
 import numpy as np
 import itertools
 

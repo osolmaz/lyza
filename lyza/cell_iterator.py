@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 import time
-from lyza_prototype.domain import DefaultDomain
+from lyza.domain import DefaultDomain
 
 flatten = lambda l: [item for sublist in l for item in sublist]
 

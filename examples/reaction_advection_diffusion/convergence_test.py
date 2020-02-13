@@ -1,4 +1,4 @@
-from lyza_prototype import *
+from lyza import *
 from reaction_advection_diffusion import *
 
 # import logging

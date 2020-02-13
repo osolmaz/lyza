@@ -1,4 +1,4 @@
-from lyza_prototype.cell import Cell
+from lyza.cell import Cell
 from math import sqrt
 import itertools
 import numpy as np

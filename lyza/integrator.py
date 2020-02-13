@@ -1,4 +1,4 @@
-from lyza_prototype.cell_iterator import CellIterator
+from lyza.cell_iterator import CellIterator
 
 class Integrator(CellIterator):
 

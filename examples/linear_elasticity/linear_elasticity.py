@@ -1,4 +1,4 @@
-from lyza_prototype import *
+from lyza import *
 import sympy as sp
 import numpy as np
 from plane_stress_strain import plane_stress_tensor, plane_strain_tensor

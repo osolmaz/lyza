@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from math import sqrt
-from lyza_prototype import *
+from lyza import *
 
 import logging
 logging.basicConfig(level=logging.INFO)

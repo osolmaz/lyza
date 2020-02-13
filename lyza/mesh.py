@@ -1,7 +1,7 @@
-from lyza_prototype.node import Node
-from lyza_prototype.cell_quantity import CellQuantity
-from lyza_prototype.function import Function
-from lyza_prototype.domain import DefaultDomain
+from lyza.node import Node
+from lyza.cell_quantity import CellQuantity
+from lyza.function import Function
+from lyza.domain import DefaultDomain
 import time
 import logging
 

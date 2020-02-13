@@ -1,5 +1,5 @@
 from sympy import *
-from lyza_prototype.partition_system import *
+from lyza.partition_system import *
 import itertools
 
 lambda_ = Symbol('lambda')

@@ -1,7 +1,7 @@
 from math import log
 import numpy as np
-from lyza_prototype.integrator import Integrator
-from lyza_prototype.analytic_solution import get_analytic_solution_vector
+from lyza.integrator import Integrator
+from lyza.analytic_solution import get_analytic_solution_vector
 import logging
 import itertools
 

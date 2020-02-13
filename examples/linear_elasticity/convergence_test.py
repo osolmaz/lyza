@@ -1,4 +1,4 @@
-from lyza_prototype import *
+from lyza import *
 from linear_elasticity import *
 
 import logging

@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-from lyza_prototype.function import Function
+from lyza.function import Function
 
 class CellQuantity:
     def __init__(self, mesh, shape):

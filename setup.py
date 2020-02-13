@@ -7,7 +7,7 @@ here = path.abspath(path.dirname(__file__))
 
 
 setup(
-    name = 'lyza_prototype',
+    name = 'lyza',
 
     version = '0.0',
 

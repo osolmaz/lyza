@@ -1,7 +1,7 @@
 from math import sqrt, cos, sin, pi
 import numpy as np
 import itertools
-from lyza_prototype.helper import determinant, inverse
+from lyza.helper import determinant, inverse
 
 
 class Cell:

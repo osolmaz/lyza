@@ -1,6 +1,6 @@
 import numpy as np
 import itertools
-from lyza_prototype.cell_quantity import CellQuantity
+from lyza.cell_quantity import CellQuantity
 
 def mu_from_E_nu(E, nu):
     return E/(1.+nu)/2.

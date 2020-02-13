@@ -1,4 +1,4 @@
-from lyza_prototype import *
+from lyza import *
 import sympy as sp
 import numpy as np
 

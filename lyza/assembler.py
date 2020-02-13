@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 import time
-from lyza_prototype.cell_iterator import CellIterator
+from lyza.cell_iterator import CellIterator
 
 class Assembler(CellIterator):
     def assemble(self):

@@ -1,16 +1,18 @@
-# LYZA Prototype
+# LYZA
+
+
 
 ## Installation
 
 For basic usage:
 
-    cd lyza_prototype
+    cd lyza
     sudo python setup.py install
 
 
 For development:
 
-    cd lyza_prototype/
+    cd lyza/
     unset PETSC_DIR
     unset PETSC_ARCH
     pipenv install
