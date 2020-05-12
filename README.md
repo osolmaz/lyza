@@ -36,12 +36,12 @@ The blog posts given below contain the formulations for some of the examples.
 
 | Example | Blog post |
 |-|-|
-|[Poisson](/examples/poisson)| [Linear Finite Elements](https://solmaz.io/2017/11/14/linear-finite-elements/)|
-|[Linear Elasticity](/examples/linear_elasticity)| [Vectorial Finite Elements](https://solmaz.io/2017/11/21/vectorial-finite-elements/)|
-|[Cahn Hilliard](/examples/cahn-hilliard)| [Nonlinear Finite Elements](https://solmaz.io/2017/12/22/nonlinear-finite-elements/)|
-|[Hyperelasticity](/examples/hyperelasticity)| [Variational Formulation of Elasticity](https://solmaz.io/2018/04/01/variational-formulation-elasticity/)|
-|[Nonlinear Poisson](/examples/nonlinear_poisson)| [Nonlinear Finite Elements](https://solmaz.io/2017/12/22/nonlinear-finite-elements/)|
-|[Reaction-advection-diffusion](/examples/reaction_advection_diffusion)| [Time-Dependent Finite Elements](https://solmaz.io/2017/12/07/time-dependent-finite-elements/)|
+|[Poisson](/examples/poisson)| [Linear Finite Elements](https://solmaz.io/notes/linear-finite-elements/)|
+|[Linear Elasticity](/examples/linear_elasticity)| [Vectorial Finite Elements](https://solmaz.io/notes/vectorial-finite-elements/)|
+|[Cahn Hilliard](/examples/cahn-hilliard)| [Nonlinear Finite Elements](https://solmaz.io/notes/nonlinear-finite-elements/)|
+|[Hyperelasticity](/examples/hyperelasticity)| [Variational Formulation of Elasticity](https://solmaz.io/notes/variational-formulation-elasticity/)|
+|[Nonlinear Poisson](/examples/nonlinear_poisson)| [Nonlinear Finite Elements](https://solmaz.io/notes/nonlinear-finite-elements/)|
+|[Reaction-advection-diffusion](/examples/reaction_advection_diffusion)| [Time-Dependent Finite Elements](https://solmaz.io/notes/time-dependent-finite-elements/)|
 
 The examples are specified and solved in very simple domains, but it is possible
 to read in or generate arbitrary meshes.
