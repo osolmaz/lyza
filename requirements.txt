@@ -1,0 +1,6 @@
+ipython
+numpy
+sympy
+scipy
+progressbar2
+ipdb

@@ -273,10 +273,6 @@ def get_constrained_dofs(mesh, node_dofs, function_size, dirichlet_bcs):
 def solve_linear_system(A, b, solver="scipy_sparse", solver_parameters={}):
     if solver == "scipy_sparse":
         u = solve_scipy_sparse(A, b)
-    elif solver == "petsc":
-        from lyza.petsc import solve_petsc
-
-        u = solve_petsc(A, b)
     else:
         raise Exception("Unknown solver: %s" % solver)
 

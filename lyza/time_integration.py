@@ -58,7 +58,6 @@ def implicit_euler(
         )
         # matrix_bc, vector_bc = apply_bcs(matrix, vector, u.function_space, dirichlet_bcs)
         previous_solution_vector = solution_vector
-        # solution_vector = solve_petsc(matrix_bc, vector_bc)
         solution_vector = solve_scipy_sparse(matrix_bc, vector_bc)
 
         if out_prefix:

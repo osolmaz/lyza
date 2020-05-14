@@ -16,10 +16,6 @@ For basic usage:
 For development:
 
     cd lyza/
-    unset PETSC_DIR
-    unset PETSC_ARCH
-    pipenv install
-    pipenv shell
     sudo pip install --editable .
 
 ## Examples
