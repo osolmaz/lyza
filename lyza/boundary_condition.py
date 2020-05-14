@@ -2,9 +2,11 @@ def join_boundaries(boundaries):
     def result(x, t):
         test = [b(x, t) for b in boundaries]
         return True in test
-    return  result
 
-class DirichletBC():
+    return result
+
+
+class DirichletBC:
     def __init__(self, function, position_bool, components=None):
         self.function = function
         self.position_bool = position_bool

@@ -17,7 +17,7 @@ h1_array = []
 
 
 for RESOLUTION in RESOLUTIONS:
-    logging.info('Solving for resolution %d'%RESOLUTION)
+    logging.info("Solving for resolution %d" % RESOLUTION)
 
     mesh = meshes.UnitSquareMesh(RESOLUTION, RESOLUTION)
 
@@ -32,10 +32,14 @@ for RESOLUTION in RESOLUTIONS:
 
     u, f = solve(a, b, dirichlet_bcs)
 
-    h_max = 1./RESOLUTION
+    h_max = 1.0 / RESOLUTION
     n_node = len(mesh.nodes)
-    l2 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='l2')
-    h1 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='h1')
+    l2 = error.absolute_error(
+        u, analytic_solution, analytic_solution_gradient, error="l2"
+    )
+    h1 = error.absolute_error(
+        u, analytic_solution, analytic_solution_gradient, error="h1"
+    )
 
     h_max_array.append(h_max)
     n_node_array.append(n_node)
@@ -43,8 +47,11 @@ for RESOLUTION in RESOLUTIONS:
     h1_array.append(h1)
 
 import matplotlib
-matplotlib.use('Qt4Agg')
-matplotlib.rc('text', usetex=True)
 
-error.plot_errors('plot_errors.pdf', h_max_array, l2=l2_array, h1=h1_array)
-error.plot_convergence_rates('plot_convergence_rates.pdf', h_max_array, l2=l2_array, h1=h1_array)
+matplotlib.use("Qt4Agg")
+matplotlib.rc("text", usetex=True)
+
+error.plot_errors("plot_errors.pdf", h_max_array, l2=l2_array, h1=h1_array)
+error.plot_convergence_rates(
+    "plot_convergence_rates.pdf", h_max_array, l2=l2_array, h1=h1_array
+)

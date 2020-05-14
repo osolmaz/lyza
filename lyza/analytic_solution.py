@@ -9,7 +9,7 @@ class AnalyticSolution:
         self.n_eqn = n_eqn
         self.n_dim = n_dim
 
-        x, y, z = sp.symbols('x y z')
+        x, y, z = sp.symbols("x y z")
         if n_dim == 1:
             self.position = [x]
         elif n_dim == 2:
@@ -17,18 +17,19 @@ class AnalyticSolution:
         elif n_dim == 3:
             self.position = [x, y, z]
         else:
-            raise Exception('Invalid # of dimensions')
+            raise Exception("Invalid # of dimensions")
 
         self.u = u(self.position)
-        if self.simplify: self.u = simplify(self.u)
-
+        if self.simplify:
+            self.u = simplify(self.u)
 
     def get_rhs_expression(self):
         pass
 
     def get_rhs_function(self):
         f_expr = self.get_force_expression()
-        if self.simplify: f_expr = simplify(f_expr)
+        if self.simplify:
+            f_expr = simplify(f_expr)
 
         lambdas = [sp.lambdify(self.position, i) for i in f_expr]
         n_dim = self.n_dim
@@ -36,7 +37,7 @@ class AnalyticSolution:
         def result(pos, t):
 
             # import ipdb; ipdb.set_trace()
-            return [i(*pos[:self.n_dim]) for i in lambdas]
+            return [i(*pos[: self.n_dim]) for i in lambdas]
 
         return result
 
@@ -46,16 +47,15 @@ class AnalyticSolution:
         lambdas = [sp.lambdify(self.position, i) for i in self.u]
 
         def result(pos, t):
-            return [i(*pos[:self.n_dim]) for i in lambdas]
+            return [i(*pos[: self.n_dim]) for i in lambdas]
 
         return result
-
 
     def get_gradient_expression(self):
         gradient = sp.zeros(self.n_eqn, self.n_dim)
 
-        for i,j in itertools.product(range(self.n_eqn), range(self.n_dim)):
-            gradient[i,j] += sp.diff(self.u[i], self.position[j])
+        for i, j in itertools.product(range(self.n_eqn), range(self.n_dim)):
+            gradient[i, j] += sp.diff(self.u[i], self.position[j])
 
         return gradient
 
@@ -67,11 +67,11 @@ class AnalyticSolution:
         for i in range(self.n_eqn):
             row = []
             for j in range(self.n_dim):
-                row.append(sp.lambdify(self.position, gradient_expr[i,j]))
+                row.append(sp.lambdify(self.position, gradient_expr[i, j]))
             lambdas.append(row)
 
         def result(pos, t):
-            return [[j(*pos[:self.n_dim]) for j in i] for i in lambdas]
+            return [[j(*pos[: self.n_dim]) for j in i] for i in lambdas]
 
         return result
 
@@ -85,6 +85,3 @@ def get_analytic_solution_vector(function_space, function, time=0):
             result[dof] = analytic_val[n]
 
     return result
-
-
-

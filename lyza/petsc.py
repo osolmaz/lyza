@@ -1,12 +1,13 @@
 from petsc4py import PETSc
 
+
 def solve_petsc(mat, vec):
 
     # A = PETSc.Mat().create(PETSc.COMM_SELF)
     csr_mat = csr_matrix(mat)
     A = PETSc.Mat().createAIJ(
-        size=csr_mat.shape,
-        csr=(csr_mat.indptr, csr_mat.indices,csr_mat.data))
+        size=csr_mat.shape, csr=(csr_mat.indptr, csr_mat.indices, csr_mat.data)
+    )
 
     b = PETSc.Vec().create(PETSc.COMM_SELF)
     u = PETSc.Vec().create(PETSc.COMM_SELF)
@@ -41,7 +42,7 @@ def solve_petsc(mat, vec):
 
     ksp = PETSc.KSP().create()
     ksp.setOperators(A)
-    ksp.setType('cg')
+    ksp.setType("cg")
     # pc = ksp.getPC()
     # pc.setType('none')
     ksp.setFromOptions()

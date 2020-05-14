@@ -27,13 +27,19 @@ for RESOLUTION in RESOLUTIONS:
 
     dirichlet_bcs = [DirichletBC(analytic_solution, perimeter)]
 
-    t_array = np.linspace(0, T_MAX, T_RESOLUTION+1)
-    u, f = time_integration.implicit_euler(m, a, b, dirichlet_bcs, analytic_solution, t_array)
+    t_array = np.linspace(0, T_MAX, T_RESOLUTION + 1)
+    u, f = time_integration.implicit_euler(
+        m, a, b, dirichlet_bcs, analytic_solution, t_array
+    )
 
-    h_max = 1./RESOLUTION
+    h_max = 1.0 / RESOLUTION
     n_node = len(mesh.nodes)
-    l2 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='l2', time=T_MAX)
-    h1 = error.absolute_error(u, analytic_solution, analytic_solution_gradient, error='h1', time=T_MAX)
+    l2 = error.absolute_error(
+        u, analytic_solution, analytic_solution_gradient, error="l2", time=T_MAX
+    )
+    h1 = error.absolute_error(
+        u, analytic_solution, analytic_solution_gradient, error="h1", time=T_MAX
+    )
 
     h_max_array.append(h_max)
     n_node_array.append(n_node)
@@ -42,8 +48,11 @@ for RESOLUTION in RESOLUTIONS:
 
 # import ipdb; ipdb.set_trace()
 import matplotlib
-matplotlib.use('Qt4Agg')
-matplotlib.rc('text', usetex=True)
 
-error.plot_errors('plot_errors.pdf', h_max_array, l2=l2_array, h1=h1_array)
-error.plot_convergence_rates('plot_convergence_rates.pdf', h_max_array, l2=l2_array, h1=h1_array)
+matplotlib.use("Qt4Agg")
+matplotlib.rc("text", usetex=True)
+
+error.plot_errors("plot_errors.pdf", h_max_array, l2=l2_array, h1=h1_array)
+error.plot_convergence_rates(
+    "plot_convergence_rates.pdf", h_max_array, l2=l2_array, h1=h1_array
+)

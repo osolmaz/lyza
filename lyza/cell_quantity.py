@@ -2,6 +2,7 @@ import numpy as np
 import logging
 from lyza.function import Function
 
+
 class CellQuantity:
     def __init__(self, mesh, shape):
         self.mesh = mesh
@@ -21,23 +22,26 @@ class CellQuantity:
     def add_quantity_by_cell_idx(self, cell_idx, quantity_matrix):
         if self.shape:
             if quantity_matrix.shape != self.shape:
-                raise Exception('Array shape %s does not match quantity shape %s'%(
-                    quantity_matrix.shape, self.shape))
+                raise Exception(
+                    "Array shape %s does not match quantity shape %s"
+                    % (quantity_matrix.shape, self.shape)
+                )
 
         self.quantity_array_list[cell_idx].append(quantity_matrix)
 
     def add_quantity_by_cell(self, cell, quantity_matrix):
         if self.shape:
             if quantity_matrix.shape != self.shape:
-                raise Exception('Array shape %s does not match quantity shape %s'%(
-                    quantity_matrix.shape, self.shape))
+                raise Exception(
+                    "Array shape %s does not match quantity shape %s"
+                    % (quantity_matrix.shape, self.shape)
+                )
 
         self.quantity_array_dict[cell].append(quantity_matrix)
 
     def add_zero_array(self, cell, n_array=1):
         for i in range(n_array):
             self.quantity_array_dict[cell].append(np.zeros(self.shape))
-
 
     def reset_quantity_by_cell(self, cell):
         # self.quantity_array_dict[cell] = []
@@ -58,15 +62,15 @@ class CellQuantity:
         #     raise Exception('Function space can be either 1 or 2')
 
         if self.shape[1] > 1:
-            raise Exception('Projecting matrix quantities not yet implemented')
+            raise Exception("Projecting matrix quantities not yet implemented")
 
         function_size = self.shape[0]
 
         result = Function(self.mesh, function_size)
 
-        n_dof = len(self.mesh.nodes)*function_size
-        f = np.zeros((n_dof,1))
-        w = np.zeros((n_dof,1))
+        n_dof = len(self.mesh.nodes) * function_size
+        f = np.zeros((n_dof, 1))
+        w = np.zeros((n_dof, 1))
 
         for cell in self.mesh.cells:
             # target_elem = interface.elements[function_space-1]
@@ -82,46 +86,45 @@ class CellQuantity:
                     f[dof] += f_elem[dof_i]
                     w[dof] += w_elem[dof_i]
 
-        projected_values = f/w
+        projected_values = f / w
         result.set_vector(projected_values)
 
         return result
 
     def _projection_vector(self, cell, node_idx):
         n_dof = self.shape[0]
-        f = np.zeros((n_dof,1))
+        f = np.zeros((n_dof, 1))
 
-        N_arr = self.mesh.quantities['N'].get_quantity(cell)
-        DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
-        W_arr = self.mesh.quantities['W'].get_quantity(cell)
+        N_arr = self.mesh.quantities["N"].get_quantity(cell)
+        DETJ_arr = self.mesh.quantities["DETJ"].get_quantity(cell)
+        W_arr = self.mesh.quantities["W"].get_quantity(cell)
         arrays = self.get_quantity(cell)
 
         for idx in range(len(W_arr)):
-            DETJ = DETJ_arr[idx][0,0]
-            W = W_arr[idx][0,0]
+            DETJ = DETJ_arr[idx][0, 0]
+            W = W_arr[idx][0, 0]
             N = N_arr[idx]
             for i in range(n_dof):
-                f[i] += arrays[idx][i,0]*N[node_idx,0]*DETJ*W
+                f[i] += arrays[idx][i, 0] * N[node_idx, 0] * DETJ * W
 
         return f
 
     def _projection_weight_vector(self, cell, node_idx):
         n_dof = self.shape[0]
-        f = np.zeros((n_dof,1))
+        f = np.zeros((n_dof, 1))
 
-        N_arr = self.mesh.quantities['N'].get_quantity(cell)
-        DETJ_arr = self.mesh.quantities['DETJ'].get_quantity(cell)
-        W_arr = self.mesh.quantities['W'].get_quantity(cell)
+        N_arr = self.mesh.quantities["N"].get_quantity(cell)
+        DETJ_arr = self.mesh.quantities["DETJ"].get_quantity(cell)
+        W_arr = self.mesh.quantities["W"].get_quantity(cell)
 
         for idx in range(len(W_arr)):
-            DETJ = DETJ_arr[idx][0,0]
-            W = W_arr[idx][0,0]
+            DETJ = DETJ_arr[idx][0, 0]
+            W = W_arr[idx][0, 0]
             N = N_arr[idx]
             for i in range(n_dof):
-                f[i] += N[node_idx,0]*DETJ*W
+                f[i] += N[node_idx, 0] * DETJ * W
 
         return f
-
 
     def copy(self):
         result = CellQuantity(self.mesh, self.shape)
