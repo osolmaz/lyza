@@ -190,7 +190,7 @@ def plot_convergence_rates(path, h_max_array, l2=None, linf=None, h1=None):
             h_max_array,
             calculate_convergence(h_max_array, linf),
             "-o",
-            label="$L^\infty$ Convergence rate",
+            label="$L^\\infty$ Convergence rate",
         )
     if h1:
         pl.semilogx(
@@ -201,7 +201,7 @@ def plot_convergence_rates(path, h_max_array, l2=None, linf=None, h1=None):
         )
 
     pl.xlabel("$h_{max}$")
-    pl.ylabel("$\log(\epsilon_{n-1}-\epsilon_{n})/\log(h_{max,n-1}-h_{max,n})$")
+    pl.ylabel("$\\log(\\epsilon_{n-1}-\\epsilon_{n})/\\log(h_{max,n-1}-h_{max,n})$")
     pl.grid(b=True, which="minor", color="gray", linestyle="--")
     pl.grid(b=True, which="major", color="gray", linestyle="-")
     pl.title("Convergence rates")
@@ -233,13 +233,13 @@ def plot_errors(path, h_max_array, l2=None, linf=None, h1=None):
     if l2:
         pl.loglog(h_max_array, l2, "-o", label="$L^2$ Error")
     if linf:
-        pl.loglog(h_max_array, linf, "-o", label="$L^\infty$ Error")
+        pl.loglog(h_max_array, linf, "-o", label="$L^\\infty$ Error")
     if h1:
         pl.loglog(h_max_array, h1, "-o", label="$H^1$ Error")
 
     # pl.minorticks_on()
     pl.xlabel("$h_{max}$")
-    pl.ylabel("$\epsilon_{a}$")
+    pl.ylabel("$\\epsilon_{a}$")
     pl.grid(b=True, which="minor", color="gray", linestyle="--")
     pl.grid(b=True, which="major", color="gray", linestyle="-")
     pl.title("Errors")

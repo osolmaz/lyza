@@ -1,9 +1,10 @@
 # LYZA
 
+![Python package](https://github.com/osolmaz/lyza/workflows/Python%20package/badge.svg)
+
 This project grew out of dissatisfaction with not being able to control what is
-going on under the hood with most finite elements packages. I was inspired by
-[FEniCS](https://fenicsproject.org/) when I created the library. I used it to
-solve nonlinear and coupled problems I encountered in courses I took.
+going on under the hood with most finite elements packages. It was inspired by
+[FEniCS](https://fenicsproject.org/).
 
 ## Installation
 
