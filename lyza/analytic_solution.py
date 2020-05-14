@@ -29,7 +29,7 @@ class AnalyticSolution:
     def get_rhs_function(self):
         f_expr = self.get_force_expression()
         if self.simplify:
-            f_expr = simplify(f_expr)
+            f_expr = sp.simplify(f_expr)
 
         lambdas = [sp.lambdify(self.position, i) for i in f_expr]
         n_dim = self.n_dim
