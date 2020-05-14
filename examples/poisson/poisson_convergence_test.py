@@ -4,11 +4,7 @@ import matplotlib
 from lyza import *
 from poisson import *
 
-try:
-    matplotlib.rc("text", usetex=True)
-except:
-    logging.info("TeX formatting will be disabled in output")
-
+matplotlib.rc("text", usetex=True)
 
 # logging.getLogger().setLevel(level=logging.DEBUG)
 
@@ -55,7 +51,10 @@ for RESOLUTION in RESOLUTIONS:
     h1_array.append(h1)
 
 
-error.plot_errors("plot_errors.pdf", h_max_array, l2=l2_array, h1=h1_array)
-error.plot_convergence_rates(
-    "plot_convergence_rates.pdf", h_max_array, l2=l2_array, h1=h1_array
-)
+try:
+    error.plot_errors("plot_errors.pdf", h_max_array, l2=l2_array, h1=h1_array)
+    error.plot_convergence_rates(
+        "plot_convergence_rates.pdf", h_max_array, l2=l2_array, h1=h1_array
+    )
+except:
+    logging.warning("Output files could not be generated")
