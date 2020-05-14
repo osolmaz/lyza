@@ -1,7 +1,14 @@
+import logging
+import matplotlib
+
 from lyza import *
 from reaction_advection_diffusion import *
 
-# import logging
+try:
+    matplotlib.rc("text", usetex=True)
+except:
+    logging.info("TeX formatting will be disabled in output")
+
 # logging.getLogger().setLevel(level=logging.DEBUG)
 
 RESOLUTIONS = [4, 6, 8, 10, 15, 20, 30, 40]
@@ -46,11 +53,6 @@ for RESOLUTION in RESOLUTIONS:
     l2_array.append(l2)
     h1_array.append(h1)
 
-# import ipdb; ipdb.set_trace()
-import matplotlib
-
-matplotlib.use("Qt4Agg")
-matplotlib.rc("text", usetex=True)
 
 error.plot_errors("plot_errors.pdf", h_max_array, l2=l2_array, h1=h1_array)
 error.plot_convergence_rates(
