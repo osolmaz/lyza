@@ -4,3 +4,4 @@ sympy
 scipy
 progressbar2
 ipdb
+matplotlib
